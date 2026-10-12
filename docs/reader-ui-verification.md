@@ -1,5 +1,7 @@
 # Проверка читалки 0.2.1 — 12 октября 2026
 
+> Исторические результаты указанных запусков и APK. Для нового изменения выполните проверки заново; текущие ограничения собраны в [project-status.md](project-status.md), команды — в [development.md](development.md).
+
 APK: `artifacts/FlibustaReader-0.2.1-debug.apk`. Android 14+, versionCode 3. Подпись debug APK проверена apksigner: APK Signature Scheme v2, один подписант. Старые APK сохранены.
 
 ## Автоматические проверки

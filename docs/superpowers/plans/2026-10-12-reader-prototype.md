@@ -1,5 +1,7 @@
 # Reader Prototype Implementation Plan
 
+> Historical implementation plan, not an active backlog. Current architecture and limitations: [architecture.md](../../architecture.md), [project-status.md](../../project-status.md).
+
 **Goal:** Installable Android 14+ prototype for OPDS search, local FB2/EPUB library and Readium reading.
 
 **Architecture:** Pure JVM core for OPDS and FB2 conversion; Android Compose shell; Readium navigator in a dedicated activity. App-private files and persisted locators.

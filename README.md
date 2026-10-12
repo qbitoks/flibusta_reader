@@ -2,6 +2,12 @@
 
 Нативный APK для Android 14+ (API 34), телефонов и планшетов. Kotlin + Jetpack Compose, готовый EPUB navigator Readium 3.0.0. FB2 преобразуется в EPUB локально, без сервера и аккаунта. MOBI отложен.
 
+## Разработчикам и LLM-агентам
+
+Общая инструкция для любого coding agent: [AGENTS.md](AGENTS.md). Карта актуальной документации и исторических материалов: [docs/README.md](docs/README.md). Начните с них; предыдущие чаты, Codex и персональные плагины не требуются.
+
+Для Claude Code, Gemini CLI, Cursor и GitHub Copilot добавлены короткие указатели на общий контракт. Если инструмент не загружает инструкции автоматически, попросите его прочитать AGENTS.md вручную. Подготовка окружения, команды Windows/Linux/macOS и матрица проверок — в [docs/development.md](docs/development.md). Текущие ограничения и статусы старого ревью — в [docs/project-status.md](docs/project-status.md).
+
 ## Проверить приложение
 
 1. Установить `artifacts/FlibustaReader-0.2.1-debug.apk` поверх предыдущей версии на Android 14+. Не удалять старое приложение: так сохранятся книги и позиции.
@@ -22,9 +28,12 @@
 
 ## Сборка
 
+GitHub Actions проверяет push/PR в `main`; по тегу `vX.Y.Z` выполняет также регрессии на Android 15 и готовит черновик pre-release с APK, описанием совместимости и SHA-256. Preview-сборки используют текущую тестовую подпись, чтобы обновляться поверх v0.2.1. Ручной запуск проверяет подписанный пакет без создания Release. Инструкция: [docs/release-pipeline.md](docs/release-pipeline.md).
+
 Необходимы JDK 17 и Android SDK platform 34/build-tools 34.0.0. Версии закреплены для воспроизводимого прототипа с уже установленным SDK; это не выбор последних версий для будущего релиза.
 
 ```powershell
+./scripts/doctor.ps1
 ./scripts/build.ps1
 ```
 

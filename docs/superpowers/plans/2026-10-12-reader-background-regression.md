@@ -1,5 +1,7 @@
 # Reader background regression implementation plan
 
+> Completed historical plan. Current commands: [development.md](../../development.md); observed results and limits: [reader-ui-verification.md](../../reader-ui-verification.md).
+
 **Goal:** Reproduce completion of EPUB preparation while ReaderActivity is stopped and verify safe fragment attachment on resume.
 
 **Architecture:** A debug source-set checkpoint suspends immediately before the existing `lifecycle.withResumed` block. A release source-set implementation is a no-op. An ADB script owns checkpoint files in the app's private directory, checks Activity state and returns through Recents. No exported component or network dependency is added.

@@ -1,0 +1,6 @@
+---
+description: Общая инструкция Flibusta Reader для coding agents
+alwaysApply: true
+---
+
+Перед работой прочитай корневой [AGENTS.md](../../AGENTS.md) и следуй общему контракту проекта. Подробные справочники выбирай по задаче через [docs/README.md](../../docs/README.md). Не дублируй общие правила в Cursor rules.
