@@ -126,7 +126,8 @@ jobs:
           api-level: 35
           arch: x86_64
           target: google_apis
-          profile: pixel_6
+          profile: pixel_2
+          ram-size: 3072M
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: pwsh -NoProfile -File scripts/ci-emulator.ps1

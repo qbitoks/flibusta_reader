@@ -14,8 +14,8 @@ foreach ($line in Get-Content artifacts/release/SHA256SUMS.txt) {
     if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ine $expected) { throw "Checksum mismatch: $path" }
 }
 try {
-    ./scripts/reader-background-regression.ps1 -Serial $serial -Adb $adb -Apk $apk | Tee-Object -FilePath .tools/ci-background-result.txt
-    ./scripts/reader-regression.ps1 -Serial $serial -Adb $adb -Apk $apk | Tee-Object -FilePath .tools/ci-reader-result.txt
+    ./scripts/reader-background-regression.ps1 -Serial $serial -Adb $adb -Apk $apk -RecoverLauncherStartupAnr | Tee-Object -FilePath .tools/ci-background-result.txt
+    ./scripts/reader-regression.ps1 -Serial $serial -Adb $adb -Apk $apk -RecoverLauncherStartupAnr | Tee-Object -FilePath .tools/ci-reader-result.txt
 } finally {
     & $adb -s $serial logcat -d > .tools/ci-logcat.txt
 }

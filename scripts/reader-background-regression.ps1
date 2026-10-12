@@ -1,7 +1,8 @@
 param(
     [string]$Serial = 'emulator-5556',
     [string]$Adb = "$env:LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe",
-    [string]$Apk = 'artifacts/FlibustaReader-0.2.1-debug.apk'
+    [string]$Apk = 'artifacts/FlibustaReader-0.2.1-debug.apk',
+    [switch]$RecoverLauncherStartupAnr
 )
 $ErrorActionPreference = 'Stop'
 if (!$Serial.StartsWith('emulator-')) { throw 'Use a test emulator' }
@@ -9,6 +10,7 @@ Set-Location (Split-Path $PSScriptRoot -Parent)
 New-Item -ItemType Directory -Force .tools | Out-Null
 $uiPath = Join-Path (Get-Location) '.tools/background-regression.xml'
 $checkpoint = 'files/reader-opening-checkpoint'
+$script:launcherAnrRecovered = $false
 function AdbChecked {
     $result = & $Adb -s $Serial @args
     if ($LASTEXITCODE -ne 0) { throw "ADB failed ($LASTEXITCODE): $args" }
@@ -19,7 +21,17 @@ function Ui {
     if ($LASTEXITCODE -ne 0) { return @() }
     AdbChecked pull /sdcard/reader-background.xml $uiPath 2>$null | Out-Null
     [xml]$document = Get-Content -LiteralPath $uiPath -Raw
-    @($document.SelectNodes('//node'))
+    $nodes = @($document.SelectNodes('//node'))
+    if ($RecoverLauncherStartupAnr -and ($nodes | Where-Object { $_.package -eq 'android' -and $_.text -eq "Pixel Launcher isn't responding" })) {
+        if ($script:launcherAnrRecovered) { throw 'Pixel Launcher remains unresponsive after startup recovery' }
+        $wait = $nodes | Where-Object { $_.package -eq 'android' -and $_.text -eq 'Wait' } | Select-Object -First 1
+        if (!$wait) { throw 'Pixel Launcher startup dialog has no Wait action' }
+        Tap $wait
+        $script:launcherAnrRecovered = $true
+        Write-Host 'Pixel Launcher startup ANR: selected Wait once'
+        return @()
+    }
+    $nodes
 }
 function Find([string]$Value) {
     for ($attempt=0; $attempt -lt 10; $attempt++) {
