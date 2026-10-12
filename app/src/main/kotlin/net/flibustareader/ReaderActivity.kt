@@ -213,9 +213,11 @@ class ReaderActivity : AppCompatActivity() {
                         return true
                     }
                 })
+                ReaderOpeningCheckpoint.beforeAttach(this@ReaderActivity)
                 lifecycle.withResumed {
                     check(!supportFragmentManager.isStateSaved)
                     supportFragmentManager.beginTransaction().replace(R.id.reader_container, fragment).commitNow()
+                    ReaderOpeningCheckpoint.afterAttach(this@ReaderActivity)
                 }
                 prefs.edit().putString("lastBook", bookId).apply()
                 fragment.currentLocator.collect { locator ->
