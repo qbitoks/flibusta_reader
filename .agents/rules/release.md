@@ -27,7 +27,7 @@ Push tags and publish releases only on explicit user request.
   missing files of a matching draft (same SHA-256); mismatches fail.
 
 ## Assets
-- `FlibustaReader-vX.Y.Z-android14plus-universal-preview-debug.apk`, `README-release-ru.md`,
+- `FlibustaReader-vX.Y.Z-android14plus-universal-preview-debug.apk`, README-release-ru.md (generated),
   `SHA256SUMS.txt`, `release-metadata.json` (version, minSdk, APK name, certificate).
 
 ## Local

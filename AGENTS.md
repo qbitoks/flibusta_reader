@@ -1,89 +1,99 @@
-# Flibusta Reader: инструкция для coding agents
+# AGENTS.md
 
-Эта инструкция подходит любому агенту с доступом к репозиторию. Она не требует конкретной модели, IDE, плагинов, skills или памяти предыдущих чатов. Все пути ниже относительны корню репозитория.
+Rules for every AI agent in this repo. Deeper `AGENTS.md` files add rules for their area.
+Precedence: the user's explicit request > nearest `AGENTS.md` > this file > `.agents/rules/`.
 
-## Начало работы
+## 1. Orientation (in order; stop as soon as you know enough)
 
-1. Прочитай этот файл и формулировку задачи. Посмотри `git status --short`; сохраняй чужие изменения.
-2. Выбери нужный справочник из таблицы ниже и прочитай относящиеся к задаче исходники и тесты. Не загружай всю историю проекта для каждой правки.
-3. Для изменения кода сформулируй ожидаемое поведение и способ проверки. Для большой задачи запиши короткий план с критериями приёмки в `docs/superpowers/plans/` (название каталога историческое, дополнительных инструментов не требуется).
-4. Внеси минимальное законченное изменение, выполни подходящие проверки, просмотри diff и обнови затронутую документацию.
-5. В результате укажи, что изменилось, какие проверки действительно выполнены и что осталось непроверенным. Старый отчёт PASS не доказывает текущую исправность.
+1. Read `.agents/STATE.md` (status, focus, next steps) and `.agents/MAP.md` (areas → their docs).
+2. Read the `AGENTS.md` of each area your task touches, unless your tool already loaded it.
+   Never read all of them.
+3. Before changing architecture, a library, a data format or the layout: grep `.agents/DECISIONS.md`
+   for the area or keyword. Don't reverse a recorded decision without telling the user.
+4. Search (grep/glob/symbols) for exact names. Read small files (< ~300 lines) whole, large ones by range.
+5. Load a playbook (§4) only when the task matches its trigger.
 
-Уточняй только неоднозначности, влияющие на поведение, совместимость или разрешённый объём работы. Продолжай независимую работу, пока ждёшь ответ. Локальные чтение, правки и проверки в рамках задачи не требуют повторного согласования. Публикация, push, release и удаление пользовательских данных требуют соответствующего поручения пользователя.
+`status: uninitialized` in STATE: if the task is to start or build the project, run
+`.agents/playbooks/bootstrap.md` first. Work on the template itself (agent docs, scripts) needs no bootstrap.
 
-## Проект
+## 2. Context hygiene
 
-Нативная Android-читалка: Kotlin, Jetpack Compose, Readium 3.0.0; Android 14+ (API 34). EPUB читается через Readium, FB2/FB2.ZIP преобразуется локально в EPUB. Нет сервера приложения и аккаунтов.
+- Read the minimum. Every tool call re-sends the context: one whole read beats five tiny ones.
+- Skip what `.agents/ignore.md` lists (deps, build output, lockfiles, generated code). Open such a file
+  only by explicit path when the task is about it. Never read secrets.
+- Don't re-read files you just wrote. Pipe noisy output through `tail`/`grep`; run single tests while iterating.
+- Broad exploration → a sub-agent or search tool if your harness has one; keep only the conclusions.
+- One fact, one place. Link (`see path/file.md`) instead of copying.
 
-- `core/src/main/kotlin/net/flibustareader/core/`: JVM-логика без Android — XML/OPDS, HTTPS, FB2, атомарный индекс, настройки и расчёты читалки.
-- `core/src/test/kotlin/net/flibustareader/core/`: JUnit 4 tests; `fixtures/`: примеры каталогов.
-- `app/src/main/kotlin/net/flibustareader/`: Android UI, lifecycle, сеть/импорт, файлы и интеграция Readium.
-- `app/src/debug/` и `app/src/release/`: разные реализации контрольной точки открытия книги.
-- `scripts/`: PowerShell-сборка и проверки на тестовом эмуляторе.
-- `docs/`: актуальные справочники и явно обозначенная история.
+## 3. Working rules
 
-## Куда смотреть по задаче
+- Match surrounding code: style, naming, comment density, idioms. No speculative abstractions.
+- Small, verifiable steps. Run the Check command (Project section below) before saying "done".
+- Docs disagree with the code → the code wins; fix the doc in the same task.
+- Ask the user only for decisions that are theirs; otherwise pick the conventional default and say so.
+- Never commit secrets. Destructive commands (force-push, `rm -rf`, DB drops) need explicit approval.
+- Commit only when the user asks. Messages: conventional (`feat:`, `fix:`, `docs(agents):`), summary + why.
+- Scratch files go to `.agents/tmp/` (gitignored). Don't create report or summary files; report in chat.
+- Reply in the user's language. Write agent docs in English.
 
-| Задача | Документация | Основные исходники |
-| --- | --- | --- |
-| Архитектура, границы модулей | [architecture](docs/architecture.md) | `app/` и `core/` |
-| Поиск, OPDS, источники, redirect | [architecture: каталог](docs/architecture.md#каталог-и-загрузка) | `MainActivity.kt`, `CatalogState.kt`, `BookRepository.kt`, `OpdsParser.kt`, `HttpsRequest.kt` |
-| Импорт, сохранение, удаление, восстановление | [data-storage](docs/data-storage.md) | `BookRepository.kt`, `AtomicTextFile.kt`, `Fb2Converter.kt`, `Xml.kt` |
-| Читалка, lifecycle, панели, типографика | [architecture: чтение](docs/architecture.md#чтение-и-настройки), [data-storage](docs/data-storage.md) | `ReaderActivity.kt`, `ReaderChrome.kt`, `ReaderPreferences.kt`, `ReaderInteraction.kt`, `ReaderViewport.kt` |
-| Сборка, тесты, окружение | [development](docs/development.md) | Gradle-файлы, `scripts/`, `.github/workflows/android.yml` |
-| Упаковка, подпись, выпуск APK | [release-pipeline](docs/release-pipeline.md) | `scripts/ReleaseMetadata.ps1`, `package-release.ps1`, `publish-release.ps1`, `ci-emulator.ps1` |
-| Ограничения, незакрытые сценарии | [project-status](docs/project-status.md) | Затем относящиеся к задаче код и тесты |
-| Причины архитектурных решений | [ADR](docs/adr/README.md) | Не подменяют проверку текущего кода |
+## 4. Playbooks (load on demand)
 
-Полные пути к Kotlin-файлам приведены в architecture.md. Индекс всех документов: [docs/README.md](docs/README.md). README описывает продукт, тематические справочники — текущую реализацию. Датированные планы и отчёты описывают прошлые работы; при расхождении проверь код и явно обнови актуальный справочник.
+| Trigger | File |
+|---|---|
+| Start/build a project while `status: uninitialized`, or adopt the template in an existing repo | `.agents/playbooks/bootstrap.md` |
+| Add a module, package, service, feature area or vault section | `.agents/playbooks/new-module.md` |
+| Lint: over a limit (now) or "maintenance due" (offer after the task); docs feel stale | `.agents/playbooks/maintenance.md` |
+| Pull agent-infrastructure updates from the upstream template | `.agents/playbooks/upgrade.md` |
+| Write or edit any agent doc (AGENTS.md, STATE, MAP, DECISIONS, playbook, rule) | `.agents/rules/writing-agent-docs.md` |
 
-## Инварианты
+Topic rules live in `.agents/rules/`, indexed in `.agents/MAP.md`. Create new ones there, not here.
 
-- `core` не зависит от Android, Compose и Readium. Android-адаптеры остаются в `app`.
-- Readium управляет EPUB-навигацией; показывать панели нужно поверх текста без изменения viewport и разбивки страниц.
-- Скрытые HUD-индикаторы сохраняют области касания; видимая строка 24 dp, области касания 48 dp. Ширина колонки ограничена 760 dp.
-- Быстрые изменения типографики сохраняют якорь текста; во время восстановления якоря переходы не должны с ним конкурировать. Небольшое изменение процента не означает потерю позиции.
-- Установка Readium fragment и диалог ошибки выполняются в `RESUMED` с учётом `isStateSaved`. Не обходи lifecycle через `commitAllowingStateLoss()`.
-- Сохраняй совместимость `library.json`, `reader.xml`, JSON Locator и идентификаторов книг. Изменение схемы требует описанного перехода и проверки существующих данных.
-- Книга готовится в `.part`, публикуется EPUB, затем индексируется. Очистка остатков не должна удалять индексированные книги и данные чтения.
-- Только HTTPS, включая redirects; OPDS использует конечный URL ответа и наследуемый `xml:base`. Адрес каталога и адрес скачивания — отдельные настройки.
-- Лимит входной книги/распакованного FB2 — 50 MiB, ленты OPDS — 5 MiB; глубина FB2 — 128. DTD и внешние XML-сущности запрещены. Не снимай ограничения ради прохождения конкретного примера.
-- Отмена coroutine не превращается в обычную ошибку пользователя. Блокирующий I/O не переносится на UI thread.
-- Debug-контрольная точка не должна добавлять файловое управление и задержки в release.
+## 5. Before saying "done" (every task; most need zero doc edits)
 
-## Проверки
+- The Check command passes, or you report the failure.
+- Added, moved or removed an area → `.agents/MAP.md` + that area's `AGENTS.md` (new-module playbook).
+- Had to explore an undocumented area to understand it → write its `AGENTS.md` (entry points,
+  canonical example) so the next agent doesn't pay for it again.
+- New or changed command → Project section below.
+- Non-obvious decision or rejected alternative → one line in `.agents/DECISIONS.md`.
+- Gotcha that cost time and will recur → "Gotchas" in the closest `AGENTS.md`.
+- Focus, next steps or blockers changed → rewrite `.agents/STATE.md`.
+- Don't write session diaries, changelogs (git has them) or what the code already says.
 
-Из корня на Windows (PowerShell):
+Put knowledge in the deepest file whose scope covers it. This file holds only repo-wide rules.
 
-```powershell
-./scripts/doctor.ps1
-./gradlew.bat :core:test --console=plain
-./scripts/build.ps1
-```
+<!-- PROJECT-OWNED BELOW: filled by bootstrap; template upgrades never touch it (.agents/playbooks/upgrade.md). -->
+## Project
 
-`doctor` проверяет окружение; `build` запускает JVM tests, debug APK и Android lint. Для одного тестового класса: `./gradlew.bat :core:test --tests 'net.flibustareader.core.OpdsParserTest' --console=plain`. На Linux/macOS используй `bash ./gradlew`; инструкции SDK и команды — в development.md.
+- What: Flibusta Reader, a native Android e-reader with an OPDS catalog. No app server, no accounts.
+- Stack: Kotlin, Jetpack Compose, Readium 3.0.0, Android 14+ (API 34). EPUB via Readium; FB2/FB2.ZIP
+  converted locally to EPUB. Areas: `.agents/MAP.md`. User-facing product description: `README.md`.
+- Env: JDK 17 (JAVA_HOME → JDK), Android SDK platform 34 + build-tools 34.0.0; versions live in Gradle files.
+  First build needs Google Maven, Maven Central, Gradle Plugin Portal. Use the wrapper, not system Gradle.
 
-| Изменение | Дополнительная проверка |
-| --- | --- |
-| Ошибка в `core` | Воспроизведение и регрессионный тест; затем затронутые JVM tests |
-| Android-код, зависимости, Gradle | `./scripts/build.ps1` |
-| Панели, HUD, настройки | `./scripts/smoke-test.ps1 -Serial <test-emulator>` |
-| Хранение, поворот, process death, типографика | `./scripts/reader-regression.ps1 -Serial <test-emulator>` |
-| Lifecycle открытия, debug/release checkpoint | `./scripts/reader-background-regression.ps1 -Serial <test-emulator>` и `./gradlew.bat :app:compileReleaseKotlin --console=plain` |
-| Только документация | Проверка ссылок, путей, команд и соответствия коду; сборка нужна при изменении команд/скриптов/CI |
+Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGENTS.md`):
+- Check before "done": `./scripts/build.ps1` (JVM tests, debug APK, Android lint) + agent-lint:
+  `& "$env:ProgramFiles\Git\bin\sh.exe" scripts/agent-lint.sh`. Docs-only change: agent-lint + link check.
+- Setup / env check: `./scripts/doctor.ps1`
+- Core tests: `./gradlew.bat :core:test --console=plain`
+- Test one: `./gradlew.bat :core:test --tests 'net.flibustareader.core.OpdsParserTest' --console=plain`
+- Extra checks by change (`<serial>` from `adb devices`; workflow and caveats: `scripts/AGENTS.md`):
+  - Panels, HUD, settings: `./scripts/smoke-test.ps1 -Serial <serial>`
+  - Storage, rotation, process death, typography: `./scripts/reader-regression.ps1 -Serial <serial>`
+  - Open-book lifecycle, debug/release checkpoint: `./scripts/reader-background-regression.ps1 -Serial <serial>`
+    and `./gradlew.bat :app:compileReleaseKotlin --console=plain`
+  - Bug in `core`: reproduce with a regression test first.
+- A check you can't run: name the reason; never report it as passed.
 
-Параметр `<test-emulator>` замени реальным serial из `adb devices`; не копируй исторический serial без проверки. ADB-сценарии меняют данные демо-книги и настройки тестового профиля. Перед ними собери и установи свежий APK; подробности в development.md. Если проверка недоступна, укажи конкретную причину и не объявляй её успешной.
-
-## Стиль и сопровождение
-
-- Следуй существующим Kotlin-паттернам; сначала ищи похожую реализацию. Не добавляй фреймворк или обновление зависимостей без необходимости для задачи.
-- Комментарии объясняют причины и ограничения. Не копируй очевидный код в документацию и не составляй полный ручной каталог символов.
-- Добавляй тесты для значимых сценариев и регрессий; не создавай тесты, повторяющие реализацию, ради количества.
-- Изменение поведения сопровождается обновлением соответствующего справочника; новое значимое архитектурное решение — коротким ADR.
-- Не коммить `local.properties`, `.tools/`, `.gradle/`, `**/build/`, `artifacts/`, личные книги, ключи и токены. Сохраняй лицензии зависимостей.
-- Не требуй установки персональных skills/MCP для обычной работы. Проверяй актуальную документацию библиотеки именно для закреплённой версии, если её API неясен.
-
-## Критерии завершения
-
-Поведение соответствует задаче; затронутые сценарии проверены либо ограничения названы; чужие изменения сохранены; diff не содержит случайных артефактов; документация соответствует результату. В отчёте различай локальные проверки, исторические результаты и ещё не выполненный CI/проверки устройства.
+## Project rules
+- `core` must not depend on Android, Compose or Readium; Android adapters stay in `app`.
+- Keep `library.json`, `reader.xml`, JSON Locator and book IDs compatible. Schema change needs a migration
+  described in `.agents/rules/storage.md` and a test on existing data.
+- HTTPS only, redirects included. Limits stay: book/unpacked FB2 50 MiB, OPDS feed 5 MiB, FB2 depth 128,
+  no DTD or external XML entities. Don't relax them to make a sample pass.
+- Coroutine cancellation is not a user error. No blocking I/O on the UI thread.
+- Publish, push, release and deleting user data only on explicit user request.
+- Behaviour change → update the affected `AGENTS.md`/rule and, if user-visible, `README.md` (Russian).
+  Long rationale → `.agents/decisions/NNNN-title.md` + one line in `.agents/DECISIONS.md`.
+- Don't commit `local.properties`, `.tools/`, `.gradle/`, `**/build/`, `artifacts/`, personal books, keys.
+- Reader/viewport/lifecycle invariants: `.agents/rules/reader-invariants.md`.

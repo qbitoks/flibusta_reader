@@ -16,7 +16,12 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-12 | ignore | Tool ignore files generated from .agents/ignore.md; .cursorignore = secrets only | hand-kept mirrors drifted; hard blocks hid lockfiles
 2026-10-12 | tooling | agent-lint runs from .githooks/pre-commit and CI | PowerShell has no sh on PATH, but git runs hooks with its own sh
 2026-10-12 | process | finish-task inlined into root AGENTS.md §5 | needed on every task: saves a read and removes a duplicate
-2026-10-12 | repo | Adopted agent_template; Russian AGENTS.md contract moved into root AGENTS.md (English) + .agents/rules/reader-invariants.md | one entry point for all agents | docs/README.md
-2026-10-12 | docs | Human docs stay in docs/ (Russian); ADRs stay in docs/adr/, DECISIONS links them | existing references and history kept
+2026-10-12 | repo | Adopted agent_template; Russian AGENTS.md contract moved into root AGENTS.md (English) + .agents/rules/reader-invariants.md | one entry point for all agents
+2026-10-12 | docs | docs/ dissolved: module AGENTS.md (core, app, scripts) + .agents/rules (storage, release) + STATE | one doc system, loaded on demand
+2026-10-12 | docs | Dated reports, review, plans/specs moved to .agents/archive/ | history, not instructions; kept out of search
+2026-10-12 | docs | README.md stays the Russian user-facing product description | humans read it; agents read AGENTS.md
+2026-10-12 | reader | Readium 3.0.0 is the EPUB navigator | no own renderer | .agents/decisions/0001-readium-navigator.md
+2026-10-12 | core | FB2/FB2.ZIP converted locally to EPUB 3 | one reading path | .agents/decisions/0002-local-fb2-to-epub.md
+2026-10-12 | storage | library.json + SharedPreferences, positions as Locator JSON, .part→EPUB→index | no backend | .agents/decisions/0003-local-library-and-locator.md
 2026-10-12 | cursor | Removed .cursor/rules/project.mdc | Cursor reads AGENTS.md natively
 2026-10-12 | git | No `* text=auto eol=lf` from the template | avoid renormalizing the whole repo; existing .gitattributes kept

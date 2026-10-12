@@ -1,7 +1,2 @@
-# Инструкции проекта
-
-Общий контракт для всех coding agents находится в корневом AGENTS.md:
-
-@AGENTS.md
-
-Если импорт недоступен, прочитай [AGENTS.md](AGENTS.md) вручную перед работой. Подробные справочники выбирай по задаче через [docs/README.md](docs/README.md). Не дублируй общие правила в этом файле.
+@./AGENTS.md
+<!-- Gemini CLI entry point: rules live in AGENTS.md. Do not add rules here. -->

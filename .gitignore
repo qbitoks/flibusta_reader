@@ -5,3 +5,23 @@ local.properties
 .idea/
 *.iml
 artifacts/
+
+# Secrets: every line of the ignore-secrets block in .agents/ignore.md (agent-lint checks it)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets.*
+
+# Agent scratch and per-machine state
+.agents/tmp/
+.claude/settings.local.json
+CLAUDE.local.md
+.aider*
+!.aiderignore
+!.aider.conf.yml

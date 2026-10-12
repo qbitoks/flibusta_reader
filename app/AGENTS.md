@@ -5,7 +5,7 @@ Pure logic belongs in `core/`. Reader/storage invariants: `.agents/rules/reader-
 
 ## Entry points
 - `app/src/main/kotlin/net/flibustareader/MainActivity.kt` — library, catalog, search, cards, system import, launching operations
-- `app/src/main/kotlin/net/flibustareader/CatalogState.kt` — ViewModel: books, catalog results, UI state; runs `perform` jobs
+- `app/src/main/kotlin/net/flibustareader/CatalogState.kt` — ViewModel: books, catalog results, UI state; its scope runs MainActivity `perform` jobs
 - `app/src/main/kotlin/net/flibustareader/BookRepository.kt` — sources, HTTP, import/convert, library index, startup cleanup
 - `app/src/main/kotlin/net/flibustareader/ReaderActivity.kt` — Readium navigator, lifecycle, geometry, Locator, typography anchor, HUD data
 - `app/src/main/kotlin/net/flibustareader/ReaderChrome.kt` — Compose reader panels, indicators, palettes, settings sheet
@@ -21,7 +21,7 @@ Pure logic belongs in `core/`. Reader/storage invariants: `.agents/rules/reader-
 - Reading: ReaderActivity → AssetRetriever/PublicationOpener → EpubNavigatorFactory → EpubNavigatorFragment.
 
 ## Conventions
-- Network/import/demo jobs: `perform` + `runInterruptible(Dispatchers.IO)` in `viewModelScope`, not the Activity.
+- Network/import/demo jobs: `MainActivity.perform` → `runInterruptible(Dispatchers.IO)` in `CatalogState.viewModelScope`.
 - `download` resolves the OPDS link path+query against `downloadBase` on purpose (separate text server);
   don't turn it into downloading from any host named in the catalog. Download limit 50 MiB, to cache temp file.
 - ZIP: take the first FB2 entry; never extract archive paths into app storage. EPUB check is only

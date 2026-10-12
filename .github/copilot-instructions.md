@@ -1,3 +1,1 @@
-# Инструкции проекта
-
-Перед работой прочитай корневой [AGENTS.md](../AGENTS.md) и следуй общему контракту проекта. Подробные справочники выбирай по задаче через [docs/README.md](../docs/README.md). Не дублируй общие правила в этом файле.
+Rules live in `AGENTS.md` (repo root) and in the nested `AGENTS.md` of each area. Read and follow them; do not add rules here.

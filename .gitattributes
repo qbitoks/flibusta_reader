@@ -2,3 +2,7 @@
 *.yml text eol=lf
 gradlew text eol=lf
 *.bat text eol=crlf
+*.sh text eol=lf
+.githooks/* text eol=lf
+# Append-only log: parallel branches append at the same place; keep both sides instead of conflicting
+.agents/DECISIONS.md merge=union
