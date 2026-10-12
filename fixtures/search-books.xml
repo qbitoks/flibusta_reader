@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <feed xmlns="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/terms/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/" xmlns:opds="http://opds-spec.org/2010/catalog"> <id>tag:search:books:Потоп:</id>
+ <title>Результат поиска</title>
+ <updated>2026-10-12T09:54:19+02:00</updated>
+ <icon>/favicon.ico</icon>
+ <link href="/opds-opensearch.xml" rel="search" type="application/opensearchdescription+xml" />
+ <link href="/opds/search?searchTerm={searchTerms}" rel="search" type="application/atom+xml" />
+ <link href="/opds" rel="start" type="application/atom+xml;profile=opds-catalog" />
+ <link href="/opds/search?searchTerm=%D0%9F%D0%BE%D1%82%D0%BE%D0%BF" rel="up" type="application/atom+xml;profile=opds-catalog" />
+ <link href="/opds/search?searchType=books&amp;searchTerm=%D0%9F%D0%BE%D1%82%D0%BE%D0%BF&amp;pageNumber=1" rel="next" type="application/atom+xml;profile=opds-catalog" />
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>10 тысяч лет русской истории. От Потопа до Крещения Руси</title>
+ <author> <name>Павлищева Наталья Павловна</name>
+ <uri>/a/77804</uri>
+</author>
+ <link href="/opds/author/77804" rel="related" type="application/atom+xml" title="Все книги автора Павлищева Наталья Павловна" />
+ <category term="Попаданцы" label="Попаданцы" />
+ <category term="Публицистика" label="Публицистика" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2011</dc:issued>
+ <content type="text/html">
+    &lt;p class=book&gt;НОВАЯ книга от автора бестселлеров «Княгиня Ольга» и «Вещий Олег»! Сенсационное переосмысление русской истории, переворачивающее все привычные представления о прошлом и неопровержимо доказывающее, что наша история насчитывает не 1200–1500 лет, как утверждают учебники, а минимум в десять раз больше! Просто «официальная наука» предпочитает не замечать или сознательно замалчивает неудобные факты, которые не вписываются в «общепринятые» концепции. А таких фактов за последние годы накопилось предостаточно.&lt;/p&gt;
+    &lt;p class=book&gt;Наперекор негласной цензуре и «профессиональным» табу, основываясь не на пересказе замшелых «научных» мифов, а на новейших данных археологии, климатологии и даже генетики, эта книга предлагает новый, революционный взгляд на истоки Древней Руси и глубочайшие корни русского народа, разгадывает главные тайны нашей истории.&lt;/p&gt;
+   &lt;br/&gt;Год издания: 2011&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 1001 Kb&lt;br/&gt;Скачиваний: 8771&lt;br/&gt;</content>
+ <link href="/i/20/241020/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/20/241020/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/20/241020/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/20/241020/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/241020/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/241020/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/241020/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/241020/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/241020/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/241020/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/241020" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:a5e17de02744857bfe8640c4748712e2</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>«Непотопляемый авианосец» Крым. 1945–2014</title>
+ <author> <name>Широкорад Александр Борисович</name>
+ <uri>/a/20311</uri>
+</author>
+ <link href="/opds/author/20311" rel="related" type="application/atom+xml" title="Все книги автора Широкорад Александр Борисович" />
+ <category term="Военная история" label="Военная история" />
+ <category term="Военное дело, военная техника и вооружение" label="Военное дело, военная техника и вооружение" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2014</dc:issued>
+ <content type="text/html">
+    &lt;p class=&quot;book&quot;&gt;&lt;img border=0 style=&#039;spacing 9px;&#039; src=&quot;/i/20/393720/i_001.png&quot;&gt;&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;Тот, кто владеет Крымом, владеет Черным морем. Это прекрасно понимали византийцы, генуэзцы, турки, последовательно владевшие полуостровом. В 1783 г. императрица Екатерина II повелела присоединить Крым к России.&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;Крым стал одновременно цитаделью России и курортной зоной. Там располагались практически все базы Черноморского флота и морской авиации. Чуть ли не половина авиационных и ракетных полков СССР также находились в Крыму.&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;Что представлял собой военный Крым в 70–80-х годах XX века? Как проходил раздел флота, авиации, баз и полигонов между Российской Федерацией и Украиной в середине 1990-а годов?&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;Как повлияло на военную инфраструктуру полуострова 23-летнее украинское правление?&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;Почему у России не было иного выхода, нежели помочь населению Крыма весной 2014 г.?&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;Об этом и многом другом рассказывается в книге Александра Широкорада «“Непотопляемый авианосец” Крым. 1945–2014».&lt;/p&gt;
+   &lt;br/&gt;Год издания: 2014&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 4535 Kb&lt;br/&gt;Скачиваний: 6564&lt;br/&gt;</content>
+ <link href="/i/20/393720/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/20/393720/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/20/393720/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/20/393720/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/393720/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/393720/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/393720/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/393720/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/393720/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/393720/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/393720" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:9dfb66bcd9818d95d5cf81464c453718</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>«Синано» - потопление японского секретного суперавианосца</title>
+ <author> <name>Инрайт Джозеф</name>
+ <uri>/a/4990</uri>
+</author>
+ <link href="/opds/author/4990" rel="related" type="application/atom+xml" title="Все книги автора Инрайт Джозеф" />
+ <category term="Биографии и мемуары: прочее" label="Биографии и мемуары: прочее" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>5</dc:issued>
+ <content type="text/html">
+        &lt;p class=book&gt;В публицистической книге Джозефа Инрайта рассказывается о потоплении в конце второй мировой войны американской подводной лодкой, которой командовал автор, японского суперавианосца «Синано». &lt;/p&gt;
+        &lt;p class=book&gt;Автор книги Джозеф Инрайт родился в 1911 году. В 1933 году он окончил Военно-морское училище в Аннаполисе и стал кадровым морским офицером. В годы Второй мировой войны коммандер (капитан 2 ранга) Инрайт добился выдающегося успеха, о котором мечтает каждый моряк, - подводная лодка «Арчер-Фиш», которой он командовал, потопила самый крупный для того времени авианосец новейшей конструкции «Синано». За потопление авианосца Инрайт был награжден Крестом ВМС. &lt;/p&gt;
+      &lt;br/&gt;Перевод: Смаль Анатолий Г&lt;br/&gt;Год издания: 5&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 511 Kb&lt;br/&gt;Скачиваний: 2082&lt;br/&gt;</content>
+ <link href="/b/93533/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/93533/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/93533/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/93533/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/93533/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/93533/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/93533" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:135d81925e2ce3efc7df78592a35d10a</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>«Синано» - потопление японского секретного суперавианосца.</title>
+ <author> <name>Инрайт Джозеф</name>
+ <uri>/a/4990</uri>
+</author>
+ <link href="/opds/author/4990" rel="related" type="application/atom+xml" title="Все книги автора Инрайт Джозеф" />
+ <category term="Документальная литература" label="Документальная литература" />
+ <category term="История" label="История" />
+ <category term="Проза о войне" label="Проза о войне" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>1991</dc:issued>
+ <content type="text/html">
+&lt;p class=book&gt;В публицистической книге Джозефа Инрайта рассказывается о потоплении в конце второй мировой войны американской подводной лодкой, которой командовал автор, японского суперавианосца «Синано».&lt;/p&gt;
+&lt;br/&gt;Перевод: Смаль Анатолий Г&lt;br/&gt;Год издания: 1991&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 501 Kb&lt;br/&gt;Скачиваний: 2429&lt;br/&gt;</content>
+ <link href="/i/10/97410/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/10/97410/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/10/97410/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/10/97410/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/97410/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/97410/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/97410/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/97410/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/97410/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/97410/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/97410" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:a54f758f8176c5a83fb26be9b57f133c</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Атлантида. Мир до потопа</title>
+ <author> <name>Доннелли Игнатиус Лойола</name>
+ <uri>/a/82977</uri>
+</author>
+ <link href="/opds/author/82977" rel="related" type="application/atom+xml" title="Все книги автора Доннелли Игнатиус Лойола" />
+ <category term="Альтернативные науки и научные теории" label="Альтернативные науки и научные теории" />
+ <category term="История" label="История" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>1998</dc:issued>
+ <content type="text/html">
+    &lt;p class=&quot;book&quot;&gt;Атлантида… Таинственная страна, исчезнувшая в пучине океана. Какого именно? И почему? И была ли он вообще? Вот неполный перечень вопросов, возникающих при мысли об этой удивительной «Земле Богов».&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;Эта книга, написанная американским юристом и политиком, является одной из попыток доказать существование Атлантиды и описать ее быт и историю, опираясь на литературные, исторические и археологические источники.&lt;/p&gt;
+    &lt;br&gt;
+    &lt;blockquote class=book&gt;
+     &lt;p class=&quot;book&quot;&gt;[Адаптировано для AlReader]&lt;/p&gt;
+    &lt;/blockquote&gt;
+    &lt;br&gt;
+    &lt;p class=&quot;book&quot;&gt;&lt;img border=0 style=&#039;spacing 9px;&#039; src=&quot;i_001.png&quot;&gt;&lt;/p&gt;
+   &lt;br/&gt;Перевод: Альбедиль А. О.&lt;br/&gt;Год издания: 1998&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 7529 Kb&lt;br/&gt;Скачиваний: 2371&lt;br/&gt;</content>
+ <link href="/i/94/544894/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/94/544894/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/94/544894/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/94/544894/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/544894/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/544894/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/544894/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/544894/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/544894/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/544894/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/544894" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:f1a54dcccd2bad6cfeb6996d0f8ee27f</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Битва Богов и Людей. Гнев Небес. Потоп</title>
+ <author> <name>Мисечко Владимир Александрович</name>
+ <uri>/a/227477</uri>
+</author>
+ <link href="/opds/author/227477" rel="related" type="application/atom+xml" title="Все книги автора Мисечко Владимир Александрович" />
+ <category term="Поэзия" label="Поэзия" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <content type="text/html">
+    &lt;p class=&quot;book&quot;&gt;Сборник &quot;Битва Богов и Людей&quot;. Сборник мифических стихов.&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;В этом сборнике собраны мифы, легенды и сказания о вечном противостоянии Богов и людей. Когда вечный спор, что тлел в сердцах, Разжёгся пламенем, и гнев небес Низвергся с высот, в смертных глазах Зажёгся страх, предвестье грозных мест. Боги, чьи лики в молниях сверкали, И люди, чьи души горели в борьбе, Сошлись в битве, что мир расколола, И каждый искал свою правду в судьбе.&lt;/p&gt;
+   &lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 44 Kb&lt;br/&gt;Скачиваний: 187&lt;br/&gt;</content>
+ <link href="/b/852846/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/852846/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/852846/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/852846/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/852846/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/852846/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/852846" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:9f0af2da70f13a43456ccfce24713fd1</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>В потопе времени</title>
+ <author> <name>Олдисс Брайан Уилсон</name>
+ <uri>/a/19522</uri>
+</author>
+ <link href="/opds/author/19522" rel="related" type="application/atom+xml" title="Все книги автора Олдисс Брайан Уилсон" />
+ <category term="Научная фантастика" label="Научная фантастика" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <content type="text/html">Техногенная катастрофа с хроногазом грозит отбросить человечество назад в прошлое.&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 32 Kb&lt;br/&gt;Скачиваний: 3494&lt;br/&gt;</content>
+ <link href="/b/736637/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/736637/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/736637/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/736637/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/736637/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/736637/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/736637" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:192b2d6b0cec2298509ef92a502a051f</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Великий потоп. Мифы и реальность</title>
+ <author> <name>Кондратов Александр Михайлович</name>
+ <uri>/a/29709</uri>
+</author>
+ <link href="/opds/author/29709" rel="related" type="application/atom+xml" title="Все книги автора Кондратов Александр Михайлович" />
+ <category term="Научная литература" label="Научная литература" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>1982</dc:issued>
+ <content type="text/html">
+    &lt;p class=book&gt;Библейской легенде о «всемирном потопе» когда-то верили безоговорочно… У различных народов мира существуют рассказы о катастрофическом нашествии вод. Имеется ли рациональное зерно в легендах о потопе? Что говорит современная наука о возможности «всемирного потопа» — в прошлом, настоящем и будущем? Ответ на эти вопросы вы найдете в новой книге ленинградского писателя и ученого Александра Кондратова «Великий потоп: мифы и реальность».&lt;/p&gt;
+    &lt;br&gt;
+    &lt;p class=book&gt;Александр Кондратов — действительный член Географического общества, кандидат филологических наук, член Научного совета по кибернетике АН СССР. Его перу принадлежит свыше 60 научных работ и 32 книги, переведенные на двадцать языков мира. Особым успехом у советских и зарубежных читателей пользуется серия книг А. Кондратова, посвященная связям между историей человечества и историей океанов: «Тайны трех океанов», «Атлантика без Атлантиды», «Адрес — Лемурия?», «Следы — на шельфе».&lt;/p&gt;
+   &lt;br/&gt;Год издания: 1982&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 1196 Kb&lt;br/&gt;Скачиваний: 3324&lt;br/&gt;</content>
+ <link href="/i/36/222036/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/36/222036/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/36/222036/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/36/222036/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/222036/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/222036/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/222036/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/222036/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/222036/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/222036/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/222036" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:a79e63a6e75df02694a90e0dea9e5f2f</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Виктор Суворов врет! [Потопить «Ледокол»]</title>
+ <author> <name>Верхотуров Дмитрий Николаевич</name>
+ <uri>/a/60268</uri>
+</author>
+ <link href="/opds/author/60268" rel="related" type="application/atom+xml" title="Все книги автора Верхотуров Дмитрий Николаевич" />
+ <category term="История" label="История" />
+ <category term="Публицистика" label="Публицистика" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2013</dc:issued>
+ <content type="text/html">
+    &lt;p class=book&gt;За двадцать лет, прошедших с первого издания суворовского «Ледокола», этот псевдоним стал главным военно-историческим «брендом» и «символом веры» «либеральной общественности» — сколько бы историки-«антирезунисты» ни разоблачали Виктора Суворова как провокатора на службе заклятых врагов России, сколько бы ни ловили его на вопиющих ошибках, передергиваниях и подтасовках фактов, в ответ слышишь: мол, это всё частности и тонкости, но в главном-то Суворов прав!&lt;/p&gt;
+    &lt;p class=book&gt;Эта книга не разменивается на частности, не копается в мелочах, не занимается утомительными подсчетами солдатских сапог и заклепок на броне — а выбивает центральную опору суворовской лжи, поражает «Ледокол» ниже ватерлинии и отправляет его на свалку истории. Как именно? Откройте это сенсационное историческое расследование! Пусть счет анти-суворовских публикаций идет уже на десятки, если не на сотни, — такого вы еще точно не читали!&lt;/p&gt;
+   &lt;br/&gt;Год издания: 2013&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 936 Kb&lt;br/&gt;Скачиваний: 5279&lt;br/&gt;</content>
+ <link href="/i/33/321233/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/33/321233/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/33/321233/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/33/321233/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/321233/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/321233/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/321233/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/321233/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/321233/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/321233/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/321233" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:fa72cbdcdfcba2279390540885791d5d</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Всемирный потоп [Великая война и переустройство мирового порядка, 1916–1931 годы] [litres]</title>
+ <author> <name>Туз Адам</name>
+ <uri>/a/218114</uri>
+</author>
+ <link href="/opds/author/218114" rel="related" type="application/atom+xml" title="Все книги автора Туз Адам" />
+ <category term="История" label="История" />
+ <category term="Образовательная, прикладная, научно-популярная литература" label="Образовательная, прикладная, научно-популярная литература" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2017</dc:issued>
+ <content type="text/html">&lt;p class=&quot;book&quot;&gt;Спустя сто лет после начала Первой мировой войны йельский историк Адам Туз предлагает совершенно новый взгляд на нее, сосредоточивая внимание на заключительных годах конфликта и последствиях вплоть до Великой депрессии. В этот неспокойный период надежды на долгий мир и либеральный интернационализм столкнулись с насильственными потрясениями и возникновением тоталитарных режимов. Тогда же произошло рождение нового мирового порядка, в котором все крупные державы, как победившие, так и проигравшие в войне, вынуждены были связать свою судьбу с Соединенными Штатами, ведущей экономической силой мира.&lt;/p&gt;
+&lt;br/&gt;Перевод: Гуськов Андрей Геннадьевич&lt;br/&gt;Год издания: 2017&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 4123 Kb&lt;br/&gt;Скачиваний: 5217&lt;br/&gt;</content>
+ <link href="/i/94/556294/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/94/556294/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/94/556294/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/94/556294/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/556294/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/556294/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/556294/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/556294/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/556294/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/556294/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/556294" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:c6d4431143c0a318fa9c1af5909b27cf</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Всемирный потоп [ёфицировано]</title>
+ <author> <name>Туз Адам</name>
+ <uri>/a/218114</uri>
+</author>
+ <link href="/opds/author/218114" rel="related" type="application/atom+xml" title="Все книги автора Туз Адам" />
+ <category term="Военная документалистика и аналитика" label="Военная документалистика и аналитика" />
+ <category term="История" label="История" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2017</dc:issued>
+ <content type="text/html">
+    &lt;p class=&quot;book&quot;&gt;÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;Спустя сто лет после начала Первой мировой войны йельский историк Адам Туз предлагает совершенно новый взгляд на неё, сосредоточивая внимание на заключительных годах конфликта и последствиях вплоть до Великой депрессии. В этот неспокойный период надежды на долгий мир и либеральный интернационализм столкнулись с насильственными потрясениями и возникновением тоталитарных режимов. Тогда же произошло рождение нового мирового порядка, в котором все крупные державы, как победившие, так и проигравшие в войне, вынуждены были связать свою судьбу с Соединёнными Штатами, ведущей экономической силой мира.&lt;/p&gt;
+    &lt;p class=&quot;book&quot;&gt;÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷&lt;/p&gt;
+   &lt;br/&gt;Перевод: Гуськов Андрей Геннадьевич&lt;br/&gt;Год издания: 2017&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 3671 Kb&lt;br/&gt;Скачиваний: 1285&lt;br/&gt;</content>
+ <link href="/i/21/818521/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/21/818521/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/21/818521/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/21/818521/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/818521/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/818521/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/818521/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/818521/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/818521/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/818521/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/818521" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:45dac3a2c88e00d704831d1b562285b0</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Всемирный потоп. Великая война и переустройство мирового порядка 1916-1931</title>
+ <author> <name>Туз Адам</name>
+ <uri>/a/218114</uri>
+</author>
+ <link href="/opds/author/218114" rel="related" type="application/atom+xml" title="Все книги автора Туз Адам" />
+ <category term="История" label="История" />
+ <dc:language>ru</dc:language>
+ <dc:format>djvu</dc:format>
+ <dc:issued>2019</dc:issued>
+ <content type="text/html">    &lt;p class=&quot;book&quot;&gt;Спустя сто лет после начала Первой мировой войны йельский историк Адам Туз предлагает совершенно новый взгляд на нее, сосредоточивая внимание на заключительных годах конфликта и последствиях вплоть до Великой депрессии. В этот неспокойный период надежды на долгий мир и либеральный интернационализм столкнулись с насильственными потрясениями и возникновением тоталитарных режимов. Тогда же произошло рождение нового мирового порядка, в котором все крупные державы, как победившие, так и проигравшие в войне, вынуждены были связать свою судьбу с Соединенными Штатами, ведущей экономической силой мира.　&lt;/p&gt;
+    &lt;br&gt;
+   &lt;br/&gt;Перевод: Гуськов Андрей Геннадьевич&lt;br/&gt;Год издания: 2019&lt;br/&gt;Формат: djvu&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 7617 Kb&lt;br/&gt;Скачиваний: 1736&lt;br/&gt;</content>
+ <link href="/i/77/555677/cover.jpg_0" rel="http://opds-spec.org/image" type="image/jpg_0" />
+ <link href="/i/77/555677/cover.jpg_0" rel="x-stanza-cover-image" type="image/jpg_0" />
+ <link href="/i/77/555677/cover.jpg_0" rel="http://opds-spec.org/thumbnail" type="image/jpg_0" />
+ <link href="/i/77/555677/cover.jpg_0" rel="x-stanza-cover-image-thumbnail" type="image/jpg_0" />
+ <link href="/b/555677/download" rel="http://opds-spec.org/acquisition/open-access" type="application/djvu" />
+ <link href="/b/555677" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:ca6a512fdb300c65e3f472ee7bbccffe</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Всемирный потоп. Мистический закон четырех шестерок</title>
+ <author> <name>Мулдашев Эрнст Рифгатович</name>
+ <uri>/a/19802</uri>
+</author>
+ <link href="/opds/author/19802" rel="related" type="application/atom+xml" title="Все книги автора Мулдашев Эрнст Рифгатович" />
+ <category term="Альтернативные науки и научные теории" label="Альтернативные науки и научные теории" />
+ <category term="Публицистика" label="Публицистика" />
+ <category term="Религия, религиозная литература" label="Религия, религиозная литература" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2016</dc:issued>
+ <content type="text/html">
+        &lt;p class=&quot;book&quot;&gt;Автор – всемирно известный офтальмолог и путешественник – делится в этой книге своим открытием – законом «четырех шестерок», которому подчиняется наша планета. Автор приходит к выводу, что во время апокалипсисов ось Земли поворачивается на 6666 км, «стряхивая» со своей поверхности заблудшее человечество. Более того, выясняется, что основные монументы древности и загадочные места планеты отстоят друг от друга тоже на 6666 км. Приводятся математические расчеты, из которых явствует, что древние люди не просто знали о законе «четырех шестерок», но и использовали силу точек «6666» Земли для своей жизни.&lt;/p&gt;
+        &lt;p class=&quot;book&quot;&gt;Книга написана для широкого круга читателей, хотя по своей сути глубокого научна.&lt;/p&gt;
+        &lt;p class=&quot;book&quot;&gt;1-е издание, дополненное.&lt;/p&gt;
+      &lt;br/&gt;Год издания: 2016&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 50976 Kb&lt;br/&gt;Скачиваний: 3461&lt;br/&gt;</content>
+ <link href="/i/88/482088/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/88/482088/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/88/482088/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/88/482088/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/482088/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/482088/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/482088/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/482088/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/482088/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/482088/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/482088" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:58ff904bf795515081649921d831cbb6</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Всемирный потоп. Миф, легенда или реальность?</title>
+ <author> <name>Головин Сергей Леонидович</name>
+ <uri>/a/90329</uri>
+</author>
+ <link href="/opds/author/90329" rel="related" type="application/atom+xml" title="Все книги автора Головин Сергей Леонидович" />
+ <category term="Религия, религиозная литература" label="Религия, религиозная литература" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>1999</dc:issued>
+ <content type="text/html">Год издания: 1999&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 5614 Kb&lt;br/&gt;Скачиваний: 2135&lt;br/&gt;</content>
+ <link href="/b/300080/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/300080/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/300080/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/300080/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/300080/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/300080/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/300080" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:1fd9cbc2ed5cbdd3fac4fc4057a85657</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Всемирный потоп: Как это было и к чему привело [Исследование исторического периода допотопного времени]</title>
+ <author> <name>Леднев Юрий Иванович</name>
+ <uri>/a/110293</uri>
+</author>
+ <link href="/opds/author/110293" rel="related" type="application/atom+xml" title="Все книги автора Леднев Юрий Иванович" />
+ <category term="Геология и география" label="Геология и география" />
+ <category term="История" label="История" />
+ <category term="Религиоведение" label="Религиоведение" />
+ <category term="Философия" label="Философия" />
+ <dc:language>ru</dc:language>
+ <dc:format>pdf</dc:format>
+ <dc:issued>2012</dc:issued>
+ <content type="text/html">Одной из основополагающих тем во многих религиозных учениях является история о «великом потопе», где всѐ человечество, за свои сознательные «прегрешенья», оказалось на грани полного уничтожения. Например, библейская история повествует нам о страшной всеобъемлющей катастрофе, представлявшей собой мощное наводнение, приведшее к гибели практически всех людей на Земле.&lt;br/&gt;Год издания: 2012&lt;br/&gt;Формат: pdf&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 1122 Kb&lt;br/&gt;Скачиваний: 1468&lt;br/&gt;</content>
+ <link href="/b/319458/download" rel="http://opds-spec.org/acquisition/open-access" type="application/pdf" />
+ <link href="/b/319458" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:3923831ac52a525f82f7cdc3d12d7a94</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Вся история Петербурга: от потопа и варягов до Лахта-центра и гастробаров [litres]</title>
+ <author> <name>Лурье Лев Яковлевич</name>
+ <uri>/a/136409</uri>
+</author>
+ <link href="/opds/author/136409" rel="related" type="application/atom+xml" title="Все книги автора Лурье Лев Яковлевич" />
+ <author> <name>Элькина Мария Борисовна</name>
+ <uri>/a/326843</uri>
+</author>
+ <link href="/opds/author/326843" rel="related" type="application/atom+xml" title="Все книги автора Элькина Мария Борисовна" />
+ <category term="История" label="История" />
+ <category term="Скульптура и архитектура" label="Скульптура и архитектура" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2026</dc:issued>
+ <content type="text/html">&lt;p class=&quot;book&quot;&gt;НЕЗАКОННОЕ ПОТРЕБЛЕНИЕ НАРКОТИЧЕСКИХ СРЕДСТВ, ПСИХОТРОПНЫХ ВЕЩЕСТВ, ИХ АНАЛОГОВ ПРИЧИНЯЕТ ВРЕД ЗДОРОВЬЮ, ИХ НЕЗАКОННЫЙ ОБОРОТ ЗАПРЕЩЕН И ВЛЕЧЕТ УСТАНОВЛЕННУЮ ЗАКОНОДАТЕЛЬСТВОМ ОТВЕТСТВЕННОСТЬ.&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;Первая книга о всей истории Санкт-Петербурга, которая будет интересна и понятна каждому, влюбленному в этот город!&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;«Вся история Петербурга. От потопа и варягов до Лахта-центра и гастробаров» охватывает все этапы развития города:&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;• ранние поселения на берегах Невы;&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;• Петербург как столицу империи;&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;• индустриализацию XIX века;&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;• советский Ленинград;&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;• и современный многогранный мегаполис.&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;Авторы умело объединили в своем повествовании политические события и преобразования с важными культурными вехами и социальными изменениями, а также градостроительные решения и архитектурные стили.&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;• Достаточно ли зарабатывал Доменико Трезини?&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;• Где одевались ленинградские модники в 1970‑е годы?&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;• Что есть в городе такого, чего нет ни в одном другом населенном пункте земного шара?&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;Книга написана живо и увлеченно, предоставляя не только глубокий анализ прошлого города, но и его потенциального будущего. А цветные иллюстрации к каждой главе позволят еще больше погрузиться в трансформации, происходившие с Петербургом на протяжении веков.&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;&lt;b&gt;[b]&lt;/b&gt;&lt;/p&gt;
+&lt;br/&gt;Год издания: 2026&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 7564 Kb&lt;br/&gt;Скачиваний: 2552&lt;br/&gt;</content>
+ <link href="/i/38/859038/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/38/859038/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/38/859038/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/38/859038/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/859038/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/859038/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/859038/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/859038/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/859038/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/859038/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/859038" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:dd4226ff865279438ccaab2883eb3018</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Второй потоп</title>
+ <author> <name>Шарапов Кирилл Юрьевич</name>
+ <uri>/a/131059</uri>
+</author>
+ <link href="/opds/author/131059" rel="related" type="application/atom+xml" title="Все книги автора Шарапов Кирилл Юрьевич" />
+ <category term="Боевая фантастика и фэнтези" label="Боевая фантастика и фэнтези" />
+ <category term="Самиздат, сетевая литература" label="Самиздат, сетевая литература" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2015</dc:issued>
+ <content type="text/html">
+    &lt;p class=&quot;book&quot;&gt;Что делать, если привычный мир рухнул? Что делать, если дом, квартира, быт, друзья перестали существовать в одно мгновение? И ладно бы, если все это произошло по вине глобальной катастрофы, ядерного взрыва или ранее неведомого поветрия, но… Но главный герой по случайному стечению обстоятельств купил компьютерную игру «Апокалипсис» и апокалипсис ворвался в его жизнь. Теперь Стасу предстоит самому создать свой мир, свое будущее, свой дом и быт.&lt;/p&gt;
+   &lt;br/&gt;Год издания: 2015&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 943 Kb&lt;br/&gt;Скачиваний: 10689&lt;br/&gt;</content>
+ <link href="/b/414993/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/414993/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/414993/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/414993/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/414993/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/414993/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/414993" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:803be42f23812891aa780449be162cc8</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Второй потоп</title>
+ <author> <name>Сервисс Гарретт Патмен</name>
+ <uri>/a/265046</uri>
+</author>
+ <link href="/opds/author/265046" rel="related" type="application/atom+xml" title="Все книги автора Сервисс Гарретт Патмен" />
+ <category term="Научная фантастика" label="Научная фантастика" />
+ <category term="Социально-психологическая фантастика" label="Социально-психологическая фантастика" />
+ <category term="Фантастика" label="Фантастика" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2022</dc:issued>
+ <content type="text/html">&lt;p class=&quot;book&quot;&gt;Роман &quot;Второй потом&quot; впервые был опубликован 110 лет назад в 1912 году. Автором романа является Гарретт Патнем Сервисс – американский астроном-популяризатор и один из зачинателей американской журнальной научной фантастики.&lt;/p&gt;
+&lt;p class=&quot;book&quot;&gt;Действие в футуристическом романе-катастрофе «Второй потоп» происходит около 2000 года. В XX веке мир прошел через гонку вооружений и пришел к необходимости ограничить международными соглашениями наиболее разрушительные из них – например, подводные лодки и ковровые бомбардировки. Развивается генетика. Социальные потрясения уничтожили власть глобальных монополий с их тягой к войнам. Ученый Космо Версаль предсказывает грандиозную катастрофу: Земля приближается к дрейфующей в космосе «водяной туманности». Когда они столкнутся, уровень океанов поднимется сразу на несколько километров и цивилизация погибнет. Ученый убеждает одного из капиталистов вложиться в создание современного «ковчега», в котором могли бы переждать бедствие хотя бы несколько тысяч человек…&lt;/p&gt;
+&lt;br/&gt;Перевод: Балонов Денис Геннадьевич&lt;br/&gt;Год издания: 2022&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 3960 Kb&lt;br/&gt;Скачиваний: 1238&lt;br/&gt;</content>
+ <link href="/i/72/688872/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/72/688872/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/72/688872/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/72/688872/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/688872/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/688872/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/688872/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/688872/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/688872/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/688872/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/688872" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:c6b9bb2f15b899dca8060ab0bca02710</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Год потопа [The Year of the Flood (aka God&#039;s Gardeners)]</title>
+ <author> <name>Этвуд Маргарет</name>
+ <uri>/a/3035</uri>
+</author>
+ <link href="/opds/author/3035" rel="related" type="application/atom+xml" title="Все книги автора Этвуд Маргарет" />
+ <category term="Социально-психологическая фантастика" label="Социально-психологическая фантастика" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2011</dc:issued>
+ <link href="/opds/sequencebooks/22675" rel="related" type="application/atom+xml" title="Все книги серии &quot;Трилогия Беззумного Аддама&quot;" />
+ <content type="text/html">
+    &lt;p class=book&gt;Вот уже более тридцати лет выдающаяся канадская писательница Маргарет Этвуд создает работы поразительной оригинальности и глубины, неоднократно отмеченные престижными литературными наградами, в числе которых Букеровская премия (за «Слепого убийцу»), Премия Артура Кларка (за «Рассказ Служанки»), Литературная премия генерал-губернатора Канады, итальянская «Премио монделло» и другие. «Год потопа» — это амбициозная панорама мира, стоявшего на грани рукотворной катастрофы — и шагнувшего за эту грань; мира, где правит бал всемогущая генная инженерия и лишь вертоградари в своем саду пытаются сохранить многообразие живой природы; мира, в котором девушке-меховушке прямая дорога в ночной клуб «Чешуйки» — излюбленное злачное заведение как крутых ребят из Отстойника, так и воротил из охраняемых поселков Корпораций…&lt;/p&gt;
+   &lt;br/&gt;Перевод: Боровикова Татьяна Павловна&lt;br/&gt;Год издания: 2011&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 1404 Kb&lt;br/&gt;Скачиваний: 14801&lt;br/&gt;Серия: Трилогия Беззумного Аддама #2&lt;br/&gt;</content>
+ <link href="/i/43/256043/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/43/256043/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/43/256043/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/43/256043/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/256043/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/256043/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/256043/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/256043/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/256043/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/256043/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/256043" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:fb83c8f427ee04b7e62c44d8179fa2de</id>
+</entry>
+ <entry> <updated>2026-10-12T09:54:19+02:00</updated>
+ <title>Год потопа [litres][The Year of the Flood]</title>
+ <author> <name>Этвуд Маргарет</name>
+ <uri>/a/3035</uri>
+</author>
+ <link href="/opds/author/3035" rel="related" type="application/atom+xml" title="Все книги автора Этвуд Маргарет" />
+ <category term="Социально-психологическая фантастика" label="Социально-психологическая фантастика" />
+ <dc:language>ru</dc:language>
+ <dc:format>fb2+zip</dc:format>
+ <dc:issued>2016</dc:issued>
+ <link href="/opds/sequencebooks/22675" rel="related" type="application/atom+xml" title="Все книги серии &quot;Трилогия Беззумного Аддама&quot;" />
+ <content type="text/html">&lt;p class=&quot;book&quot;&gt;Книги Маргарет Этвуд неизменно отличаются поразительной оригинальностью и глубиной. Они неоднократно были отмечены престижными литературными наградами, в числе которых Букеровская премия (за «Слепого убийцу»), Премия Артура Кларка (за «Рассказ Служанки»), Литературная премия генерал-губернатора Канады, итальянская «Премио монделло» и другие. «Год потопа» – это амбициозная панорама мира, стоявшего на грани рукотворной катастрофы и шагнувшего за эту грань; мира, где правит бал всемогущая генная инженерия, и лишь вертоградари в своем саду пытаются сохранить многообразие живой природы; мира, в котором девушке-меховушке прямая дорога в ночной клуб «Чешуйки» – излюбленное злачное заведение как крутых ребят из Отстойника, так и воротил из охраняемых поселков Корпораций.&lt;/p&gt;
+&lt;br/&gt;Перевод: Боровикова Татьяна Павловна&lt;br/&gt;Год издания: 2016&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 1552 Kb&lt;br/&gt;Скачиваний: 6493&lt;br/&gt;Серия: Трилогия Беззумного Аддама #2&lt;br/&gt;</content>
+ <link href="/i/49/537349/cover.jpg" rel="http://opds-spec.org/image" type="image/jpeg" />
+ <link href="/i/49/537349/cover.jpg" rel="x-stanza-cover-image" type="image/jpeg" />
+ <link href="/i/49/537349/cover.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg" />
+ <link href="/i/49/537349/cover.jpg" rel="x-stanza-cover-image-thumbnail" type="image/jpeg" />
+ <link href="/b/537349/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip" />
+ <link href="/b/537349/html" rel="http://opds-spec.org/acquisition/open-access" type="application/html+zip" />
+ <link href="/b/537349/txt" rel="http://opds-spec.org/acquisition/open-access" type="application/txt+zip" />
+ <link href="/b/537349/rtf" rel="http://opds-spec.org/acquisition/open-access" type="application/rtf+zip" />
+ <link href="/b/537349/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip" />
+ <link href="/b/537349/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook" />
+ <link href="/b/537349" rel="alternate" type="text/html" title="Книга на сайте" />
+ <id>tag:book:47fa4ff453175f731bfaad9eb4e3a676</id>
+</entry>
+</feed>
