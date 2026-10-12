@@ -1,4 +1,8 @@
-param([string]$Serial = 'emulator-5556', [string]$Adb = "$env:LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe")
+param(
+    [string]$Serial = 'emulator-5556',
+    [string]$Adb = "$env:LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe",
+    [string]$Apk = 'artifacts/FlibustaReader-0.2.1-debug.apk'
+)
 $ErrorActionPreference = 'Stop'
 if (!$Serial.StartsWith('emulator-')) { throw 'Use a test emulator' }
 Set-Location (Split-Path $PSScriptRoot -Parent)
@@ -49,7 +53,7 @@ function Position {
     $id = ($prefs.map.string | Where-Object name -eq 'lastBook').'#text'
     (($prefs.map.string | Where-Object name -eq "position:$id").'#text' | ConvertFrom-Json).locations.progression
 }
-AdbChecked install -r artifacts/FlibustaReader-0.2.1-debug.apk | Out-Null
+AdbChecked install -r $Apk | Out-Null
 # Seed a completed book even on a freshly installed emulator.
 AdbChecked shell am start -W -n net.flibustareader/.MainActivity | Out-Null
 Tap (Find 'Демо-книга')

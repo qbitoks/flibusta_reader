@@ -17,6 +17,16 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions { jvmTarget = "17" }
+    // Trusted tag/manual builds restore this keystore from Actions Secrets.
+    // Local builds and PR CI keep Android's normal debug signing behavior.
+    System.getenv("ANDROID_DEBUG_KEYSTORE_PATH")?.let { keyPath ->
+        signingConfigs.getByName("debug") {
+            storeFile = file(keyPath)
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
 }
 dependencies {
     implementation(project(":core"))
