@@ -25,6 +25,7 @@ Push tags and publish releases only on explicit user request.
 2. Commit, push main, wait for green CI.
 3. `git tag -a vX.Y.Z -m "Flibusta Reader X.Y.Z"` on the verified commit; `git push origin vX.Y.Z`.
 4. Wait for build, emulator check, draft. The user checks the APK on a phone, then publishes as Pre-release.
+- Release job failed after creating the draft: `gh run rerun <id> --failed` fills in the missing files.
 - Never move tags; published releases are never overwritten. Re-running the release job only fills in
   missing files of a matching draft (same SHA-256); mismatches fail.
 

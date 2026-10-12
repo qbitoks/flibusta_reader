@@ -18,7 +18,8 @@ if ($release) {
 if (!$release) {
     gh release create $Tag --repo $env:GITHUB_REPOSITORY --verify-tag --draft --prerelease --title "$Tag — тестовая версия для Android $($metadata.minimumAndroid)+" --notes-file artifacts/release/README-release-ru.md
     if ($LASTEXITCODE -ne 0) { throw 'Draft release creation failed' }
-    $release = Find-Release
+    # The release list lags behind creation by a few seconds.
+    for ($i = 0; $i -lt 10 -and !$release; $i++) { Start-Sleep -Seconds 3; $release = Find-Release }
     if (!$release) { throw 'Cannot verify created draft' }
 }
 $assets = @(
