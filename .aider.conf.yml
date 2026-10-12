@@ -1,0 +1,2 @@
+# Aider doesn't read AGENTS.md by itself and can't open files on its own. Rules live there; don't add them here.
+read: [AGENTS.md, .agents/STATE.md, .agents/MAP.md]

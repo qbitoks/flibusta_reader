@@ -1,0 +1,4 @@
+#!/bin/sh
+# Runs agent-lint before every commit. Enable once per clone: git config core.hooksPath .githooks
+# Git runs hooks with its own sh, so this also works from PowerShell/cmd on Windows.
+exec sh scripts/agent-lint.sh

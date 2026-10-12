@@ -1,0 +1,12 @@
+# GENERATED from .agents/ignore.md by scripts/agent-lint.sh --fix. Edit that file, not this one.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+local.properties
+secrets.*

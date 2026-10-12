@@ -1,0 +1,30 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Code indentation is left to each stack's formatter; these formats have one obvious answer.
+[*.{md,yml,yaml,json,sh}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[{Makefile,*.mk,*.go}]
+indent_style = tab
+
+[*.{bat,cmd}]
+end_of_line = crlf
+
+[*.{kt,kts}]
+indent_style = space
+indent_size = 4
+
+[*.ps1]
+end_of_line = lf
+indent_style = space
+indent_size = 4

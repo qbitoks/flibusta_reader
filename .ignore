@@ -1,0 +1,55 @@
+# GENERATED from .agents/ignore.md by scripts/agent-lint.sh --fix. Edit that file, not this one.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+local.properties
+secrets.*
+# dependencies
+node_modules/
+vendor/
+.venv/
+venv/
+__pycache__/
+Pods/
+.gradle/
+.m2/
+.dart_tool/
+# build output
+build/
+dist/
+out/
+target/
+obj/
+.next/
+.nuxt/
+DerivedData/
+coverage/
+# lockfiles
+*.lock
+package-lock.json
+pnpm-lock.yaml
+npm-shrinkwrap.json
+go.sum
+# generated, minified, logs
+*.min.js
+*.min.css
+*.js.map
+*.css.map
+*.pb.go
+*_pb2.py
+*.g.dart
+*.freezed.dart
+*_generated.*
+*.log
+# project tooling and outputs
+.tools/
+artifacts/
+# agent history and scratch
+.agents/archive/
+.agents/tmp/
