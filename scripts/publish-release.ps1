@@ -4,18 +4,22 @@ Set-Location (Split-Path $PSScriptRoot -Parent)
 $metadata = Get-Content artifacts/release/release-metadata.json -Raw | ConvertFrom-Json
 if ($Tag -cne "v$($metadata.version)" -or $metadata.signingKind -ne 'preview') { throw 'Only matching, signed preview packages can be released' }
 if ($metadata.commit -cne ((git rev-parse HEAD) -join '')) { throw 'Release package does not match checked-out commit' }
-$existing = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$Tag" 2>&1
-$release = $null
-if ($LASTEXITCODE -eq 0) {
-    $release = ($existing -join "`n") | ConvertFrom-Json
+# releases/tags/<tag> never returns drafts, so look the tag up in the full release list.
+function Find-Release {
+    $all = gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" --paginate --jq '.[]'
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot safely determine whether the release already exists' }
+    $all | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object tag_name -ceq $Tag | Select-Object -First 1
+}
+$release = Find-Release
+if ($release) {
     if (!$release.draft) { throw 'Release is published; refusing to overwrite existing files or notes' }
     if ($release.body.Trim() -cne (Get-Content artifacts/release/README-release-ru.md -Raw).Trim()) { throw 'Existing draft belongs to a different package' }
-} elseif (($existing -join "`n") -notmatch 'HTTP 404') { throw 'Cannot safely determine whether the release already exists' }
+}
 if (!$release) {
     gh release create $Tag --repo $env:GITHUB_REPOSITORY --verify-tag --draft --prerelease --title "$Tag — тестовая версия для Android $($metadata.minimumAndroid)+" --notes-file artifacts/release/README-release-ru.md
     if ($LASTEXITCODE -ne 0) { throw 'Draft release creation failed' }
-    $release = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$Tag" | ConvertFrom-Json
-    if ($LASTEXITCODE -ne 0) { throw 'Cannot verify created draft' }
+    $release = Find-Release
+    if (!$release) { throw 'Cannot verify created draft' }
 }
 $assets = @(
     @{ name=$metadata.apkName; label=$metadata.apkLabel },
