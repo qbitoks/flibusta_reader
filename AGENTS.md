@@ -87,8 +87,7 @@ Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGE
 
 ## Project rules
 - `core` must not depend on Android, Compose or Readium; Android adapters stay in `app`.
-- Keep `library.json`, `reader.xml`, JSON Locator and book IDs compatible. Schema change needs a migration
-  described in `.agents/rules/storage.md` and a test on existing data.
+- Keep saved data compatible (`library.json`, `reader.xml`, Locators, book IDs): `.agents/rules/storage.md`.
 - HTTPS only, redirects included. Limits stay: book/unpacked FB2 50 MiB, OPDS feed 5 MiB, FB2 depth 128,
   no DTD or external XML entities. Don't relax them to make a sample pass.
 - Coroutine cancellation is not a user error. No blocking I/O on the UI thread.

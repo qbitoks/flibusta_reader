@@ -1,8 +1,6 @@
-*.ps1 text eol=lf
-*.yml text eol=lf
-gradlew text eol=lf
+* text=auto eol=lf
+# Windows scripts need CRLF (e.g. Gradle's gradlew.bat)
 *.bat text eol=crlf
-*.sh text eol=lf
-.githooks/* text eol=lf
+*.cmd text eol=crlf
 # Append-only log: parallel branches append at the same place; keep both sides instead of conflicting
 .agents/DECISIONS.md merge=union

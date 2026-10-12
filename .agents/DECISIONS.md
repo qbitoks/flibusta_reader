@@ -24,4 +24,4 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-12 | core | FB2/FB2.ZIP converted locally to EPUB 3 | one reading path | .agents/decisions/0002-local-fb2-to-epub.md
 2026-10-12 | storage | library.json + SharedPreferences, positions as Locator JSON, .part→EPUB→index | no backend | .agents/decisions/0003-local-library-and-locator.md
 2026-10-12 | cursor | Removed .cursor/rules/project.mdc | Cursor reads AGENTS.md natively
-2026-10-12 | git | No `* text=auto eol=lf` from the template | avoid renormalizing the whole repo; existing .gitattributes kept
+2026-10-12 | git | Template .gitattributes (`* text=auto eol=lf`) adopted as is | index was already all-LF; stops CRLF drift on Windows
