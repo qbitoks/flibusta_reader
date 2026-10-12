@@ -1,5 +1,6 @@
 package net.flibustareader.core.data.db
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
@@ -12,9 +13,11 @@ import androidx.room.RoomDatabase
         HighlightEntity::class,
         ReadingSessionEntity::class,
         SearchHistoryEntity::class,
+        DownloadEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 abstract class FlibustaDatabase : RoomDatabase() {
     abstract fun books(): BookDao
@@ -23,4 +26,5 @@ abstract class FlibustaDatabase : RoomDatabase() {
     abstract fun highlights(): HighlightDao
     abstract fun sessions(): SessionDao
     abstract fun searchHistory(): SearchHistoryDao
+    abstract fun downloads(): DownloadDao
 }

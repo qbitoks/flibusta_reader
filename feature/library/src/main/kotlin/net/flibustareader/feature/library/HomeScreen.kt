@@ -51,6 +51,9 @@ import net.flibustareader.core.designsystem.BookTransition
 import net.flibustareader.core.designsystem.bookTransition
 import net.flibustareader.core.designsystem.Flibusta
 import net.flibustareader.core.designsystem.FlibustaType
+import net.flibustareader.core.designsystem.components.LargeTitleHeader
+import net.flibustareader.core.designsystem.components.SectionTitle
+import net.flibustareader.core.designsystem.components.SectionBand
 import net.flibustareader.core.designsystem.components.CapsuleButton
 
 /**
@@ -75,7 +78,7 @@ fun HomeScreen(
     }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
         item {
-            Band(first = true) {
+            SectionBand(first = true) {
                 LargeTitleHeader(stringResource(R.string.home_title))
                 if (home.continueReading.isNotEmpty()) {
                     SectionTitle(stringResource(R.string.home_continue), Modifier.padding(top = 0.dp))
@@ -95,7 +98,7 @@ fun HomeScreen(
         }
         if (home.wantToRead.isNotEmpty()) {
             item {
-                Band {
+                SectionBand {
                     SectionTitle(stringResource(R.string.home_want_to_read), onClick = { onOpenShelf(Shelf.WantToRead) })
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 32.dp),
@@ -127,7 +130,7 @@ fun HomeScreen(
         }
         if (home.previous.isNotEmpty()) {
             item {
-                Band {
+                SectionBand {
                     SectionTitle(stringResource(R.string.home_previous), onClick = { onOpenShelf(Shelf.Previous) })
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 32.dp),
@@ -142,20 +145,6 @@ fun HomeScreen(
             }
         }
     }
-}
-
-/** A Home section on its gradient band. The first band is plain in dark mode, as in Apple Books. */
-@Composable
-private fun Band(first: Boolean = false, content: @Composable () -> Unit) {
-    val c = Flibusta.colors
-    val brush = if (first && c.isDark) {
-        Brush.verticalGradient(listOf(c.background, c.background))
-    } else if (first) {
-        Brush.verticalGradient(listOf(c.background, c.bandBottom))
-    } else {
-        Brush.verticalGradient(listOf(c.bandTop, c.bandBottom))
-    }
-    Column(Modifier.fillMaxWidth().background(brush)) { content() }
 }
 
 /**

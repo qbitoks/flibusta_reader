@@ -6,11 +6,13 @@ Agent infrastructure (`.agents/`, `scripts/agent-lint.sh`, tool adapters) is des
 
 ## Areas
 - `app/` — Application, Hilt, MainActivity, nav host with tabs Главная/Библиотека/Каталог — `app/AGENTS.md`
-- `core/model`, `core/format`, `core/layout` — JVM book model, FB2/EPUB parsers, pagination/text layout
+- `core/model`, `core/layout` — JVM book model, pagination/text layout
+- `core/format/` — JVM FB2/EPUB parsers — `core/format/AGENTS.md`
 - `core/opds/` — JVM OPDS parser, HTTPS-only requests, safe XML; JUnit tests — `core/opds/AGENTS.md`
-- `core/data/` — Room, files, settings, LibraryRepository, CatalogRepository
+- `core/data/` — Room, files, settings, LibraryRepository, CatalogRepository, DownloadManager (catalog downloads)
 - `core/designsystem/` — Apple Books–style theme, fonts, glass, covers, components
-- `feature/library`, `feature/reader`, `feature/catalog` — screens and ViewModels
+- `feature/library`, `feature/reader` — screens and ViewModels
+- `feature/catalog/` — «Каталог»: OPDS home, search, book sheet, downloads — `feature/catalog/AGENTS.md`
 - `baselineprofile/` — baseline profile generator (not generated; it uninstalls the app)
 - `scripts/` — PowerShell doctor, build, emulator regressions, release packaging — `scripts/AGENTS.md`
 - `fixtures/` — sample OPDS feeds for `core/opds` parser tests

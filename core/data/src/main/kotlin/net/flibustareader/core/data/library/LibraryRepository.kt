@@ -207,6 +207,8 @@ class LibraryRepository @Inject constructor(
 
     suspend fun knownSourceUris(): Set<String> = books.sourceUris().toHashSet()
 
+    suspend fun contains(id: String): Boolean = books.get(id) != null
+
     suspend fun savePosition(id: String, position: Position, progress: Float) {
         books.updatePosition(id, position.encode(), progress, System.currentTimeMillis())
     }

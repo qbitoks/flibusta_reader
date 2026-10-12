@@ -44,13 +44,29 @@ internal class Fb2Parser(private val resources: ResourceSink) {
     }
 
     private fun run(xml: String, handler: Handler) {
-        // No DTD and no external entities (project rule): a DOCTYPE fails the parse.
+        // No DTD and no external entities (project rule). Android's SAX parser doesn't know
+        // disallow-doctype-decl, so the DOCTYPE check is ours and the features are best effort.
+        if (hasDoctype(xml)) throw UnsupportedBookException("DTD в книге не поддерживается")
         val factory = SAXParserFactory.newInstance().apply { isNamespaceAware = true }
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+        runCatching { factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true) }
         runCatching { factory.setFeature("http://xml.org/sax/features/external-general-entities", false) }
         runCatching { factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false) }
         runCatching { factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false) }
         factory.newSAXParser().parse(InputSource(StringReader(xml)), handler)
+    }
+
+    /** A DOCTYPE may only stand in the prolog: before the root element, after `<?…?>` and comments. */
+    private fun hasDoctype(xml: String): Boolean {
+        var i = 0
+        while (true) {
+            i = xml.indexOf('<', i)
+            if (i < 0) return false
+            i = when {
+                xml.startsWith("<?", i) -> xml.indexOf("?>", i).takeIf { it >= 0 }?.plus(2) ?: return false
+                xml.startsWith("<!--", i) -> xml.indexOf("-->", i).takeIf { it >= 0 }?.plus(3) ?: return false
+                else -> return xml.regionMatches(i, "<!DOCTYPE", 0, 9, ignoreCase = true)
+            }
+        }
     }
 
     private class SectionMark(val depth: Int, val block: Int, val id: String?) {
@@ -58,6 +74,9 @@ internal class Fb2Parser(private val resources: ResourceSink) {
     }
 
     private class Handler(private val resources: ResourceSink) : DefaultHandler() {
+        override fun resolveEntity(publicId: String?, systemId: String?): InputSource =
+            throw SAXException("External entities are disabled")
+
         // Description
         private var title = ""
         private val authors = ArrayList<String>()

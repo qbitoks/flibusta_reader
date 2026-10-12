@@ -8,7 +8,7 @@ CI pipeline and signing: `.agents/rules/release.md`.
   found; downloads nothing. SDK from `-SdkPath`, `local.properties`, ANDROID_HOME, ANDROID_SDK_ROOT, LOCALAPPDATA.
   `-RequireEmulator -Serial <serial>` also checks the device.
 - `scripts/build.ps1` — `:core:opds:test :core:format:test :app:assembleDebug :app:lintDebug`; creates `local.properties` only if
-  missing; copies APK to `artifacts/FlibustaReader-0.3.0-debug.apk`. Doesn't install.
+  missing; copies APK to `artifacts/FlibustaReader-0.3.1-debug.apk`. Doesn't install.
 - `scripts/smoke-test.ps1` — HUD toggles and tap areas, battery, restart, panels, settings, page turns.
   Needs the app installed. `-FailAfterBatteryOverride` fails on purpose ("Injected battery cleanup test
   failure"); then `adb shell dumpsys battery` must not show `UPDATES STOPPED`.
@@ -27,7 +27,7 @@ CI pipeline and signing: `.agents/rules/release.md`.
 $adb = Join-Path $env:LOCALAPPDATA 'Android/Sdk/platform-tools/adb.exe'
 & $adb devices                      # pick a real serial; never reuse a historical one
 ./scripts/build.ps1
-& $adb -s <serial> install -r ./artifacts/FlibustaReader-0.3.0-debug.apk
+& $adb -s <serial> install -r ./artifacts/FlibustaReader-0.3.1-debug.apk
 ./scripts/smoke-test.ps1 -Serial <serial> -Adb $adb
 ```
 - Regressions accept `-Apk`, `-Adb`, `-Serial`. Rebuild first, or they pass on a stale binary.

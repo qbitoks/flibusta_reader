@@ -2,28 +2,92 @@
 <resources>
     <string name="tab_catalog">Каталог</string>
     <string name="catalog_title">Каталог</string>
-    <string name="catalog_sources">Источники</string>
     <string name="catalog_back">Назад</string>
-    <string name="catalog_query_books">Название книги</string>
-    <string name="catalog_query_authors">Фамилия автора</string>
-    <string name="catalog_books">Книги</string>
-    <string name="catalog_authors">Авторы</string>
-    <string name="catalog_new">Новинки</string>
-    <string name="catalog_empty_title">Что будем читать?</string>
-    <string name="catalog_empty_text">Поиск по названию или фамилии автора. Скачанные книги хранятся на устройстве и открываются без сети.</string>
-    <string name="catalog_nothing_found">Ничего не найдено. Попробуйте другой запрос.</string>
-    <string name="catalog_more">Показать ещё</string>
-    <string name="catalog_loading">Загрузка каталога…</string>
-    <string name="catalog_downloading">Скачивание…</string>
-    <string name="catalog_downloading_percent">Скачивание %1$d%%</string>
-    <string name="catalog_no_description">Описание отсутствует</string>
-    <string name="catalog_no_downloads">Скачивание недоступно</string>
-    <string name="catalog_download">Скачать %1$s</string>
-    <string name="catalog_failed">Не удалось: %1$s</string>
     <string name="catalog_close">Закрыть</string>
-    <string name="catalog_sources_text">Каталог и сервер скачивания настраиваются отдельно. flisland.net используйте для каталога.</string>
-    <string name="catalog_source_catalog">Каталог · HTTPS</string>
-    <string name="catalog_source_downloads">Скачивание · HTTPS</string>
-    <string name="catalog_save">Сохранить</string>
-    <string name="catalog_cancel">Отмена</string>
+    <string name="catalog_more_actions">Ещё</string>
+    <string name="catalog_retry">Повторить</string>
+    <string name="catalog_cancel">Отменить</string>
+
+    <!-- Home -->
+    <string name="catalog_new">Новинки</string>
+    <string name="catalog_new_subtitle">Поступления за неделю</string>
+    <string name="catalog_sections">Разделы</string>
+    <string name="catalog_source_footer">Источник: %1$s</string>
+    <string name="catalog_refresh">Обновить</string>
+    <string name="catalog_empty_folder">Здесь пока пусто.</string>
+    <plurals name="catalog_hidden_books">
+        <item quantity="one">Скрыта %1$d книга в формате, который приложение не открывает (PDF и др.)</item>
+        <item quantity="few">Скрыто %1$d книги в форматах, которые приложение не открывает (PDF и др.)</item>
+        <item quantity="many">Скрыто %1$d книг в форматах, которые приложение не открывает (PDF и др.)</item>
+        <item quantity="other">Скрыто %1$d книги в форматах, которые приложение не открывает (PDF и др.)</item>
+    </plurals>
+
+    <!-- Search -->
+    <string name="catalog_search_hint">Книги и авторы</string>
+    <string name="catalog_search_recent">Недавние</string>
+    <string name="catalog_search_clear">Очистить</string>
+    <string name="catalog_search_forget">Удалить из недавних</string>
+    <string name="catalog_search_tip_title">Поиск по каталогу</string>
+    <string name="catalog_search_tip">Введите название книги или фамилию автора и нажмите «Найти». Каталог ищет книги и авторов одновременно.</string>
+    <string name="catalog_scope_all">Все</string>
+    <string name="catalog_scope_books">Книги</string>
+    <string name="catalog_scope_authors">Авторы</string>
+    <string name="catalog_results_all_authors">Все авторы</string>
+    <string name="catalog_nothing_found">Ничего не найдено</string>
+    <string name="catalog_nothing_found_text">Проверьте написание или поищите только по фамилии автора.</string>
+    <string name="catalog_searching">Ищем «%1$s»… Каталог иногда отвечает до минуты.</string>
+
+    <!-- Book -->
+    <string name="catalog_read">Читать</string>
+    <string name="catalog_download">Скачать %1$s</string>
+    <string name="catalog_download_queued">%1$s · в очереди</string>
+    <string name="catalog_download_waiting">%1$s · ждём сеть</string>
+    <string name="catalog_download_preparing">%1$s · сервер готовит файл…</string>
+    <string name="catalog_download_percent">%1$s · %2$d %%</string>
+    <string name="catalog_download_bytes">%1$s · %2$s</string>
+    <string name="catalog_download_paused">%1$s · пауза</string>
+    <string name="catalog_download_retry">%1$s · повторить</string>
+    <string name="catalog_formats_hint">FB2 — исходный формат каталога, скачивается быстрее. EPUB сервер собирает по запросу: подготовка может занять до минуты.</string>
+    <string name="catalog_unreadable">Книга есть только в формате %1$s — приложение такие файлы не открывает.</string>
+    <string name="catalog_no_downloads">Скачивание недоступно</string>
+    <string name="catalog_no_description">Описание отсутствует</string>
+    <string name="catalog_show_more">ещё</string>
+    <string name="catalog_related">Ещё в каталоге</string>
+
+    <!-- Downloads -->
+    <string name="catalog_downloads">Загрузки</string>
+    <string name="catalog_downloads_clear">Очистить</string>
+    <string name="catalog_downloads_empty">Загрузок нет</string>
+    <string name="catalog_downloads_empty_text">Книги, которые вы скачиваете из каталога, появятся здесь. Если связь оборвётся, загрузка продолжится с того же места.</string>
+    <string name="catalog_downloads_note">Загрузки идут в фоне и докачиваются после обрыва связи.</string>
+    <string name="catalog_status_queued">В очереди</string>
+    <string name="catalog_status_waiting">Ожидание сети</string>
+    <string name="catalog_status_retrying">Повтор: %1$s</string>
+    <string name="catalog_status_preparing">Сервер готовит файл…</string>
+    <string name="catalog_status_of">%1$s из %2$s</string>
+    <string name="catalog_status_paused">Пауза · %1$s</string>
+    <string name="catalog_status_paused_empty">Пауза</string>
+    <string name="catalog_status_done">Загружено · %1$s</string>
+    <string name="catalog_status_removed">Удалена из библиотеки</string>
+    <string name="catalog_pause">Приостановить</string>
+    <string name="catalog_resume">Продолжить</string>
+    <string name="catalog_remove">Удалить из списка</string>
+
+    <!-- Errors -->
+    <string name="catalog_error_offline">Нет подключения к интернету</string>
+    <string name="catalog_error_timeout">Сервер долго не отвечает</string>
+    <string name="catalog_error_dropped">Соединение оборвалось</string>
+    <string name="catalog_error_server">Сервер перегружен (HTTP %1$d). Попробуйте ещё раз</string>
+    <string name="catalog_error_http">Сервер ответил ошибкой HTTP %1$d</string>
+    <string name="catalog_error_not_book">Сервер вернул страницу вместо книги</string>
+    <string name="catalog_error_too_big">Книга больше 50 МБ</string>
+    <string name="catalog_error_import">Не удалось открыть скачанный файл</string>
+
+    <!-- Sources -->
+    <string name="catalog_sources">Источники</string>
+    <string name="catalog_sources_menu">Источники…</string>
+    <string name="catalog_sources_text">Каталог и сервер скачивания настраиваются отдельно. Только HTTPS-адреса сайтов без пути, например https://flibusta.is. Если каталог недоступен, попробуйте https://flisland.net.</string>
+    <string name="catalog_source_catalog">Каталог</string>
+    <string name="catalog_source_downloads">Скачивание</string>
+    <string name="catalog_clear_history">Очистить историю поиска</string>
 </resources>

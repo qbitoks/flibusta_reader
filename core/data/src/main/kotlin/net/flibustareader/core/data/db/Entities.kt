@@ -120,3 +120,37 @@ data class SearchHistoryEntity(
     @PrimaryKey val query: String,
     val usedAt: Long,
 )
+
+/** Lifecycle of a [DownloadEntity]; stored by name. */
+enum class DownloadState { Queued, Running, Paused, Failed, Done }
+
+/**
+ * A catalog download kept across restarts (see `DownloadManager`). The partial file is
+ * `files/downloads/<id>.part` until the book is imported.
+ */
+@Entity(tableName = "downloads", indices = [Index("createdAt")])
+data class DownloadEntity(
+    /** SHA-1 of [link]. */
+    @PrimaryKey val id: String,
+    /** Acquisition link from the feed; requested from the download host with the same path. */
+    val link: String,
+    val format: String,
+    val title: String,
+    val author: String,
+    val coverUrl: String?,
+    /** [DownloadState] name. */
+    val state: String,
+    val bytes: Long = 0,
+    /** Full size, -1 while unknown. */
+    val total: Long = -1,
+    /** `NetworkErrors` code of the last failed attempt. */
+    val error: String? = null,
+    val attempts: Int = 0,
+    /** Strong ETag or Last-Modified of the partial file, sent as If-Range when resuming. */
+    val validator: String? = null,
+    val bookId: String? = null,
+    val createdAt: Long,
+    val updatedAt: Long,
+) {
+    val downloadState: DownloadState get() = runCatching { DownloadState.valueOf(state) }.getOrDefault(DownloadState.Failed)
+}

@@ -47,38 +47,6 @@ import net.flibustareader.core.designsystem.components.MenuAction
 import net.flibustareader.core.designsystem.components.NewBadge
 import net.flibustareader.core.designsystem.components.PullDownMenu
 
-/** Large serif title with round glass buttons on the right (§ 3.2 of the guideline). */
-@Composable
-internal fun LargeTitleHeader(title: String, modifier: Modifier = Modifier, trailing: @Composable () -> Unit = {}) {
-    Row(
-        modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(start = 32.dp, end = 16.dp, top = 14.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(title, style = FlibustaType.largeTitle, color = Flibusta.colors.label, maxLines = 1, modifier = Modifier.weight(1f))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) { trailing() }
-    }
-}
-
-/** Serif section header; with [onClick] it gets a grey chevron and becomes a link («Хочу прочесть ›»). */
-@Composable
-internal fun SectionTitle(text: String, modifier: Modifier = Modifier, subtitle: String? = null, onClick: (() -> Unit)? = null) {
-    androidx.compose.foundation.layout.Column(modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 14.dp)) {
-        Row(
-            (if (onClick != null) Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick) else Modifier),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(text, style = FlibustaType.section, color = Flibusta.colors.label)
-            if (onClick != null) {
-                Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = Flibusta.colors.tertiaryLabel, modifier = Modifier.size(30.dp))
-            }
-        }
-        if (subtitle != null) Text(subtitle, style = FlibustaType.body, color = Flibusta.colors.secondaryLabel)
-    }
-}
-
 /** Where a book menu is opened from: decides which items it shows (guideline, white spots 17–18, 22, 27). */
 internal sealed interface MenuContext {
     data object Library : MenuContext

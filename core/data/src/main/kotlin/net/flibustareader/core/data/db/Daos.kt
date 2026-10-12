@@ -141,3 +141,27 @@ interface SessionDao {
     @Insert
     suspend fun insert(session: ReadingSessionEntity)
 }
+
+@Dao
+interface DownloadDao {
+    @Query("SELECT * FROM downloads ORDER BY createdAt DESC")
+    fun observeAll(): Flow<List<DownloadEntity>>
+
+    @Query("SELECT * FROM downloads WHERE id = :id")
+    suspend fun get(id: String): DownloadEntity?
+
+    @Query("SELECT * FROM downloads WHERE state IN ('Queued', 'Running')")
+    suspend fun active(): List<DownloadEntity>
+
+    @Upsert
+    suspend fun upsert(download: DownloadEntity)
+
+    @Query("DELETE FROM downloads WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("SELECT id FROM downloads WHERE state = 'Done'")
+    suspend fun doneIds(): List<String>
+
+    @Query("DELETE FROM downloads WHERE state = 'Done'")
+    suspend fun deleteDone()
+}

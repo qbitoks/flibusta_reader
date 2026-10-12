@@ -71,6 +71,7 @@ import net.flibustareader.core.designsystem.BookTransition
 import net.flibustareader.core.designsystem.bookTransition
 import net.flibustareader.core.designsystem.Flibusta
 import net.flibustareader.core.designsystem.FlibustaType
+import net.flibustareader.core.designsystem.components.LargeTitleHeader
 import net.flibustareader.core.designsystem.components.CircleButton
 import net.flibustareader.core.designsystem.components.CircleButtonStyle
 import net.flibustareader.core.designsystem.components.GlassCapsule

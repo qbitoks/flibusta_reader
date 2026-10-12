@@ -2,28 +2,90 @@
 <resources>
     <string name="tab_catalog">Catalog</string>
     <string name="catalog_title">Catalog</string>
-    <string name="catalog_sources">Sources</string>
     <string name="catalog_back">Back</string>
-    <string name="catalog_query_books">Book title</string>
-    <string name="catalog_query_authors">Author\'s last name</string>
-    <string name="catalog_books">Books</string>
-    <string name="catalog_authors">Authors</string>
-    <string name="catalog_new">New arrivals</string>
-    <string name="catalog_empty_title">What shall we read?</string>
-    <string name="catalog_empty_text">Search by title or author. Downloaded books stay on this device and open offline.</string>
-    <string name="catalog_nothing_found">Nothing found. Try another query.</string>
-    <string name="catalog_more">Show more</string>
-    <string name="catalog_loading">Loading catalog…</string>
-    <string name="catalog_downloading">Downloading…</string>
-    <string name="catalog_downloading_percent">Downloading %1$d%%</string>
-    <string name="catalog_no_description">No description</string>
-    <string name="catalog_no_downloads">Download is not available</string>
-    <string name="catalog_download">Download %1$s</string>
-    <string name="catalog_failed">Could not complete: %1$s</string>
     <string name="catalog_close">Close</string>
-    <string name="catalog_sources_text">The catalog and the download server are set separately. Use flisland.net for the catalog.</string>
-    <string name="catalog_source_catalog">Catalog · HTTPS</string>
-    <string name="catalog_source_downloads">Downloads · HTTPS</string>
-    <string name="catalog_save">Save</string>
+    <string name="catalog_more_actions">More</string>
+    <string name="catalog_retry">Try again</string>
     <string name="catalog_cancel">Cancel</string>
+
+    <!-- Home -->
+    <string name="catalog_new">New arrivals</string>
+    <string name="catalog_new_subtitle">Added this week</string>
+    <string name="catalog_sections">Browse</string>
+    <string name="catalog_source_footer">Source: %1$s</string>
+    <string name="catalog_refresh">Refresh</string>
+    <string name="catalog_empty_folder">Nothing here yet.</string>
+    <plurals name="catalog_hidden_books">
+        <item quantity="one">%1$d book in a format this app can\'t open (PDF etc.) is hidden</item>
+        <item quantity="other">%1$d books in formats this app can\'t open (PDF etc.) are hidden</item>
+    </plurals>
+
+    <!-- Search -->
+    <string name="catalog_search_hint">Books and authors</string>
+    <string name="catalog_search_recent">Recent</string>
+    <string name="catalog_search_clear">Clear</string>
+    <string name="catalog_search_forget">Remove from recent</string>
+    <string name="catalog_search_tip_title">Search the catalog</string>
+    <string name="catalog_search_tip">Type a book title or an author\'s last name and press Search. Books and authors are searched at once.</string>
+    <string name="catalog_scope_all">All</string>
+    <string name="catalog_scope_books">Books</string>
+    <string name="catalog_scope_authors">Authors</string>
+    <string name="catalog_results_all_authors">All authors</string>
+    <string name="catalog_nothing_found">Nothing found</string>
+    <string name="catalog_nothing_found_text">Check the spelling or search by the author\'s last name only.</string>
+    <string name="catalog_searching">Searching for “%1$s”… The catalog can take up to a minute.</string>
+
+    <!-- Book -->
+    <string name="catalog_read">Read</string>
+    <string name="catalog_download">Download %1$s</string>
+    <string name="catalog_download_queued">%1$s · queued</string>
+    <string name="catalog_download_waiting">%1$s · waiting for network</string>
+    <string name="catalog_download_preparing">%1$s · server is preparing…</string>
+    <string name="catalog_download_percent">%1$s · %2$d%%</string>
+    <string name="catalog_download_bytes">%1$s · %2$s</string>
+    <string name="catalog_download_paused">%1$s · paused</string>
+    <string name="catalog_download_retry">%1$s · try again</string>
+    <string name="catalog_formats_hint">FB2 is the catalog\'s own format and downloads faster. EPUB is built by the server on request and can take up to a minute to start.</string>
+    <string name="catalog_unreadable">This book is only available as %1$s, which this app can\'t open.</string>
+    <string name="catalog_no_downloads">Download is not available</string>
+    <string name="catalog_no_description">No description</string>
+    <string name="catalog_show_more">more</string>
+    <string name="catalog_related">More in the catalog</string>
+
+    <!-- Downloads -->
+    <string name="catalog_downloads">Downloads</string>
+    <string name="catalog_downloads_clear">Clear</string>
+    <string name="catalog_downloads_empty">No downloads</string>
+    <string name="catalog_downloads_empty_text">Books you download from the catalog appear here. If the connection drops, the download continues where it stopped.</string>
+    <string name="catalog_downloads_note">Downloads run in the background and resume after a dropped connection.</string>
+    <string name="catalog_status_queued">Queued</string>
+    <string name="catalog_status_waiting">Waiting for network</string>
+    <string name="catalog_status_retrying">Retrying: %1$s</string>
+    <string name="catalog_status_preparing">Server is preparing the file…</string>
+    <string name="catalog_status_of">%1$s of %2$s</string>
+    <string name="catalog_status_paused">Paused · %1$s</string>
+    <string name="catalog_status_paused_empty">Paused</string>
+    <string name="catalog_status_done">Downloaded · %1$s</string>
+    <string name="catalog_status_removed">Removed from the library</string>
+    <string name="catalog_pause">Pause</string>
+    <string name="catalog_resume">Resume</string>
+    <string name="catalog_remove">Remove from list</string>
+
+    <!-- Errors -->
+    <string name="catalog_error_offline">No internet connection</string>
+    <string name="catalog_error_timeout">The server takes too long to answer</string>
+    <string name="catalog_error_dropped">The connection dropped</string>
+    <string name="catalog_error_server">The server is busy (HTTP %1$d). Try again</string>
+    <string name="catalog_error_http">The server answered HTTP %1$d</string>
+    <string name="catalog_error_not_book">The server sent a web page instead of a book</string>
+    <string name="catalog_error_too_big">The book is larger than 50 MB</string>
+    <string name="catalog_error_import">The downloaded file can\'t be opened</string>
+
+    <!-- Sources -->
+    <string name="catalog_sources">Sources</string>
+    <string name="catalog_sources_menu">Sources…</string>
+    <string name="catalog_sources_text">The catalog and the download server are set separately. HTTPS site addresses only, without a path, e.g. https://flibusta.is. If the catalog is unreachable, try https://flisland.net.</string>
+    <string name="catalog_source_catalog">Catalog</string>
+    <string name="catalog_source_downloads">Downloads</string>
+    <string name="catalog_clear_history">Clear search history</string>
 </resources>

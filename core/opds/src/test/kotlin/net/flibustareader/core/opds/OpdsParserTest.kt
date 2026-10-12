@@ -28,4 +28,33 @@ class OpdsParserTest {
     @Test(expected = IllegalArgumentException::class) fun rejectsDoctype() {
         OpdsParser.parse("<!DOCTYPE feed [<!ENTITY x SYSTEM 'file:///secret'>]><feed>&x;</feed>", "https://flibusta.is")
     }
+    @Test fun readsFlibustaBookDetailsCoverAndRelatedLinks() {
+        val page = OpdsParser.parse("""<feed xmlns="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/terms/"><entry><title>Предчувствие</title><author><name>Аршакуни Ольга</name></author><link href="/opds/author/345809" rel="related" type="application/atom+xml" title="Все книги автора Аршакуни Ольга"/><category term="История" label="История"/><dc:language>ru</dc:language><dc:issued>1987</dc:issued><content type="text/html">&lt;p class=&quot;book&quot;&gt;&lt;b&gt;Книга &amp;laquo;о муже&amp;raquo;.&lt;/b&gt;&lt;/p&gt;&lt;br/&gt;Год издания: 1987&lt;br/&gt;Формат: fb2&lt;br/&gt;Язык: ru&lt;br/&gt;Размер: 825 Kb&lt;br/&gt;</content><link href="/i/1/892501/obl.jpg" rel="http://opds-spec.org/image" type="image/jpeg"/><link href="/i/1/892501/thumb.jpg" rel="http://opds-spec.org/thumbnail" type="image/jpeg"/><link href="/b/892501/fb2" rel="http://opds-spec.org/acquisition/open-access" type="application/fb2+zip"/><link href="/b/892501/epub" rel="http://opds-spec.org/acquisition/open-access" type="application/epub+zip"/><link href="/b/892501/mobi" rel="http://opds-spec.org/acquisition/open-access" type="application/x-mobipocket-ebook"/></entry></feed>""", "https://flibusta.is/opds/new/0/new")
+        val book = page.entries.single()
+        assertTrue(book.isBook)
+        assertEquals("Книга «о муже».", book.summary)
+        assertEquals("https://flibusta.is/i/1/892501/thumb.jpg", book.cover)
+        assertEquals(listOf("История"), book.genres)
+        assertEquals("1987", book.year)
+        assertEquals("ru", book.language)
+        assertEquals(825L * 1024, book.size)
+        assertEquals(listOf("FB2", "EPUB"), book.downloads.keys.toList())
+        assertEquals(listOf("MOBI"), book.otherFormats)
+        assertEquals(CatalogLink("Все книги автора Аршакуни Ольга", "https://flibusta.is/opds/author/345809"), book.related.single())
+    }
+    @Test fun pdfOnlyBookIsABookWithoutDownloads() {
+        val page = OpdsParser.parse("""<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>Артек</title><link href="/opds/author/1" rel="related" type="application/atom+xml" title="Все книги автора"/><link href="/b/1/download" rel="http://opds-spec.org/acquisition/open-access" type="application/pdf"/></entry></feed>""", "https://flibusta.is/opds")
+        val book = page.entries.single()
+        assertTrue(book.isBook)
+        assertTrue(book.downloads.isEmpty())
+        assertEquals(listOf("PDF"), book.otherFormats)
+    }
+    @Test fun authorEntryNavigatesToItsMainLinkNotFacets() {
+        val page = OpdsParser.parse("""<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>Лем Станислав</title><content type="text">120 книг</content><link href="/opds/authorsequences/1" rel="http://www.feedbooks.com/opds/facet" type="application/atom+xml;profile=opds-catalog" title="Книги автора по сериям"/><link href="/opds/author/1" type="application/atom+xml;profile=opds-catalog"/><link href="/ia/1/lem.jpg" rel="http://opds-spec.org/image/thumbnail" type="image/jpeg"/></entry></feed>""", "https://flibusta.is/opds/search")
+        val author = page.entries.single()
+        assertEquals("https://flibusta.is/opds/author/1", author.navigation)
+        assertEquals("120 книг", author.summary)
+        assertEquals("https://flibusta.is/ia/1/lem.jpg", author.cover)
+        assertEquals("Книги автора по сериям", author.related.single().title)
+    }
 }

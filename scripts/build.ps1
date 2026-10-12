@@ -10,5 +10,5 @@ if (!(Test-Path -LiteralPath 'local.properties')) {
 & ./gradlew.bat :core:opds:test :core:format:test :app:assembleDebug :app:lintDebug --console=plain
 if ($LASTEXITCODE -ne 0) { throw "Сборка завершилась с кодом $LASTEXITCODE" }
 New-Item -ItemType Directory -Force artifacts | Out-Null
-Copy-Item -LiteralPath 'app/build/outputs/apk/debug/app-debug.apk' -Destination 'artifacts/FlibustaReader-0.3.0-debug.apk' -Force
-Get-Item -LiteralPath 'artifacts/FlibustaReader-0.3.0-debug.apk' | Select-Object FullName,Length
+Copy-Item -LiteralPath 'app/build/outputs/apk/debug/app-debug.apk' -Destination 'artifacts/FlibustaReader-0.3.1-debug.apk' -Force
+Get-Item -LiteralPath 'artifacts/FlibustaReader-0.3.1-debug.apk' | Select-Object FullName,Length

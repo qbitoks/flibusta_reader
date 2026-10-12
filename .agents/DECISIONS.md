@@ -23,3 +23,7 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-12 | cursor | Removed .cursor/rules/project.mdc | Cursor reads AGENTS.md natively
 2026-10-12 | git | Template .gitattributes (`* text=auto eol=lf`) adopted as is | index was already all-LF; stops CRLF drift on Windows
 2026-10-12 | repo | Prototype codebase replaces the Readium app; OPDS kept in core/opds + «Каталог» tab | user chose the prototype as base | .agents/decisions/0004-prototype-engine.md
+2026-10-12 | catalog | Downloads: Room row + unique expedited WorkManager work + HTTP Range resume | survives drops and restarts without a foreground service
+2026-10-12 | catalog | Download read timeout 150 s, feed 60 s, one quick feed retry | Flibusta converts EPUB on request (15–90 s silence) and often 502s the first search
+2026-10-12 | catalog | Catalog home mirrors «Главная»: bands, «Новинки» cover shelf, sections list | user asked for one design
+2026-10-12 | catalog | OPDS covers via own HTTPS loader into BookCover, not Coil network | HTTPS-only redirects kept, no OkHttp
