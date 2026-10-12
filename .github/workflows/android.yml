@@ -49,6 +49,13 @@ jobs:
       - name: Validate package metadata
         shell: pwsh
         run: ./scripts/test-release-metadata.ps1
+      - name: Bootstrap Gradle wrapper with network retries
+        run: |
+          for attempt in 1 2 3; do
+            if bash ./gradlew --version; then exit 0; fi
+            sleep 5
+          done
+          exit 1
       - name: Build and check
         run: bash ./gradlew :core:test :app:assembleDebug :app:lintDebug --console=plain
       - name: Package APK with compatibility notes and checksums
