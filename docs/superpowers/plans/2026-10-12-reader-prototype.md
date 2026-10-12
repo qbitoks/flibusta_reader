@@ -16,4 +16,3 @@ Execution is inline in this chat, authorized by the user's request to start the 
 - [x] Implement `MainActivity.kt`: responsive library, search type, navigation, card and download, import and editable HTTPS sources. Check compile.
 - [x] Implement `ReaderActivity.kt`: Readium open, restore/save locator, scroll/page settings, themes/font size and TOC. Check compile.
 - [x] Run `:core:test :app:assembleDebug :app:lintDebug`; inspect reports. Exercise emulator if available, document what was verified in `README.md` and `docs/prototype-verification.md`, copy APK to `artifacts/`.
-
