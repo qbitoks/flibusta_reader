@@ -1,0 +1,206 @@
+package net.flibustareader.core.designsystem.components
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.dp
+import net.flibustareader.core.designsystem.Flibusta
+import net.flibustareader.core.designsystem.FlibustaType
+import kotlin.math.roundToInt
+
+/** iOS switch: 51 × 31 track, 27 dp thumb, green when on. */
+@Composable
+fun IosSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    val c = Flibusta.colors
+    val track by animateColorAsState(if (checked) c.switchOn else c.fill, label = "track")
+    val offset by animateDpAsState(if (checked) 22.dp else 2.dp, spring(stiffness = 900f), label = "thumb")
+    Box(
+        modifier
+            .size(51.dp, 31.dp)
+            .clip(CircleShape)
+            .background(track)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                role = Role.Switch,
+            ) { onCheckedChange(!checked) }
+            .semantics { stateDescription = if (checked) "on" else "off" },
+    ) {
+        Box(
+            Modifier
+                .offset(x = offset, y = 2.dp)
+                .size(27.dp)
+                .shadow(2.dp, CircleShape)
+                .clip(CircleShape)
+                .background(Color.White),
+        )
+    }
+}
+
+/**
+ * iOS-style slider: thin track filled with the label colour up to a white capsule thumb.
+ * [onValueChangeFinished] fires on release, so expensive consumers (re-pagination) run once.
+ */
+@Composable
+fun IosSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    steps: Float = 0f,
+    onValueChangeFinished: () -> Unit = {},
+    contentDescription: String? = null,
+) {
+    val c = Flibusta.colors
+    val density = LocalDensity.current
+    val latestValue by rememberUpdatedState(value)
+    val span = valueRange.endInclusive - valueRange.start
+    fun snap(v: Float): Float {
+        val clamped = v.coerceIn(valueRange.start, valueRange.endInclusive)
+        return if (steps > 0f) (valueRange.start + ((clamped - valueRange.start) / steps).roundToInt() * steps) else clamped
+    }
+    BoxWithConstraints(
+        modifier
+            .fillMaxWidth()
+            .height(30.dp)
+            .semantics { if (contentDescription != null) this.contentDescription = contentDescription },
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        val thumbW = 36.dp
+        val width = maxWidth
+        val trackPx = with(density) { (width - thumbW).toPx() }.coerceAtLeast(1f)
+        val fraction = ((value - valueRange.start) / span).coerceIn(0f, 1f)
+        var dragStart by remember { mutableFloatStateOf(0f) }
+        val gestures = Modifier
+            .pointerInput(valueRange, trackPx) {
+                detectTapGestures { p ->
+                    onValueChange(snap(valueRange.start + ((p.x - thumbW.toPx() / 2) / trackPx) * span))
+                    onValueChangeFinished()
+                }
+            }
+            .pointerInput(valueRange, trackPx) {
+                detectHorizontalDragGestures(
+                    onDragStart = { dragStart = latestValue },
+                    onDragEnd = onValueChangeFinished,
+                ) { change, amount ->
+                    change.consume()
+                    dragStart += amount / trackPx * span
+                    onValueChange(snap(dragStart))
+                }
+            }
+        Box(Modifier.fillMaxWidth().fillMaxHeight().then(gestures), contentAlignment = Alignment.CenterStart) {
+            Box(
+                Modifier
+                    .padding(horizontal = thumbW / 2)
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(CircleShape)
+                    .background(c.fill),
+            )
+            Box(
+                Modifier
+                    .padding(start = thumbW / 2)
+                    .width((width - thumbW) * fraction)
+                    .height(4.dp)
+                    .clip(CircleShape)
+                    .background(c.label),
+            )
+            Box(
+                Modifier
+                    .offset(x = (width - thumbW) * fraction)
+                    .size(thumbW, 24.dp)
+                    .shadow(3.dp, CircleShape)
+                    .clip(CircleShape)
+                    .background(Color.White),
+            )
+        }
+    }
+}
+
+/** iOS segmented control: grey capsule with the selected segment raised on a lighter capsule. */
+@Composable
+fun SegmentedControl(
+    options: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val c = Flibusta.colors
+    Row(
+        modifier
+            .fillMaxWidth()
+            .height(36.dp)
+            .clip(CircleShape)
+            .background(c.fill)
+            .padding(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        options.forEachIndexed { i, label ->
+            val isSelected = i == selected
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .then(if (isSelected) Modifier.shadow(2.dp, CircleShape) else Modifier)
+                    .clip(CircleShape)
+                    .background(if (isSelected) (if (c.isDark) Color(0xFF636366) else Color.White) else Color.Transparent)
+                    .clickable(role = Role.Tab) { onSelect(i) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(label, style = if (isSelected) FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.subheadline, color = c.label)
+            }
+        }
+    }
+}
+
+/** Row of dots marking discrete steps (font size), filled up to [current]. */
+@Composable
+fun StepDots(count: Int, current: Int, modifier: Modifier = Modifier) {
+    val c = Flibusta.colors
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+        repeat(count) { i ->
+            Box(
+                Modifier
+                    .size(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(if (i <= current) c.label else c.tertiaryLabel),
+            )
+        }
+    }
+}

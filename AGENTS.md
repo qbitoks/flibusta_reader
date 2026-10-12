@@ -66,28 +66,26 @@ Put knowledge in the deepest file whose scope covers it. This file holds only re
 ## Project
 
 - What: Flibusta Reader, a native Android e-reader with an OPDS catalog. No app server, no accounts.
-- Stack: Kotlin, Jetpack Compose, Readium 3.0.0, Android 14+ (API 34). EPUB via Readium; FB2/FB2.ZIP
-  converted locally to EPUB. Areas: `.agents/MAP.md`. User-facing product description: `README.md`.
-- Env: JDK 17 (JAVA_HOME → JDK), Android SDK platform 34 + build-tools 34.0.0; versions live in Gradle files.
-  First build needs Google Maven, Maven Central, Gradle Plugin Portal. Use the wrapper, not system Gradle.
+- Stack: Kotlin 2.4, Jetpack Compose, Hilt, Room; AGP 9.4, Gradle 9.8; minSdk 34, compileSdk/targetSdk 37.
+  Own FB2/EPUB parser and page layout (no Readium), Apple Books–style UI. Areas: `.agents/MAP.md`.
+  User-facing product description: `README.md`. Why this stack: `.agents/decisions/0004-prototype-engine.md`.
+- Env: JDK 17 (JAVA_HOME → JDK), Android SDK platform 37 (AGP fetches missing SDK parts); versions in
+  `gradle/libs.versions.toml`. First build needs Google Maven, Maven Central, Gradle Plugin Portal.
 
 Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGENTS.md`):
 - Check before "done": `./scripts/build.ps1` (JVM tests, debug APK, Android lint) + agent-lint:
   `& "$env:ProgramFiles\Git\bin\sh.exe" scripts/agent-lint.sh`. Docs-only change: agent-lint + link check.
 - Setup / env check: `./scripts/doctor.ps1`
-- Core tests: `./gradlew.bat :core:test --console=plain`
-- Test one: `./gradlew.bat :core:test --tests 'net.flibustareader.core.OpdsParserTest' --console=plain`
-- Extra checks by change (`<serial>` from `adb devices`; workflow and caveats: `scripts/AGENTS.md`):
-  - Panels, HUD, settings: `./scripts/smoke-test.ps1 -Serial <serial>`
-  - Storage, rotation, process death, typography: `./scripts/reader-regression.ps1 -Serial <serial>`
-  - Open-book lifecycle, debug/release checkpoint: `./scripts/reader-background-regression.ps1 -Serial <serial>`
-    and `./gradlew.bat :app:compileReleaseKotlin --console=plain`
+- JVM tests: `./gradlew.bat :core:opds:test :core:format:test --console=plain`
+- Test one: `./gradlew.bat :core:opds:test --tests 'net.flibustareader.core.opds.OpdsParserTest' --console=plain`
+- Device checks: install the debug APK and verify by hand (`scripts/AGENTS.md`). The ADB regression
+  scripts target the old Readium UI and are stale until rewritten.
   - Bug in `core`: reproduce with a regression test first.
 - A check you can't run: name the reason; never report it as passed.
 
 ## Project rules
-- `core` must not depend on Android, Compose or Readium; Android adapters stay in `app`.
-- Keep saved data compatible (`library.json`, `reader.xml`, Locators, book IDs): `.agents/rules/storage.md`.
+- `core/model`, `core/format`, `core/layout`, `core/opds` stay pure JVM: no Android or Compose.
+- Keep saved data compatible (Room schema, files layout, positions, book IDs): `.agents/rules/storage.md`.
 - HTTPS only, redirects included. Limits stay: book/unpacked FB2 50 MiB, OPDS feed 5 MiB, FB2 depth 128,
   no DTD or external XML entities. Don't relax them to make a sample pass.
 - Coroutine cancellation is not a user error. No blocking I/O on the UI thread.
@@ -95,4 +93,4 @@ Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGE
 - Behaviour change → update the affected `AGENTS.md`/rule and, if user-visible, `README.md` (Russian).
   Long rationale → `.agents/decisions/NNNN-title.md` + one line in `.agents/DECISIONS.md`.
 - Don't commit `local.properties`, `.tools/`, `.gradle/`, `**/build/`, `artifacts/`, personal books, keys.
-- Reader/viewport/lifecycle invariants: `.agents/rules/reader-invariants.md`.
+- UI follows `.agents/design/apple-books-guidelines.md`.

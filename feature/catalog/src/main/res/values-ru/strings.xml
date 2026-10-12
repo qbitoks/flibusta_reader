@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_catalog">Каталог</string>
+    <string name="catalog_title">Каталог</string>
+    <string name="catalog_sources">Источники</string>
+    <string name="catalog_back">Назад</string>
+    <string name="catalog_query_books">Название книги</string>
+    <string name="catalog_query_authors">Фамилия автора</string>
+    <string name="catalog_books">Книги</string>
+    <string name="catalog_authors">Авторы</string>
+    <string name="catalog_new">Новинки</string>
+    <string name="catalog_empty_title">Что будем читать?</string>
+    <string name="catalog_empty_text">Поиск по названию или фамилии автора. Скачанные книги хранятся на устройстве и открываются без сети.</string>
+    <string name="catalog_nothing_found">Ничего не найдено. Попробуйте другой запрос.</string>
+    <string name="catalog_more">Показать ещё</string>
+    <string name="catalog_loading">Загрузка каталога…</string>
+    <string name="catalog_downloading">Скачивание…</string>
+    <string name="catalog_downloading_percent">Скачивание %1$d%%</string>
+    <string name="catalog_no_description">Описание отсутствует</string>
+    <string name="catalog_no_downloads">Скачивание недоступно</string>
+    <string name="catalog_download">Скачать %1$s</string>
+    <string name="catalog_failed">Не удалось: %1$s</string>
+    <string name="catalog_close">Закрыть</string>
+    <string name="catalog_sources_text">Каталог и сервер скачивания настраиваются отдельно. flisland.net используйте для каталога.</string>
+    <string name="catalog_source_catalog">Каталог · HTTPS</string>
+    <string name="catalog_source_downloads">Скачивание · HTTPS</string>
+    <string name="catalog_save">Сохранить</string>
+    <string name="catalog_cancel">Отмена</string>
+</resources>

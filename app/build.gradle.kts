@@ -1,46 +1,63 @@
-plugins { id("com.android.application"); kotlin("android") }
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.baselineprofile)
+}
+
 android {
     namespace = "net.flibustareader"
-    compileSdk = 34
+    compileSdk = 37
+
     defaultConfig {
         applicationId = "net.flibustareader"
         minSdk = 34
-        targetSdk = 34
-        versionCode = 3
-        versionName = "0.2.1-reader-design"
+        targetSdk = 37
+        versionCode = 4
+        versionName = "0.3.0"
     }
-    buildFeatures { compose = true }
-    composeOptions { kotlinCompilerExtensionVersion = "1.5.14" }
+
+    androidResources {
+        localeFilters += listOf("en", "ru")
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Signed with the debug key until a release keystore exists, so the build is installable.
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        isCoreLibraryDesugaringEnabled = true
     }
-    kotlinOptions { jvmTarget = "17" }
-    // Trusted tag/manual builds restore this keystore from Actions Secrets.
-    // Local builds and PR CI keep Android's normal debug signing behavior.
-    System.getenv("ANDROID_DEBUG_KEYSTORE_PATH")?.let { keyPath ->
-        signingConfigs.getByName("debug") {
-            storeFile = file(keyPath)
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
+
+    buildFeatures {
+        compose = true
     }
 }
+
 dependencies {
-    implementation(project(":core"))
-    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.activity:activity-compose:1.9.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
-    implementation("androidx.fragment:fragment-ktx:1.8.1")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    implementation("org.readium.kotlin-toolkit:readium-shared:3.0.0")
-    implementation("org.readium.kotlin-toolkit:readium-streamer:3.0.0")
-    implementation("org.readium.kotlin-toolkit:readium-navigator:3.0.0")
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation(project(":core:designsystem"))
+    implementation(project(":core:data"))
+    implementation(project(":feature:library"))
+    implementation(project(":feature:reader"))
+    implementation(project(":feature:catalog"))
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.viewmodel.compose)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
 }

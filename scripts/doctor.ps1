@@ -87,8 +87,7 @@ if (!$taskResolvedSdk) {
     if ($SdkPath -and $taskLocalSdk) {
         Report 'SDK matches local.properties' ($taskResolvedSdk.TrimEnd('/\') -eq [System.IO.Path]::GetFullPath($taskLocalSdk).TrimEnd('/\')) 'Gradle uses sdk.dir when present; align local.properties with the SDK being checked.'
     }
-    Check-File 'Android platform 34' (Join-Path $taskResolvedSdk 'platforms/android-34/android.jar')
-    Check-File 'Android build-tools 34.0.0' (Join-Path $taskResolvedSdk "build-tools/34.0.0/aapt2$taskExecutableSuffix")
+    Check-File 'Android platform 37' (Join-Path $taskResolvedSdk 'platforms/android-37/android.jar')
     $taskAdb = Join-Path $taskResolvedSdk "platform-tools/adb$taskExecutableSuffix"
     Check-File 'ADB platform-tools' $taskAdb
     if ($RequireEmulator -and !$Serial) {

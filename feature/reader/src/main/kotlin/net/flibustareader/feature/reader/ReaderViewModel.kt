@@ -1,0 +1,690 @@
+package net.flibustareader.feature.reader
+
+import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import net.flibustareader.core.data.db.BookmarkEntity
+import net.flibustareader.core.data.db.HighlightEntity
+import net.flibustareader.core.data.library.BookResources
+import net.flibustareader.core.data.library.LibraryRepository
+import net.flibustareader.core.data.settings.Appearance
+import net.flibustareader.core.data.settings.GuideDim
+import net.flibustareader.core.data.settings.PageTurn
+import net.flibustareader.core.data.settings.ReaderSettings
+import net.flibustareader.core.data.settings.ReaderTheme
+import net.flibustareader.core.data.settings.SettingsRepository
+import net.flibustareader.core.data.settings.ThemeStyle
+import net.flibustareader.core.designsystem.ResourceTypefaceProvider
+import net.flibustareader.core.layout.Ink
+import net.flibustareader.core.layout.LayoutSpec
+import net.flibustareader.core.layout.Page
+import net.flibustareader.core.layout.PageItem
+import net.flibustareader.core.layout.PageRenderer
+import net.flibustareader.core.layout.Paginator
+import net.flibustareader.core.layout.ReaderStyle
+import net.flibustareader.core.layout.TextRange
+import net.flibustareader.core.layout.TextSpan
+import net.flibustareader.core.model.Block
+import net.flibustareader.core.model.Book
+import net.flibustareader.core.model.Position
+import net.flibustareader.core.model.Span
+import net.flibustareader.core.model.TocEntry
+import net.flibustareader.core.model.footnoteBlocks
+import net.flibustareader.core.model.parseInternalTarget
+import net.flibustareader.core.model.progressAt
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import javax.inject.Inject
+
+/** Size of the text box inside the page margins, supplied by the UI. */
+data class Viewport(val width: Int, val height: Int, val density: Float, val fontScale: Float)
+
+data class ReaderState(
+    val loading: Boolean = true,
+    val error: Boolean = false,
+    val title: String = "",
+    val current: PageRef? = null,
+    val page: Page? = null,
+    val prev: Page? = null,
+    val next: Page? = null,
+    val chapterTitle: String? = null,
+    val pagesLeftInChapter: Int = 0,
+    val globalPage: Int? = null,
+    val totalPages: Int? = null,
+    val progress: Float = 0f,
+    val bookmarked: Boolean = false,
+    val highlight: TextRange? = null,
+    /** Bumped whenever pagination is rebuilt so the UI drops stale pages. */
+    val layoutGeneration: Int = 0,
+)
+
+sealed interface TapTarget {
+    data class Note(val blocks: List<Block>) : TapTarget
+    data class Link(val position: Position) : TapTarget
+    data class External(val url: String) : TapTarget
+    data class Image(val file: File) : TapTarget
+}
+
+data class SearchHit(
+    val position: Position,
+    val chapterTitle: String?,
+    val snippet: String,
+    val matchStart: Int,
+    val matchLength: Int,
+    val length: Int,
+)
+
+/** Jump history for ↶ / ↷: positions to return to and to come back to. */
+data class NavHistory(val back: List<Position> = emptyList(), val forward: List<Position> = emptyList())
+
+data class SearchState(val query: String = "", val results: List<SearchHit> = emptyList(), val searching: Boolean = false)
+
+@OptIn(FlowPreview::class)
+@HiltViewModel
+class ReaderViewModel @Inject constructor(
+    savedState: SavedStateHandle,
+    private val library: LibraryRepository,
+    private val settingsRepository: SettingsRepository,
+    @ApplicationContext context: Context,
+) : ViewModel() {
+    val bookId: String = checkNotNull(savedState["bookId"])
+
+    private val typefaces = ResourceTypefaceProvider(context)
+    val ink = Ink()
+
+    val settings: StateFlow<ReaderSettings> =
+        settingsRepository.reader.stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
+
+    val bookmarks: StateFlow<List<BookmarkEntity>> =
+        library.bookmarks(bookId).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /**
+     * Snapshot state rather than a StateFlow: page turns write it on the main thread and the
+     * pager resets its drag offset in the same frame, so there is never a one-frame flash of
+     * the old page.
+     */
+    var state by mutableStateOf(ReaderState())
+        private set
+
+    private inline fun update(transform: (ReaderState) -> ReaderState) {
+        state = transform(state)
+    }
+
+    private val _search = MutableStateFlow(SearchState())
+    val search: StateFlow<SearchState> = _search.asStateFlow()
+
+    private val viewport = MutableStateFlow<Viewport?>(null)
+    private val savedPosition = MutableStateFlow<Position?>(null)
+
+    var book: Book? = null
+        private set
+    private lateinit var resources: BookResources
+    private var engine: PaginationEngine? = null
+    private var position: Position = Position.Start
+    private var generation = 0
+    private var searchJob: Job? = null
+    private var sessionStart = 0L
+    private var finishedMarked = false
+
+    val toc: List<TocEntry> get() = book?.toc.orEmpty()
+
+    /** Library thumbnail of the cover for the contents header. */
+    val coverFile: File? = library.coverFile(bookId).takeIf { it.exists() }
+
+    init {
+        viewModelScope.launch {
+            val loaded = runCatching { library.load(bookId) }.getOrNull()
+            if (loaded == null) {
+                update { it.copy(loading = false, error = true) }
+                return@launch
+            }
+            book = loaded
+            resources = library.resources(bookId)
+            val entity = library.book(bookId).first()
+            finishedMarked = entity?.isFinished == true
+            position = Position.decode(entity?.position) ?: Position.Start
+            update { it.copy(title = loaded.metadata.title) }
+            library.markOpened(bookId)
+
+            combine(
+                settings.map { it.style }.distinctUntilChanged(),
+                viewport.filterNotNull(),
+            ) { style, vp -> style to vp }
+                .distinctUntilChanged()
+                .collectLatest { (style, vp) -> rebuild(loaded, style, vp) }
+        }
+        viewModelScope.launch {
+            savedPosition.filterNotNull().debounce(400).collectLatest { pos ->
+                book?.let { library.savePosition(bookId, pos, it.progressAt(pos)) }
+            }
+        }
+        viewModelScope.launch {
+            bookmarks.collect { refreshBookmarked() }
+        }
+    }
+
+    fun onViewport(v: Viewport) {
+        viewport.value = v
+    }
+
+    private suspend fun rebuild(book: Book, style: ReaderStyle, vp: Viewport) {
+        engine?.cancel()
+        val spec = LayoutSpec(style, vp.width, vp.height, vp.density, vp.fontScale, book.metadata.language)
+        val newEngine = PaginationEngine(
+            book,
+            Paginator(spec, typefaces, resources, ink),
+            Paginator(spec, typefaces, resources, Ink()),
+            viewModelScope,
+        )
+        engine = newEngine
+        generation++
+        newEngine.request(position.chapter.coerceIn(0, book.chapters.lastIndex))
+        showPosition(position, highlight = state.highlight)
+        newEngine.startCounting()
+        newEngine.pageOffsets.collect { updateLabels() }
+    }
+
+    private suspend fun showPosition(target: Position, highlight: TextRange? = null) {
+        val engine = engine ?: return
+        val book = book ?: return
+        val chapter = target.chapter.coerceIn(0, book.chapters.lastIndex)
+        val pages = engine.pages(chapter)
+        val index = pages.pageIndexOf(target)
+        setCurrent(PageRef(chapter, index), keepPosition = target, highlight = highlight)
+    }
+
+    private fun setCurrent(ref: PageRef, keepPosition: Position? = null, highlight: TextRange? = null) {
+        val engine = engine ?: return
+        val page = engine.page(ref) ?: return
+        position = keepPosition ?: page.start
+        savedPosition.value = position
+        engine.prefetchAround(ref.chapter)
+        update {
+            it.copy(
+                loading = false,
+                current = ref,
+                page = page,
+                prev = engine.prevRef(ref)?.let(engine::page),
+                next = engine.nextRef(ref)?.let(engine::page),
+                highlight = highlight,
+                layoutGeneration = generation,
+            )
+        }
+        updateLabels()
+        refreshBookmarked()
+        fillNeighbours(ref)
+        if (!finishedMarked && engine.nextRef(ref) == null && state.page != null) {
+            finishedMarked = true
+            viewModelScope.launch { library.setFinished(bookId, true) }
+        }
+    }
+
+    /** Neighbouring chapters may still be laying out; fill prev/next as soon as they are ready. */
+    private fun fillNeighbours(ref: PageRef) {
+        val engine = engine ?: return
+        val s = state
+        if (s.next == null && ref.chapter + 1 < engine.chapterCount && engine.nextRef(ref) != null) {
+            viewModelScope.launch {
+                engine.pages(ref.chapter + 1)
+                if (state.current == ref) update { it.copy(next = engine.nextRef(ref)?.let(engine::page)) }
+            }
+        }
+        if (s.prev == null && ref.chapter > 0 && ref.index == 0) {
+            viewModelScope.launch {
+                engine.pages(ref.chapter - 1)
+                if (state.current == ref) update { it.copy(prev = engine.prevRef(ref)?.let(engine::page)) }
+            }
+        }
+    }
+
+    private fun updateLabels() {
+        val engine = engine ?: return
+        val book = book ?: return
+        val ref = state.current ?: return
+        val pages = engine.peek(ref.chapter) ?: return
+        val offsets = engine.pageOffsets.value
+        val page = pages.pages.getOrNull(ref.index) ?: return
+        update {
+            it.copy(
+                chapterTitle = chapterTitleAt(page.start),
+                pagesLeftInChapter = pages.pages.size - ref.index - 1,
+                globalPage = offsets?.let { o -> o[ref.chapter] + ref.index + 1 },
+                totalPages = offsets?.last(),
+                progress = book.progressAt(page.start),
+            )
+        }
+    }
+
+    /** Global page number for a location, when it can be known without extra layout work. */
+    fun pageNumberOf(position: Position): Int? {
+        val engine = engine ?: return null
+        val offsets = engine.pageOffsets.value ?: return null
+        val base = offsets.getOrNull(position.chapter) ?: return null
+        val index = engine.pageIndexOf(position)
+        return when {
+            index != null -> base + index + 1
+            position.block == 0 && position.offset == 0 -> base + 1
+            else -> null
+        }
+    }
+
+    fun chapterTitleAt(position: Position): String? {
+        var best: TocEntry? = null
+        fun walk(entries: List<TocEntry>) {
+            for (e in entries) {
+                if (e.position <= position) {
+                    best = e
+                    walk(e.children)
+                }
+            }
+        }
+        walk(toc)
+        return best?.title ?: book?.chapters?.getOrNull(position.chapter)?.title
+    }
+
+    /** Moves one page forward; returns false at the end of the book or while the next chapter lays out. */
+    fun next(): Boolean {
+        val engine = engine ?: return false
+        val ref = state.current ?: return false
+        val nextRef = engine.nextRef(ref) ?: return false
+        if (engine.page(nextRef) != null) {
+            setCurrent(nextRef)
+        } else {
+            viewModelScope.launch {
+                engine.pages(nextRef.chapter)
+                setCurrent(nextRef)
+            }
+        }
+        return true
+    }
+
+    fun prev(): Boolean {
+        val engine = engine ?: return false
+        val ref = state.current ?: return false
+        val prevRef = engine.prevRef(ref) ?: return false
+        val resolved = if (prevRef.index == PaginationEngine.LAST) null else prevRef
+        if (resolved != null && engine.page(resolved) != null) {
+            setCurrent(resolved)
+        } else {
+            viewModelScope.launch {
+                val pages = engine.pages(prevRef.chapter)
+                setCurrent(PageRef(prevRef.chapter, if (prevRef.index == PaginationEngine.LAST) pages.pages.lastIndex else prevRef.index))
+            }
+        }
+        return true
+    }
+
+    // --- Scroll mode ---
+
+    val chapterCount: Int get() = book?.chapters?.size ?: 0
+
+    suspend fun chapterPages(chapter: Int) = engine?.takeIf { chapter in 0 until chapterCount }?.pages(chapter)
+
+    /** Scroll mode reports the top visible page; it becomes the reading position. */
+    fun onScrolledTo(page: Page) {
+        val ref = PageRef(page.chapter, page.index)
+        if (state.current == ref) return
+        position = page.start
+        savedPosition.value = position
+        update { it.copy(current = ref, page = page) }
+        updateLabels()
+        refreshBookmarked()
+    }
+
+    /**
+     * Jumps to [target]. Jumps (contents, search, links, notes) go into the navigation history
+     * so the reader can return with ↶ and come back with ↷, as in Apple Books.
+     */
+    fun goTo(target: Position, highlight: TextRange? = null, record: Boolean = true) {
+        if (record) {
+            val here = state.page?.start ?: position
+            history = NavHistory(back = history.back + here, forward = emptyList())
+        }
+        viewModelScope.launch { showPosition(target, highlight) }
+    }
+
+    /** Page numbers or positions the ↶ / ↷ marks jump to. */
+    var history by mutableStateOf(NavHistory())
+        private set
+
+    fun historyBack() {
+        val target = history.back.lastOrNull() ?: return
+        val here = state.page?.start ?: position
+        history = NavHistory(back = history.back.dropLast(1), forward = history.forward + here)
+        goTo(target, record = false)
+    }
+
+    fun historyForward() {
+        val target = history.forward.lastOrNull() ?: return
+        val here = state.page?.start ?: position
+        history = NavHistory(back = history.back + here, forward = history.forward.dropLast(1))
+        goTo(target, record = false)
+    }
+
+    fun goToProgress(fraction: Float) {
+        val book = book ?: return
+        val targetChars = (book.totalChars * fraction.coerceIn(0f, 1f)).toLong()
+        var acc = 0L
+        for ((c, chapter) in book.chapters.withIndex()) {
+            if (acc + chapter.charCount >= targetChars) {
+                var inChapter = targetChars - acc
+                for ((b, block) in chapter.blocks.withIndex()) {
+                    val len = if (block is Block.Text) block.text.length else 1
+                    if (inChapter <= len) {
+                        goTo(Position(c, b, inChapter.toInt().coerceAtMost((len - 1).coerceAtLeast(0))))
+                        return
+                    }
+                    inChapter -= len
+                }
+                goTo(Position(c))
+                return
+            }
+            acc += chapter.charCount
+        }
+    }
+
+    fun clearHighlight() {
+        if (state.highlight != null) update { it.copy(highlight = null) }
+    }
+
+    /** Resolves a tap at content-box coordinates on the current page. */
+    fun tapTarget(page: Page, x: Float, y: Float): TapTarget? {
+        val book = book ?: return null
+        for (item in page.items) {
+            if (item is PageItem.Image && x >= item.left && x <= item.left + item.width && y >= item.top && y <= item.top + item.height) {
+                return TapTarget.Image(resources.file(item.resource))
+            }
+        }
+        val hit = PageRenderer.hitTest(page, x, y) ?: return null
+        val block = book.chapters.getOrNull(hit.chapter)?.blocks?.getOrNull(hit.block) as? Block.Text ?: return null
+        // Superscript note labels are tiny; accept taps just around them.
+        val span = block.spans.firstOrNull { s ->
+            s.target != null && hit.offset >= s.start - 1 && hit.offset <= s.end && (s.has(Span.LINK) || s.has(Span.NOTE_REF))
+        } ?: return null
+        val target = span.target!!
+        return when {
+            // Notes with their own body (FB2 notes, EPUB asides) open in a popup; notes that are
+            // ordinary text elsewhere in the book are a jump with ↶ back, as in Apple Books.
+            span.has(Span.NOTE_REF) && book.footnotes.containsKey(target) -> TapTarget.Note(book.footnoteBlocks(target))
+            span.has(Span.NOTE_REF) -> parseInternalTarget(target)?.let { TapTarget.Link(it) }
+            target.contains("://") || target.startsWith("mailto:") -> TapTarget.External(target)
+            else -> parseInternalTarget(target)?.let { TapTarget.Link(it) }
+        }
+    }
+
+    fun imageFile(resource: String): File = resources.file(resource)
+
+    // --- Bookmarks ---
+
+    private fun currentRange(): Pair<Position, Position?>? {
+        val engine = engine ?: return null
+        val ref = state.current ?: return null
+        val page = engine.page(ref) ?: return null
+        val end = engine.nextRef(ref)?.let { next ->
+            engine.page(next)?.start ?: Position(next.chapter)
+        }
+        return page.start to end
+    }
+
+    private fun refreshBookmarked() {
+        val (start, end) = currentRange() ?: return
+        val marked = bookmarks.value.any { bm ->
+            val p = Position.decode(bm.position) ?: return@any false
+            p >= start && (end == null || p < end)
+        }
+        if (marked != state.bookmarked) update { it.copy(bookmarked = marked) }
+    }
+
+    fun toggleBookmark() {
+        val (start, end) = currentRange() ?: return
+        val book = book ?: return
+        val existing = bookmarks.value.filter { bm ->
+            val p = Position.decode(bm.position) ?: return@filter false
+            p >= start && (end == null || p < end)
+        }
+        viewModelScope.launch {
+            if (existing.isNotEmpty()) {
+                existing.forEach { library.deleteBookmark(it.id) }
+            } else {
+                library.addBookmark(
+                    BookmarkEntity(
+                        bookId = bookId,
+                        position = start.encode(),
+                        chapterTitle = chapterTitleAt(start),
+                        snippet = snippetAt(book, start),
+                        progress = book.progressAt(start),
+                        createdAt = System.currentTimeMillis(),
+                    ),
+                )
+            }
+        }
+    }
+
+    fun deleteBookmark(id: Long) = viewModelScope.launch { library.deleteBookmark(id) }
+
+    // --- Selection and highlights (v0.5) ---
+
+    val highlights: StateFlow<List<HighlightEntity>> =
+        library.highlights(bookId).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Text selected with a long press; lives on the current page only, as in Apple Books. */
+    var selection by mutableStateOf<TextSpan?>(null)
+        private set
+
+    fun select(span: TextSpan?) {
+        selection = span?.takeUnless { it.isEmpty }
+    }
+
+    /** The saved highlight covering [position], if any. */
+    fun highlightAt(position: Position): HighlightEntity? = highlights.value.firstOrNull { h ->
+        val span = spanOf(h) ?: return@firstOrNull false
+        position in span
+    }
+
+    /** Saved highlights that share text with [span] («Убрать» removes them). */
+    fun highlightsOverlapping(span: TextSpan): List<HighlightEntity> = highlights.value.filter { h ->
+        val other = spanOf(h) ?: return@filter false
+        other.start < span.end && span.start < other.end
+    }
+
+    fun spanOf(h: HighlightEntity): TextSpan? {
+        val start = Position.decode(h.start) ?: return null
+        val end = Position.decode(h.end) ?: return null
+        return TextSpan(start, end)
+    }
+
+    /** Plain text of [span]; paragraphs are joined with line breaks. */
+    fun textOf(span: TextSpan): String {
+        val book = book ?: return ""
+        val out = StringBuilder()
+        for (c in span.start.chapter..span.end.chapter) {
+            val blocks = book.chapters.getOrNull(c)?.blocks ?: continue
+            val first = if (c == span.start.chapter) span.start.block else 0
+            val last = if (c == span.end.chapter) span.end.block else blocks.lastIndex
+            for (b in first..minOf(last, blocks.lastIndex)) {
+                val text = (blocks[b] as? Block.Text)?.text ?: continue
+                val from = if (c == span.start.chapter && b == span.start.block) span.start.offset else 0
+                val to = if (c == span.end.chapter && b == span.end.block) span.end.offset else text.length
+                if (to <= from) continue
+                if (out.isNotEmpty()) out.append('\n')
+                out.append(text, from.coerceIn(0, text.length), to.coerceIn(0, text.length))
+            }
+        }
+        return out.toString().trim()
+    }
+
+    /** Text of the paragraph around [span] for the «Выделенное» list: up to ~40 characters before, the rest after. */
+    fun contextOf(span: TextSpan): Pair<String, String> {
+        val blocks = book?.chapters?.getOrNull(span.start.chapter)?.blocks ?: return "" to ""
+        val first = (blocks.getOrNull(span.start.block) as? Block.Text)?.text.orEmpty()
+        val before = first.substring(0, span.start.offset.coerceIn(0, first.length))
+        val last = (blocks.getOrNull(span.end.block) as? Block.Text)?.text.orEmpty()
+        val after = if (span.end.chapter == span.start.chapter) last.substring(span.end.offset.coerceIn(0, last.length)) else ""
+        val trimmed = if (before.length > 40) "…" + before.takeLast(40).substringAfter(' ') else before
+        return trimmed to after.take(200)
+    }
+
+    /**
+     * «Выделить»: saves [span] in the last used colour, merged with any highlight it overlaps
+     * (their notes are kept); returns the new highlight's id.
+     */
+    suspend fun addHighlight(span: TextSpan, note: String? = null): Long {
+        val book = book ?: return -1
+        val overlapping = highlightsOverlapping(span)
+        val merged = overlapping.mapNotNull(::spanOf).fold(span) { acc, s -> TextSpan(minOf(acc.start, s.start), maxOf(acc.end, s.end)) }
+        val notes = (overlapping.mapNotNull { it.note } + listOfNotNull(note)).distinct().joinToString("\n\n").ifBlank { null }
+        overlapping.forEach { library.deleteHighlight(it.id) }
+        return library.addHighlight(
+            HighlightEntity(
+                bookId = bookId,
+                start = merged.start.encode(),
+                end = merged.end.encode(),
+                text = textOf(merged),
+                color = overlapping.firstOrNull()?.color ?: settings.value.highlightColor,
+                note = notes,
+                progress = book.progressAt(merged.start),
+                createdAt = overlapping.minOfOrNull { it.createdAt } ?: System.currentTimeMillis(),
+            ),
+        )
+    }
+
+    /** «Выделить» on a selection; [then] receives the new highlight's id (to show its palette). */
+    fun highlight(span: TextSpan, then: (Long) -> Unit = {}) = viewModelScope.launch { then(addHighlight(span)) }
+
+    /** «Добавить заметку» on a fresh selection: highlights it and keeps the note (an empty note keeps just the highlight). */
+    fun highlightWithNote(span: TextSpan, note: String) = viewModelScope.launch { addHighlight(span, note.takeIf { it.isNotBlank() }) }
+
+    /** Palette choice: recolours [id] and becomes the colour of new highlights. */
+    fun setHighlightColor(id: Long, color: String) = viewModelScope.launch {
+        library.setHighlightColor(id, color)
+        settingsRepository.setHighlightColor(color)
+    }
+
+    /** «Убрать»: deletes every highlight sharing text with [span]. */
+    fun removeHighlights(span: TextSpan) = viewModelScope.launch { highlightsOverlapping(span).forEach { library.deleteHighlight(it.id) } }
+
+    fun deleteHighlight(id: Long) = viewModelScope.launch { library.deleteHighlight(id) }
+
+    fun setHighlightNote(id: Long, note: String?) = viewModelScope.launch { library.setHighlightNote(id, note?.takeIf { it.isNotBlank() }) }
+
+    private fun snippetAt(book: Book, p: Position): String {
+        val sb = StringBuilder()
+        val blocks = book.chapters.getOrNull(p.chapter)?.blocks ?: return ""
+        var i = p.block
+        var offset = p.offset
+        while (i < blocks.size && sb.length < 140) {
+            val b = blocks[i]
+            if (b is Block.Text) {
+                if (sb.isNotEmpty()) sb.append(' ')
+                sb.append(b.text, offset.coerceAtMost(b.text.length), b.text.length)
+            }
+            offset = 0
+            i++
+        }
+        return sb.toString().replace('\n', ' ').take(140).trim()
+    }
+
+    // --- Search ---
+
+    fun search(query: String) {
+        searchJob?.cancel()
+        val book = book ?: return
+        val q = normalize(query.trim())
+        if (q.length < 2) {
+            _search.value = SearchState(query = query)
+            return
+        }
+        _search.value = SearchState(query = query, searching = true)
+        searchJob = viewModelScope.launch {
+            val hits = withContext(Dispatchers.Default) {
+                val result = ArrayList<SearchHit>()
+                outer@ for ((c, chapter) in book.chapters.withIndex()) {
+                    val title = chapter.title
+                    for ((b, block) in chapter.blocks.withIndex()) {
+                        if (block !is Block.Text) continue
+                        val text = normalize(block.text)
+                        var from = 0
+                        while (true) {
+                            val at = text.indexOf(q, from)
+                            if (at < 0) break
+                            val start = (at - 40).coerceAtLeast(0).let { s -> block.text.lastIndexOf(' ', s).takeIf { it >= 0 && at - it < 60 }?.plus(1) ?: s }
+                            val end = (at + q.length + 70).coerceAtMost(block.text.length)
+                            val snippet = block.text.substring(start, end).replace('\n', ' ')
+                            result += SearchHit(Position(c, b, at), chapterTitleAt(Position(c, b, at)) ?: title, snippet, at - start, q.length, q.length)
+                            if (result.size >= MAX_HITS) break@outer
+                            from = at + q.length
+                        }
+                    }
+                }
+                result
+            }
+            _search.value = SearchState(query = query, results = hits, searching = false)
+        }
+    }
+
+    fun openSearchHit(hit: SearchHit) {
+        goTo(hit.position, TextRange(hit.position.chapter, hit.position.block, hit.position.offset, hit.position.offset + hit.length))
+    }
+
+    private fun normalize(s: String): String = s.lowercase().replace('ё', 'е')
+
+    // --- Settings passthrough ---
+
+    fun setFontSize(size: Float) = viewModelScope.launch { settingsRepository.setFontSize(size) }
+    fun saveThemeStyle(theme: ReaderTheme, style: ThemeStyle) = viewModelScope.launch { settingsRepository.setThemeStyle(theme, style) }
+    fun resetThemeStyle(theme: ReaderTheme) = viewModelScope.launch { settingsRepository.resetThemeStyle(theme) }
+
+    /** Original book file, for «Поделиться». */
+    fun bookFile(context: Context): File? =
+        File(context.filesDir, "books").listFiles { f -> f.name.startsWith("$bookId.") }?.firstOrNull()
+    fun setTheme(theme: ReaderTheme) = viewModelScope.launch { settingsRepository.setTheme(theme) }
+    fun setAppearance(value: Appearance) = viewModelScope.launch { settingsRepository.setAppearance(value) }
+    fun setPageTurn(value: PageTurn) = viewModelScope.launch { settingsRepository.setPageTurn(value) }
+    fun setGuideLine(on: Boolean) = viewModelScope.launch { settingsRepository.setGuideLine(on) }
+    fun setGuideDim(value: GuideDim) = viewModelScope.launch { settingsRepository.setGuideDim(value) }
+
+    // --- Reading sessions (kept for Reading Goals) ---
+
+    fun onResume() {
+        sessionStart = System.currentTimeMillis()
+    }
+
+    fun onPause() {
+        val start = sessionStart
+        if (start == 0L) return
+        sessionStart = 0L
+        val duration = System.currentTimeMillis() - start
+        viewModelScope.launch { library.recordSession(bookId, start, duration) }
+        savedPosition.value?.let { pos -> book?.let { b -> viewModelScope.launch { library.savePosition(bookId, pos, b.progressAt(pos)) } } }
+    }
+
+    override fun onCleared() {
+        engine?.cancel()
+    }
+
+    private companion object {
+        const val MAX_HITS = 500
+    }
+}
