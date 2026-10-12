@@ -15,7 +15,7 @@ Branch- or task-specific progress goes to the PR or issue, not here: parallel br
 ## Next steps
 - Check on a device: catalog search/browse/download → opens in reader; Room DB fresh install.
 - Rewrite ADB scripts (`smoke-test`, `reader-regression`, `reader-background-regression`) for the new UI;
-  CI emulator jobs use them too.
+  CI uses only the launch check (`scripts/ci-emulator.ps1`) meanwhile.
 - Prototype roadmap leftovers: `.agents/design/prototype-roadmap.md`; baseline profile not generated.
 - Collect dependency licenses before distributing beyond testing.
 

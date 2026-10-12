@@ -4,7 +4,7 @@ PowerShell tooling: environment check, build, emulator regressions, release pack
 CI pipeline and signing: `.agents/rules/release.md`.
 
 ## Entry points
-- `scripts/doctor.ps1` — checks JDK 17, wrapper, SDK platform 34, build-tools 34.0.0, ADB. Exit 1 = problems
+- `scripts/doctor.ps1` — checks JDK 17, wrapper, SDK platform 37, ADB. Exit 1 = problems
   found; downloads nothing. SDK from `-SdkPath`, `local.properties`, ANDROID_HOME, ANDROID_SDK_ROOT, LOCALAPPDATA.
   `-RequireEmulator -Serial <serial>` also checks the device.
 - `scripts/build.ps1` — `:core:opds:test :core:format:test :app:assembleDebug :app:lintDebug`; creates `local.properties` only if
@@ -15,6 +15,9 @@ CI pipeline and signing: `.agents/rules/release.md`.
 - `scripts/reader-regression.ps1` — leftover cleanup (index, book SHA-256, positions, bookmarks), rotation,
   process death (`am kill` + Recents, PID change), viewport, fast typography. Installs the APK itself.
 - `scripts/reader-background-regression.ps1` — EPUB preparation finishing in background via the debug checkpoint.
+- `scripts/ci-emulator.ps1` — CI emulator gate: installs the packaged APK, launches, rotates, restarts,
+  fails on a crash. Locally: set `ANDROID_HOME` and `EMULATOR_PORT`, run after `package-release.ps1`.
+- Stale (Readium UI): `smoke-test.ps1`, `reader-regression.ps1`, `reader-background-regression.ps1`.
 - `scripts/package-release.ps1`, `scripts/ReleaseMetadata.ps1`, `scripts/publish-release.ps1`,
   `scripts/ci-emulator.ps1`, `scripts/test-release-metadata.ps1` — release pipeline.
 - `scripts/agent-lint.sh` — agent docs lint (template file; update via `.agents/playbooks/upgrade.md`).

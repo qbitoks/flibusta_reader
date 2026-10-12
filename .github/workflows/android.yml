@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       run_emulator:
-        description: Run both offline Android regressions
+        description: Run the emulator install and launch check
         type: boolean
         default: true
 
@@ -35,7 +35,7 @@ jobs:
           java-version: '17'
           cache: gradle
       - name: Install pinned Android SDK components
-        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"'
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;36.0.0"'
       - name: Restore existing preview signing key
         if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
         shell: pwsh
@@ -91,14 +91,14 @@ jobs:
         with:
           name: build-reports
           path: |
-            core/build/reports/tests/
-            core/build/test-results/
+            core/*/build/reports/tests/
+            core/*/build/test-results/
             app/build/reports/lint-results-debug.*
           if-no-files-found: ignore
           retention-days: 14
 
   emulator:
-    name: Android 15 regressions
+    name: Android 15 install and launch check
     needs: build
     if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator)
     runs-on: ubuntu-24.04
@@ -120,7 +120,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Run offline regression scripts
+      - name: Install and launch on the emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 35

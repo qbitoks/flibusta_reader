@@ -17,9 +17,31 @@ foreach ($line in Get-Content artifacts/release/SHA256SUMS.txt) {
     $path = Join-Path 'artifacts/release' $Matches[2]
     if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ine $expected) { throw "Checksum mismatch: $path" }
 }
+# The old ADB regressions drove the Readium UI and are retired; until new ones exist, CI proves that
+# the packaged APK installs, starts, survives a rotation and a restart without crashing.
+function Assert-Running([string]$step) {
+    Start-Sleep -Seconds 6
+    $appPid = (& $adb -s $serial shell pidof net.flibustareader) -join ''
+    if (!$appPid) { throw "App is not running after: $step" }
+    $crash = (& $adb -s $serial logcat -d -b crash) -join "`n"
+    if ($crash -match 'net\.flibustareader') { throw "Crash after: $step`n$crash" }
+}
 try {
-    ./scripts/reader-background-regression.ps1 -Serial $serial -Adb $adb -Apk $apk -RecoverLauncherStartupAnr | Tee-Object -FilePath .tools/ci-background-result.txt
-    ./scripts/reader-regression.ps1 -Serial $serial -Adb $adb -Apk $apk -RecoverLauncherStartupAnr | Tee-Object -FilePath .tools/ci-reader-result.txt
+    & $adb -s $serial logcat -c
+    & $adb -s $serial install -r $apk
+    if ($LASTEXITCODE -ne 0) { throw 'APK install failed' }
+    & $adb -s $serial shell am start -W -n net.flibustareader/.MainActivity | Out-Null
+    Assert-Running 'first launch'
+    & $adb -s $serial shell settings put system accelerometer_rotation 0
+    & $adb -s $serial shell settings put system user_rotation 1
+    Assert-Running 'rotation'
+    & $adb -s $serial shell settings put system user_rotation 0
+    & $adb -s $serial shell am force-stop net.flibustareader
+    & $adb -s $serial shell am start -W -n net.flibustareader/.MainActivity | Out-Null
+    Assert-Running 'restart'
+    & $adb -s $serial shell screencap -p /sdcard/ci-launch.png
+    & $adb -s $serial pull /sdcard/ci-launch.png .tools/ci-launch.png | Out-Null
+    'PASS: install, launch, rotation, restart' | Tee-Object -FilePath .tools/ci-launch-result.txt
 } finally {
     & $adb -s $serial logcat -d > .tools/ci-logcat.txt
 }

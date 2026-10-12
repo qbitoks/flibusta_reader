@@ -14,7 +14,7 @@ if ($SigningKind -eq 'preview' -and $ExpectedCertificateSha256 -notmatch '^[a-fA
 if (!$AndroidSdk -and (Test-Path local.properties)) {
     $AndroidSdk = ConvertFrom-JavaPropertyValue ([regex]::Match((Get-Content local.properties -Raw), '(?m)^sdk\.dir=(.+)').Groups[1].Value.Trim())
 }
-$toolDir = Join-Path $AndroidSdk 'build-tools/34.0.0'
+$toolDir = Join-Path $AndroidSdk 'build-tools/36.0.0'
 $signer = Join-Path $toolDir $(if ($IsWindows) { 'apksigner.bat' } else { 'apksigner' })
 $aapt = Join-Path $toolDir $(if ($IsWindows) { 'aapt.exe' } else { 'aapt' })
 $certificateReport = (& $signer verify --print-certs $Apk 2>&1) -join "`n"
@@ -25,7 +25,8 @@ if ($ExpectedCertificateSha256 -and $certificate -ine $ExpectedCertificateSha256
 $badging = (& $aapt dump badging $Apk 2>&1) -join "`n"
 if ($LASTEXITCODE -ne 0) { throw 'Cannot read APK manifest' }
 if ($badging -notmatch "package: name='net.flibustareader' versionCode='$($metadata.versionCode)' versionName='$([regex]::Escape($metadata.versionName))'" -or
-    $badging -notmatch "(?m)^sdkVersion:'$($metadata.minSdk)'" -or $badging -match '(?m)^native-code:') {
+    $badging -notmatch "(?m)^sdkVersion:'$($metadata.minSdk)'" -or
+    ($badging -match '(?m)^native-code:' -and $badging -notmatch "(?m)^native-code: 'arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64'$")) {
     throw 'APK manifest does not match universal release metadata'
 }
 $commit = (git rev-parse HEAD) -join ''
@@ -34,7 +35,7 @@ New-Item -ItemType Directory -Force $OutDir | Out-Null
 $destination = Join-Path $OutDir $metadata.apkName
 Copy-Item -LiteralPath $Apk -Destination $destination -Force
 $upgrade = if ($SigningKind -eq 'preview') {
-    'Подписан тем же тестовым ключом, что и v0.2.1. Можно устанавливать поверх предыдущих preview APK с той же подписью; не удаляйте приложение, чтобы сохранить книги и позиции.'
+    'Подписан тем же тестовым ключом, что и предыдущие preview. Устанавливается поверх них, но библиотека версий 0.2.x не переносится: книги нужно добавить заново.'
 } else {
     'Промежуточная CI-сборка с временным ключом. Для отдельной тестовой установки; не используйте для обновления ранее установленного preview APK.'
 }
@@ -47,9 +48,9 @@ $notes = @"
 
 **Установка:** разрешите установку APK приложению, которым открываете файл. $upgrade
 
-**Поддержка:** EPUB, FB2/FB2.ZIP, OPDS-поиск, локальная библиотека, настройки чтения и одна закладка на книгу. MOBI/PDF, настоящие обложки и очередь фоновых загрузок пока отсутствуют.
+**Поддержка:** EPUB, FB2/FB2.ZIP, OPDS-каталог, библиотека с коллекциями и обложками, темы и шрифты, закладки, выделения и заметки, перелистывание «Загиб». MOBI/PDF и фоновые загрузки пока отсутствуют.
 
-**Проверки:** JVM-тесты и Android lint выполняются при сборке. Подготовка Release разрешена только после двух регрессионных сценариев на эмуляторе Android 15 (API 35). Физический телефон и прошивки производителей автоматически не проверяются. До проверки на телефоне выпуск остаётся черновиком pre-release.
+**Проверки:** JVM-тесты и Android lint выполняются при сборке. Подготовка Release разрешена только после установки и запуска на эмуляторе Android 15 (API 35). Физический телефон и прошивки производителей автоматически не проверяются. До проверки на телефоне выпуск остаётся черновиком pre-release.
 
 **Версия приложения:** $($metadata.versionName), versionCode $($metadata.versionCode).
 **Исходный коммит:** ``$commit``.

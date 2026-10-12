@@ -4,10 +4,12 @@ Trigger: changing `.github/workflows/android.yml`, release scripts, version, sig
 Push tags and publish releases only on explicit user request.
 
 ## Workflow `.github/workflows/android.yml`
-- Push/PR to main: JDK 17, SDK 34, `:core:test :app:assembleDebug :app:lintDebug`, metadata tests.
+- Push/PR to main: JDK 17, SDK platform 37 + build-tools 36.0.0, `:core:opds:test :core:format:test
+  :app:assembleDebug :app:lintDebug`, metadata tests.
   APK signed with a throwaway CI key, labelled `ci-debug`; reports kept 14 days. No ADB regressions.
-- Manual run: same with the permanent preview key; by default both ADB regressions on API 35. No Release.
-- Tag `vX.Y.Z`: version and signature checks, build, both regressions, draft pre-release.
+- Manual run: same with the permanent preview key; by default `scripts/ci-emulator.ps1` on API 35
+  (install, launch, rotation, restart, no crash). No Release.
+- Tag `vX.Y.Z`: version and signature checks, build, emulator launch check, draft pre-release.
 - Doctor and `:app:compileReleaseKotlin` are not run by CI; run them locally.
 - Actions are pinned by commit SHA; bumping them is CI maintenance, not an app dependency update.
 
@@ -22,7 +24,7 @@ Push tags and publish releases only on explicit user request.
    (a suffix like `-reader-design` is allowed).
 2. Commit, push main, wait for green CI.
 3. `git tag -a vX.Y.Z -m "Flibusta Reader X.Y.Z"` on the verified commit; `git push origin vX.Y.Z`.
-4. Wait for build, regressions, draft. The user checks the APK on a phone, then publishes as Pre-release.
+4. Wait for build, emulator check, draft. The user checks the APK on a phone, then publishes as Pre-release.
 - Never move tags; published releases are never overwritten. Re-running the release job only fills in
   missing files of a matching draft (same SHA-256); mismatches fail.
 
