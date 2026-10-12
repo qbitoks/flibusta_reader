@@ -18,6 +18,16 @@ class BookRepository(private val context: Context) {
     private val directory = File(context.filesDir, "books").apply { mkdirs() }
     private val index = AtomicTextFile(File(directory, "library.json"))
     private val prefs = context.getSharedPreferences("reader", Context.MODE_PRIVATE)
+    init {
+        synchronized(recoveredDirectories) {
+            if (directory.canonicalPath !in recoveredDirectories) {
+                val rows = JSONArray(index.read() ?: "[]")
+                val known = (0 until rows.length()).map { rows.getJSONObject(it).getString("path") }.toSet()
+                directory.listFiles()?.filter { it.extension == "part" || (it.extension == "epub" && it.absolutePath !in known) }?.forEach { it.delete() }
+                recoveredDirectories.add(directory.canonicalPath)
+            }
+        }
+    }
     var catalogBase: String
         get() = prefs.getString("catalog", "https://flibusta.is")!!
         set(value) { prefs.edit().putString("catalog", validateBase(value)).apply() }
@@ -72,8 +82,7 @@ class BookRepository(private val context: Context) {
     }
 
     fun page(address: String): CatalogPage {
-        val bytes = request(address) { stream, _ -> boundedBytes(stream, 5L * 1024 * 1024) }
-        return OpdsParser.parse(bytes.toString(Charsets.UTF_8), address)
+        return request(address) { stream, _, finalUrl -> OpdsParser.parse(boundedBytes(stream, 5L * 1024 * 1024).toString(Charsets.UTF_8), finalUrl) }
     }
 
     fun download(entry: CatalogEntry, format: String, progress: (String) -> Unit): LocalBook {
@@ -82,7 +91,7 @@ class BookRepository(private val context: Context) {
         val address = URL(URL(downloadBase), source.file).toString()
         val temp = File.createTempFile("download", ".part", context.cacheDir)
         try {
-            request(address) { stream, size ->
+            request(address) { stream, size, _ ->
                 temp.outputStream().use { output ->
                     val buffer = ByteArray(32 * 1024)
                     var total = 0L
@@ -125,13 +134,14 @@ class BookRepository(private val context: Context) {
     private fun prepare(input: File, format: String, title: String, author: String): LocalBook {
         val id = UUID.randomUUID().toString()
         val output = File(directory, "$id.epub")
+        val staged = File(directory, "$id.part")
         var actualTitle = title
         try {
             if (format == "EPUB") {
                 ZipFile(input).use { zip ->
                     require(zip.getEntry("META-INF/container.xml") != null) { "Сервер вернул не EPUB. Попробуйте другой источник или FB2." }
                 }
-                input.copyTo(output)
+                input.copyTo(staged)
             } else {
                 val raw = File.createTempFile("fb2", ".fb2", context.cacheDir)
                 try {
@@ -143,12 +153,14 @@ class BookRepository(private val context: Context) {
                             zip.getInputStream(entry).use { raw.writeBytes(boundedBytes(it, MAX_SIZE)) }
                         }
                     } else input.copyTo(raw, overwrite = true)
-                    actualTitle = Fb2Converter.convert(raw, output)
+                    actualTitle = Fb2Converter.convert(raw, staged)
                 } finally { raw.delete() }
             }
             checkCancellation()
+            java.nio.file.Files.move(staged.toPath(), output.toPath(), java.nio.file.StandardCopyOption.ATOMIC_MOVE)
             return save(LocalBook(id, actualTitle, author, output.absolutePath, format))
         } catch (e: Exception) { output.delete(); throw e }
+        finally { staged.delete() }
     }
 
     fun demo(): LocalBook {
@@ -164,28 +176,7 @@ class BookRepository(private val context: Context) {
         } finally { input.delete() }
     }
 
-    private fun <T> request(address: String, read: (InputStream, Long) -> T): T {
-        var url = URL(address)
-        repeat(6) {
-            checkCancellation()
-            require(url.protocol == "https") { "Источник должен использовать HTTPS" }
-            val connection = url.openConnection() as HttpURLConnection
-            connection.connectTimeout = 20_000
-            connection.readTimeout = 30_000
-            connection.instanceFollowRedirects = false
-            connection.setRequestProperty("User-Agent", "FlibustaReader/0.1 Android")
-            try {
-                val code = connection.responseCode
-                if (code in listOf(301, 302, 303, 307, 308)) {
-                    url = URL(url, connection.getHeaderField("Location") ?: error("Пустое перенаправление"))
-                } else {
-                    require(code in 200..299) { "Сервер ответил HTTP $code. Повторите попытку или смените источник." }
-                    return connection.inputStream.use { read(it, connection.contentLengthLong) }
-                }
-            } finally { connection.disconnect() }
-        }
-        error("Слишком много перенаправлений")
-    }
+    private fun <T> request(address: String, read: (InputStream, Long, String) -> T): T = HttpsRequest().read(address, read)
 
     private fun boundedBytes(input: InputStream, limit: Long): ByteArray {
         val output = java.io.ByteArrayOutputStream()
@@ -200,7 +191,10 @@ class BookRepository(private val context: Context) {
         return output.toByteArray()
     }
 
-    companion object { const val MAX_SIZE = 50L * 1024 * 1024 }
+    companion object {
+        const val MAX_SIZE = 50L * 1024 * 1024
+        private val recoveredDirectories = mutableSetOf<String>()
+    }
 
     private fun checkCancellation() {
         if (Thread.currentThread().isInterrupted) throw InterruptedException("Операция отменена")

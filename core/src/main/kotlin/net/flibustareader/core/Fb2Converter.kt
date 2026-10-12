@@ -14,6 +14,22 @@ object Fb2Converter {
         require(input.length() <= 50L * 1024 * 1024) { "FB2 превышает 50 МБ" }
         val root = Xml.parse(input.readBytes()).documentElement
         require((root.localName ?: root.tagName) == "FictionBook") { "Файл не является FB2" }
+        val reserved = mutableSetOf<String>()
+        val pending = java.util.ArrayDeque<Pair<Element, Int>>()
+        pending.add(root to 0)
+        while (pending.isNotEmpty()) {
+            val (element, depth) = pending.removeLast()
+            require(depth <= 128) { "Слишком сложная структура FB2" }
+            element.getAttribute("id").takeIf { it.isNotBlank() }?.let { reserved.add(it) }
+            Xml.children(element).forEach { pending.add(it to depth + 1) }
+        }
+        fun freeId(prefix: String): String {
+            var candidate = prefix
+            var suffix = 0
+            while (!reserved.add(candidate)) candidate = "$prefix-${++suffix}"
+            return candidate
+        }
+        val startId = freeId("start")
         val info = Xml.descendants(root, "title-info").firstOrNull()
         fun text(name: String) = info?.let { Xml.descendants(it, name).firstOrNull()?.textContent?.trim() }.orEmpty()
         val title = text("book-title").ifBlank { input.nameWithoutExtension }
@@ -39,7 +55,11 @@ object Fb2Converter {
             fun content(): String = (0 until element.childNodes.length).joinToString("") { render(element.childNodes.item(it)) }
             val sourceId = element.getAttribute("id")
             if (name == "section") {
-                val id = sourceId.ifBlank { "section-${++sequence}" }
+                val id = sourceId.ifBlank {
+                    var candidate: String
+                    do { candidate = "section-${++sequence}" } while (!reserved.add(candidate))
+                    candidate
+                }
                 Xml.children(element, "title").firstOrNull()?.textContent?.trim()?.takeIf { it.isNotBlank() }?.let { toc += id to it }
                 return "<section id=\"${Xml.escape(id)}\">${content()}</section>"
             }
@@ -69,9 +89,9 @@ object Fb2Converter {
         val bodies = Xml.children(root, "body")
         require(bodies.isNotEmpty()) { "В FB2 нет текста" }
         val html = bodies.joinToString("") { render(it) }
-        if (toc.isEmpty()) toc += "start" to title
+        if (toc.isEmpty()) toc += startId to title
         val escapedTitle = Xml.escape(title)
-        val content = """<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${Xml.escape(language)}"><head><title>$escapedTitle</title><style>body{line-height:1.5}p{margin:0 0 .7em;text-indent:1.2em}header{font-size:1.3em;font-weight:bold;margin:1.5em 0}header p{text-indent:0}img{max-width:100%;height:auto}blockquote{margin:1em}table{max-width:100%}</style></head><body id="start">$html</body></html>"""
+        val content = """<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${Xml.escape(language)}"><head><title>$escapedTitle</title><style>body{line-height:1.5}p{margin:0 0 .7em;text-indent:1.2em}header{font-size:1.3em;font-weight:bold;margin:1.5em 0}header p{text-indent:0}img{max-width:100%;height:auto}blockquote{margin:1em}table{max-width:100%}</style></head><body id="$startId">$html</body></html>"""
         val navItems = toc.joinToString("") { (id, name) -> "<li><a href=\"content.xhtml#${Xml.escape(id)}\">${Xml.escape(name)}</a></li>" }
         val nav = """<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Оглавление</title></head><body><nav epub:type="toc"><h1>Оглавление</h1><ol>$navItems</ol></nav></body></html>"""
         val imageManifest = images.values.mapIndexed { i, image -> "<item id=\"image$i\" href=\"${image.first}\" media-type=\"${image.second}\"/>" }.joinToString("")

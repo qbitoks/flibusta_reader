@@ -8,7 +8,9 @@ import org.xml.sax.SAXException
 
 internal object Xml {
     fun parse(bytes: ByteArray): Document {
-        require(!bytes.toString(Charsets.ISO_8859_1).replace("\u0000", "").contains("<!DOCTYPE", ignoreCase = true)) { "DTD в книге не поддерживается" }
+        val declarations = bytes.toString(Charsets.ISO_8859_1).replace("\u0000", "")
+            .replace(Regex("<!--.*?-->|<!\\[CDATA\\[.*?\\]\\]>", RegexOption.DOT_MATCHES_ALL), "")
+        require(!declarations.contains("<!DOCTYPE", ignoreCase = true)) { "DTD в книге не поддерживается" }
         val factory = DocumentBuilderFactory.newInstance().apply {
             isNamespaceAware = true
             isExpandEntityReferences = false

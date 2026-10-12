@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
@@ -34,15 +34,16 @@ import java.net.URLEncoder
 
 class MainActivity : ComponentActivity() {
     private lateinit var repository: BookRepository
-    private var books by mutableStateOf<List<LocalBook>>(emptyList())
-    private var tab by mutableIntStateOf(0)
-    private var query by mutableStateOf("")
-    private var searchAuthors by mutableStateOf(false)
-    private var page by mutableStateOf<CatalogPage?>(null)
-    private var currentAddress = ""
-    private val history = mutableListOf<Pair<String, CatalogPage>>()
-    private var busy by mutableStateOf(false)
-    private var status by mutableStateOf<String?>(null)
+    private var books: List<LocalBook> get() = state.books; set(value) { state.books = value }
+    private val state by lazy { androidx.lifecycle.ViewModelProvider(this)[CatalogState::class.java] }
+    private var tab: Int get() = state.tab; set(value) { state.tab = value }
+    private var query: String get() = state.query; set(value) { state.query = value }
+    private var searchAuthors: Boolean get() = state.searchAuthors; set(value) { state.searchAuthors = value }
+    private var page: CatalogPage? get() = state.page; set(value) { state.page = value }
+    private var currentAddress: String get() = state.currentAddress; set(value) { state.currentAddress = value }
+    private val history get() = state.history
+    private var busy: Boolean get() = state.busy; set(value) { state.busy = value }
+    private var status: String? get() = state.status; set(value) { state.status = value }
     private var selected by mutableStateOf<CatalogEntry?>(null)
     private var sources by mutableStateOf(false)
     private val importer = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -51,9 +52,32 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        repository = BookRepository(this)
+        repository = BookRepository(applicationContext)
         books = repository.library()
+        if (!state.initialized) {
+            state.initialized = true
+            savedInstanceState?.let {
+                tab = it.getInt("tab")
+                query = it.getString("query").orEmpty()
+                searchAuthors = it.getBoolean("authors")
+                currentAddress = it.getString("address").orEmpty()
+                val addresses = it.getStringArrayList("history").orEmpty()
+                if (currentAddress.isNotBlank()) perform("Восстановление каталога…") {
+                    addresses.forEach { address -> history.add(address to repository.page(address)) }
+                    page = repository.page(currentAddress)
+                }
+            }
+        }
         setContent { ReaderTheme { App() } }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt("tab", tab)
+        outState.putString("query", query)
+        outState.putBoolean("authors", searchAuthors)
+        outState.putString("address", currentAddress)
+        outState.putStringArrayList("history", ArrayList(history.map { it.first }))
+        super.onSaveInstanceState(outState)
     }
 
     override fun onResume() { super.onResume(); if (::repository.isInitialized) books = repository.library() }
@@ -61,7 +85,7 @@ class MainActivity : ComponentActivity() {
     private fun perform(message: String, action: () -> Unit) {
         if (busy) return
         busy = true; status = message
-        lifecycleScope.launch {
+        state.viewModelScope.launch {
             try { runInterruptible(Dispatchers.IO) { action() }; status = null }
             catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (e: Exception) { status = e.message ?: "Не удалось выполнить действие" }
@@ -81,7 +105,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun open(book: LocalBook) {
-        startActivity(Intent(this, ReaderActivity::class.java).putExtra("id", book.id).putExtra("path", book.path).putExtra("title", book.title))
+        startActivity(Intent(this, ReaderActivity::class.java).putExtra("id", book.id).putExtra("path", book.path).putExtra("title", book.title).putExtra("author", book.author))
     }
 
     @OptIn(ExperimentalMaterial3Api::class)

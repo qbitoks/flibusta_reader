@@ -6,8 +6,8 @@ android {
         applicationId = "net.flibustareader"
         minSdk = 34
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0-prototype"
+        versionCode = 3
+        versionName = "0.2.1-reader-design"
     }
     buildFeatures { compose = true }
     composeOptions { kotlinCompilerExtensionVersion = "1.5.14" }
