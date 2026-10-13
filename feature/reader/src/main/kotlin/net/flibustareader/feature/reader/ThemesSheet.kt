@@ -37,6 +37,8 @@ import androidx.compose.material.icons.rounded.TextRotationNone
 import androidx.compose.material.icons.rounded.ViewCarousel
 import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.material.icons.rounded.CropPortrait
+import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.material.icons.rounded.VerticalAlignCenter
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -63,6 +65,9 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.flibustareader.core.data.settings.Appearance
+import net.flibustareader.core.data.settings.FooterPage
+import net.flibustareader.core.data.settings.FooterStyle
+import net.flibustareader.core.data.settings.PageHeader
 import net.flibustareader.core.data.settings.PageTurn
 import net.flibustareader.core.data.settings.ReaderSettings
 import net.flibustareader.core.data.settings.ReaderTheme
@@ -113,8 +118,13 @@ internal fun ThemesSheet(
     onDismiss: () -> Unit,
 ) {
     var customizing by remember { mutableStateOf(false) }
+    var chrome by remember { mutableStateOf(false) }
     if (customizing) {
         CustomizeSheet(vm, settings, onDone = { customizing = false })
+        return
+    }
+    if (chrome) {
+        PageChromeSheet(vm, settings, onDone = { chrome = false })
         return
     }
     val appearance by vm.appearance.collectAsStateWithLifecycle()
@@ -193,16 +203,24 @@ internal fun ThemesSheet(
                         }
                     }
                 }
-                Row(
-                    Modifier.fillMaxWidth().height(46.dp).clip(CircleShape).background(top).clickable { customizing = true },
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Rounded.Settings, null, tint = ink, modifier = Modifier.size(20.dp))
-                    Text("  " + stringResource(R.string.themes_customize), fontFamily = UiSans, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = ink)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    PanelButton(Icons.Rounded.Settings, stringResource(R.string.themes_customize), top, ink, Modifier.weight(1f)) { customizing = true }
+                    PanelButton(Icons.Rounded.VerticalAlignCenter, stringResource(R.string.page_chrome_button), top, ink, Modifier.weight(1f)) { chrome = true }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PanelButton(icon: ImageVector, text: String, container: Color, ink: Color, modifier: Modifier, onClick: () -> Unit) {
+    Row(
+        modifier.height(46.dp).clip(CircleShape).background(container).clickable(onClick = onClick).padding(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, null, tint = ink, modifier = Modifier.size(20.dp))
+        Text("  " + text, fontFamily = UiSans, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = ink, maxLines = 1)
     }
 }
 
@@ -374,6 +392,96 @@ private fun CustomizeSheet(vm: ReaderViewModel, settings: ReaderSettings, onDone
             Spacer(Modifier.height(40.dp))
         }
     }
+}
+
+private fun PageHeader.label(): Int = when (this) {
+    PageHeader.None -> R.string.header_none
+    PageHeader.Book -> R.string.header_book
+    PageHeader.Chapter -> R.string.header_chapter
+}
+
+/**
+ * «Колонтитулы»: what the lines above and under the text show. Unlike «Настройка темы» there is
+ * no draft: every change shows on the page behind the sheet at once.
+ */
+@Composable
+private fun PageChromeSheet(vm: ReaderViewModel, settings: ReaderSettings, onDone: () -> Unit) {
+    val c = Flibusta.colors
+    val footer = settings.footer
+    FlibustaSheet(onDismiss = onDone, containerColor = c.groupedBackground) {
+        SheetHeader(
+            title = stringResource(R.string.page_chrome_title),
+            trailing = { CircleButton(Icons.Rounded.Check, stringResource(R.string.themes_done), onDone, style = CircleButtonStyle.Confirm) },
+        )
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GroupHeader(stringResource(R.string.header_group))
+            GroupedCard {
+                PageHeader.entries.forEachIndexed { i, header ->
+                    if (i > 0) Divider()
+                    SettingRow(title = stringResource(header.label()), onClick = { vm.setPageHeader(header) }) {
+                        if (settings.header == header) Icon(Icons.Rounded.Check, null, tint = c.label, modifier = Modifier.size(20.dp))
+                    }
+                }
+            }
+            Note(stringResource(R.string.header_note))
+            GroupHeader(stringResource(R.string.footer_group))
+            GroupedCard {
+                SettingRow(title = stringResource(R.string.footer_page)) {
+                    val options = listOf(
+                        FooterPage.None to stringResource(R.string.footer_page_none),
+                        FooterPage.Number to "42",
+                        FooterPage.NumberOfTotal to stringResource(R.string.reader_page_of, 42, 586),
+                        FooterPage.Percent to stringResource(R.string.footer_page_percent),
+                    )
+                    ChoiceMenu(options, footer.page) { vm.setPageFooter(footer.copy(page = it)) }
+                }
+                Divider()
+                SettingRow(title = stringResource(R.string.footer_pages_left)) {
+                    IosSwitch(footer.pagesLeft, { vm.setPageFooter(footer.copy(pagesLeft = it)) })
+                }
+                Divider()
+                SettingRow(title = stringResource(R.string.footer_clock)) {
+                    IosSwitch(footer.clock, { vm.setPageFooter(footer.copy(clock = it)) })
+                }
+                Divider()
+                SettingRow(title = stringResource(R.string.footer_battery)) {
+                    IosSwitch(footer.battery, { vm.setPageFooter(footer.copy(battery = it)) })
+                }
+                Divider()
+                SettingRow(title = stringResource(R.string.footer_style)) {
+                    val options = listOf(
+                        FooterStyle.Fade to stringResource(R.string.footer_style_fade),
+                        FooterStyle.Strip to stringResource(R.string.footer_style_strip),
+                    )
+                    ChoiceMenu(options, footer.style) { vm.setPageFooter(footer.copy(style = it)) }
+                }
+            }
+            Note(stringResource(R.string.footer_note))
+            Spacer(Modifier.height(40.dp))
+        }
+    }
+}
+
+/** The current choice in grey with a chevron; a tap opens the options with a check by the current one. */
+@Composable
+private fun <T> ChoiceMenu(options: List<Pair<T, String>>, current: T, onSelect: (T) -> Unit) {
+    val c = Flibusta.colors
+    var open by remember { mutableStateOf(false) }
+    Box {
+        Row(Modifier.clickable(role = Role.Button) { open = true }, verticalAlignment = Alignment.CenterVertically) {
+            Text(options.firstOrNull { it.first == current }?.second.orEmpty(), style = FlibustaType.body, color = c.secondaryLabel)
+            Icon(Icons.Rounded.UnfoldMore, null, tint = c.tertiaryLabel, modifier = Modifier.padding(start = 4.dp).size(18.dp))
+        }
+        PullDownMenu(open, { open = false }, checkColumn = true) {
+            options.forEach { (value, label) -> Item(label, { onSelect(value) }, checked = value == current) }
+        }
+    }
+}
+
+/** Grey explanation under a group. */
+@Composable
+private fun Note(text: String) {
+    Text(text, style = FlibustaType.footnote, color = Flibusta.colors.secondaryLabel, modifier = Modifier.padding(start = 34.dp, end = 34.dp, top = 8.dp))
 }
 
 /** «Aa» and a few lines of sample text in the draft style, fading out at the bottom. */

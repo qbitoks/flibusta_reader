@@ -52,6 +52,11 @@ class Page(
     val index: Int,
     val start: Position,
     val items: List<PageItem>,
+    /**
+     * Space the page break swallowed above the first item (paragraph spacing, a separator line).
+     * Pages draw from y = 0; the scroll mode puts this gap back so stacked pages read as one text.
+     */
+    val lead: Float = 0f,
 )
 
 class ChapterPages(val chapter: Int, val pages: List<Page>) {
@@ -100,7 +105,7 @@ class Paginator(
         for ((i, block) in blocks.withIndex()) {
             when (block) {
                 Block.Separator -> {
-                    if (builder.y > 0f) builder.y += styler.bodyLineHeight
+                    if (builder.y > 0f) builder.y += styler.bodyLineHeight else if (builder.pages.isNotEmpty()) builder.lead += styler.bodyLineHeight
                     if (builder.y >= height) builder.breakPage()
                 }
 
@@ -117,7 +122,9 @@ class Paginator(
                     if (builder.y > 0f && builder.y + h > height) builder.breakPage()
                     builder.markStart(Position(chapterIndex, i, 0))
                     builder.items += PageItem.Image(i, builder.y, (width - w) / 2f, w, h, block.resource)
-                    builder.y += h + em * 0.6f
+                    builder.y += h
+                    builder.bottom = builder.y
+                    builder.y += em * 0.6f
                 }
 
                 is Block.Text -> {
@@ -160,6 +167,7 @@ class Paginator(
                         builder.markStart(Position(chapterIndex, i, layout.getLineStart(line)))
                         builder.items += PageItem.Text(i, builder.y, left, layout, line, line + fit, justified = style.align == Align.Justify)
                         builder.y += (layout.getLineBottom(line + fit - 1) - base).toFloat()
+                        builder.bottom = builder.y
                         line += fit
                         if (line < lineCount) builder.breakPage()
                     }
@@ -178,6 +186,10 @@ class Paginator(
         val pages = ArrayList<Page>()
         var items = ArrayList<PageItem>()
         var y = 0f
+        /** Bottom of the last placed item; [y] minus it is spacing still pending below. */
+        var bottom = 0f
+        /** Spacing carried over the page break to the next page ([Page.lead]). */
+        var lead = 0f
         private var start: Position? = null
 
         fun markStart(position: Position) {
@@ -186,10 +198,12 @@ class Paginator(
 
         fun breakPage() {
             if (items.isNotEmpty()) {
-                pages += Page(chapter, pages.size, start ?: Position(chapter), items)
+                pages += Page(chapter, pages.size, start ?: Position(chapter), items, lead)
+                lead = (y - bottom).coerceAtLeast(0f)
             }
             items = ArrayList()
             y = 0f
+            bottom = 0f
             start = null
         }
     }

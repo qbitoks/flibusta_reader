@@ -86,6 +86,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import net.flibustareader.core.data.db.HighlightEntity
 import net.flibustareader.core.data.library.BookSharing
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -96,7 +97,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.flibustareader.core.data.settings.Appearance
+import net.flibustareader.core.data.settings.FooterStyle
+import net.flibustareader.core.data.settings.PageHeader
 import net.flibustareader.core.data.settings.PageTurn
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import net.flibustareader.core.designsystem.ReaderFont
 import net.flibustareader.core.designsystem.ReaderPalette
 import net.flibustareader.core.designsystem.ReaderPalettes
@@ -117,9 +123,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 
 internal enum class ReaderSheet { Contents, Bookmarks, Search, Themes, Customize }
-
-/** Width of the edge strips that turn pages on tap (white spot 1: about 10 % each side). */
-private const val EDGE_TAP = 0.10f
 
 @Composable
 fun ReaderRoute(onClose: () -> Unit, viewModel: ReaderViewModel = hiltViewModel()) {
@@ -178,6 +181,9 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
     var noteFor by remember { mutableStateOf<NoteTarget?>(null) }
     /** Highlight whose colour palette is open (#72). */
     var activeHighlight by remember { mutableStateOf<Long?>(null) }
+    /** Page the selection or the open palette belongs to (the scroll mode has many pages on screen). */
+    var focusPage by remember { mutableStateOf<Page?>(null) }
+    val locator = remember { ScrollLocator() }
     val clipboard = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
@@ -191,14 +197,38 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
     // Insets ignoring visibility: showing or hiding the bars must never re-paginate the book.
     val topInset = with(density) { WindowInsets.statusBarsIgnoringVisibility.getTop(density).toDp() }
     val bottomInset = with(density) { WindowInsets.navigationBarsIgnoringVisibility.getBottom(density).toDp() }
+    val header = settings.header
+    val footer = settings.footer
+    val margin = settings.style.margin.dp
+    // Without a line above, the text starts right under the status bar area; without anything
+    // below, it runs to the bottom. Changing either re-paginates, as a font change does.
     val padding = PaddingValues(
-        start = settings.style.margin.dp,
-        end = settings.style.margin.dp,
-        top = topInset + 56.dp,
-        bottom = bottomInset + 60.dp,
+        start = margin,
+        end = margin,
+        top = topInset + if (header == PageHeader.None) 12.dp else 56.dp,
+        bottom = bottomInset + if (footer.isEmpty) 20.dp else 60.dp,
     )
     val headerY = topInset + 14.dp
     val footerY = bottomInset + 16.dp
+
+    // «↶» shows by itself for a moment after a jump, until the first page turn; otherwise only with the controls.
+    var backFlash by remember { mutableStateOf(false) }
+    LaunchedEffect(vm.landedJumps) {
+        if (vm.landedJumps == 0) return@LaunchedEffect
+        val landed = vm.state.current
+        backFlash = true
+        withTimeoutOrNull(3000) { snapshotFlow { vm.state.current }.first { it != landed } }
+        backFlash = false
+    }
+
+    val clock by rememberClock(footer.clock)
+    val battery by rememberBattery(footer.battery)
+    val footerWords = FooterWords(
+        pageOf = { n, total -> context.getString(R.string.reader_page_of, n, total) },
+        percent = { context.getString(R.string.reader_percent, it) },
+        pagesLeft = { context.resources.getQuantityString(R.plurals.footer_left_in_chapter, it, it) },
+        chapterEnd = stringResource(R.string.reader_chapter_end),
+    )
 
     BoxWithConstraints(Modifier.fillMaxSize().background(palette.background)) {
         val widthPx = constraints.maxWidth
@@ -211,8 +241,16 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
             vm.onViewport(Viewport(w.toInt(), h.toInt(), density.density, density.fontScale))
         }
 
-        val guideOn = settings.guideLine && settings.pageTurn != PageTurn.Scroll
-        val guideLines = remember(state.page) { state.page?.let(PageRenderer::lines).orEmpty() }
+        val scroll = settings.pageTurn == PageTurn.Scroll
+        val guideOn = settings.guideLine && !scroll
+        // Time and battery repeat the status bar, so they hide with the controls up; the guide-line
+        // button and the bookmark badge sit in the corners, so the line makes room for them.
+        val footerClock = clock.takeIf { !chromeVisible }
+        val footerBattery = battery.takeIf { !chromeVisible }
+        val footerStart = if (guideOn) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
+        val footerEnd = if (state.bookmarked && !chromeVisible) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
+        val marks = chromeVisible || backFlash
+        val guideLines = remember(state.page, guideOn) { state.page?.takeIf { guideOn }?.let(PageRenderer::lines).orEmpty() }
         LaunchedEffect(state.page) {
             guideIndex = if (guideToLast) guideLines.lastIndex.coerceAtLeast(0) else 0
             guideToLast = false
@@ -245,22 +283,23 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
         }
         /** The word a long press started on; dragging extends the selection from it. */
         var anchor by remember { mutableStateOf<TextSpan?>(null) }
+        val contentOrigin = Offset(contentLeft, contentTop)
 
-        fun onLongPress(offset: Offset): Boolean {
+        /** Long press at [local] (content-box coordinates of [page]) selects the word there. */
+        fun startSelection(page: Page, local: Offset): Boolean {
             if (menuVisible) return false
-            val page = vm.state.page ?: return false
-            val word = PageRenderer.wordAt(page, offset.x - contentLeft, offset.y - contentTop) ?: return false
+            val word = PageRenderer.wordAt(page, local.x, local.y) ?: return false
             anchor = word
+            focusPage = page
             vm.select(word)
             chromeVisible = false
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             return true
         }
 
-        fun onLongPressDrag(offset: Offset) {
-            val page = vm.state.page ?: return
+        fun extendSelection(page: Page, local: Offset) {
             val from = anchor ?: return
-            val p = PageRenderer.positionNear(page, offset.x - contentLeft, offset.y - contentTop) ?: return
+            val p = PageRenderer.positionNear(page, local.x, local.y) ?: return
             vm.select(if (p < from.start) TextSpan(p, from.end) else TextSpan(from.start, maxOf(p, from.end)))
         }
 
@@ -276,26 +315,28 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
             return true
         }
 
-        fun onTap(offset: Offset, width: Float): TapAction {
+        /** A tap that closes what is open or opens what is under it ([local]: content box of [page]); false if it did neither. */
+        fun tapOnPage(page: Page?, local: Offset): Boolean {
             if (menuVisible) {
                 menuVisible = false
-                return TapAction.Handled
+                return true
             }
             if (vm.selection != null || activeHighlight != null) {
                 vm.select(null)
                 activeHighlight = null
-                return TapAction.Handled
+                return true
             }
-            val page = vm.state.page
-            if (page != null && openTarget(page, offset.x - contentLeft, offset.y - contentTop)) return TapAction.Handled
+            if (page != null && openTarget(page, local.x, local.y)) return true
             vm.clearHighlight()
             // A tap on a saved highlight opens its colour palette (#72).
-            val hit = page?.let { PageRenderer.hitTest(it, offset.x - contentLeft, offset.y - contentTop) }
-            val saved = hit?.let(vm::highlightAt)
-            if (saved != null) {
-                activeHighlight = saved.id
-                return TapAction.Handled
-            }
+            val saved = page?.let { PageRenderer.hitTest(it, local.x, local.y) }?.let(vm::highlightAt) ?: return false
+            activeHighlight = saved.id
+            focusPage = page
+            return true
+        }
+
+        fun onTap(offset: Offset, width: Float): TapAction {
+            if (tapOnPage(vm.state.page, offset - contentOrigin)) return TapAction.Handled
             val plate = currentGuidePlate
             if (plate != null) {
                 // With the guide line on, a tap on the right half steps it down a line and on the left half
@@ -306,9 +347,10 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
                     else -> if (guideIndex > 0) { guideIndex--; TapAction.Handled } else { guideToLast = true; TapAction.Prev }
                 }
             }
-            return when {
-                offset.x < width * EDGE_TAP -> TapAction.Prev
-                offset.x > width * (1 - EDGE_TAP) -> TapAction.Next
+            // Outer thirds turn the page (and put the controls away); the middle toggles them.
+            return when (tapZone(offset.x, width)) {
+                -1 -> { chromeVisible = false; TapAction.Prev }
+                1 -> { chromeVisible = false; TapAction.Next }
                 else -> {
                     chromeVisible = !chromeVisible
                     TapAction.ToggleChrome
@@ -328,28 +370,31 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
                 strokeWidth = 2.dp,
                 modifier = Modifier.align(Alignment.Center).size(28.dp),
             )
-            settings.pageTurn == PageTurn.Scroll -> ScrollReader(
+            scroll -> ScrollReader(
                 vm = vm,
+                generation = state.layoutGeneration,
                 palette = palette,
                 padding = padding,
-                onTapPage = { page, local ->
-                    if (menuVisible) {
-                        menuVisible = false
-                    } else if (!openTarget(page, local.x, local.y)) {
-                        vm.clearHighlight()
-                        chromeVisible = !chromeVisible
-                    }
-                },
+                highlight = state.highlight,
+                marks = if (selection != null && focusPage != null) savedMarks + Mark(selection, selectionColor) else savedMarks,
+                locator = locator,
+                onTap = { page, local -> if (!tapOnPage(page, local)) chromeVisible = !chromeVisible },
+                onLongPress = ::startSelection,
+                onLongPressDrag = ::extendSelection,
                 onScrollStart = {
                     chromeVisible = false
                     menuVisible = false
+                    vm.select(null)
+                    activeHighlight = null
                 },
-                marks = savedMarks,
+                pageOverlay = { page -> NoteMarkers(page, Offset.Zero, highlights, vm, palette) { noteFor = it } },
             )
             else -> HorizontalPageTurner(
                 current = state.page,
                 prev = state.prev,
                 next = state.next,
+                canPrev = state.hasPrev,
+                canNext = state.hasNext,
                 mode = when {
                     settings.pageTurn == PageTurn.Fade -> TurnMode.Fade
                     settings.pageTurn == PageTurn.Curl && PageCurl.supported -> TurnMode.Curl
@@ -367,8 +412,8 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
                 },
                 onSwipeDown = onClose,
                 pageColor = palette.background,
-                onLongPress = ::onLongPress,
-                onLongPressDrag = ::onLongPressDrag,
+                onLongPress = { offset -> vm.state.page?.let { startSelection(it, offset - contentOrigin) } ?: false },
+                onLongPressDrag = { offset -> vm.state.page?.let { extendSelection(it, offset - contentOrigin) } },
                 modifier = Modifier.fillMaxSize(),
             ) { page ->
                 key(state.layoutGeneration) {
@@ -383,19 +428,36 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
                             modifier = Modifier.fillMaxSize().padding(padding),
                             marks = if (page != null && page === state.page && selection != null) savedMarks + Mark(selection, selectionColor) else savedMarks,
                         )
-                        PageTitle(
-                            state.title, palette, Modifier.align(Alignment.TopCenter).padding(top = headerY),
-                            titleMargin(chromeVisible, vm.history),
-                        )
-                        PageLabel(
-                            page = page?.let { vm.pageNumberOf(it.start) },
-                            total = state.totalPages,
-                            full = chromeVisible,
-                            palette = palette,
-                            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = footerY + 12.dp),
-                        )
+                        headerText(header, state.title, page?.let { vm.chapterTitleAt(it.start) })?.let { title ->
+                            PageTitle(
+                                title, palette, Modifier.align(Alignment.TopCenter).padding(top = headerY),
+                                titleMargin(marks, chromeVisible, vm.history),
+                            )
+                        }
+                        if (!footer.isEmpty && page != null) {
+                            PageFooterBar(
+                                center = footerCenter(footer, chromeVisible, vm.pageNumberOf(page.start), state.totalPages, vm.progressOf(page), vm.pagesLeftAfter(page), footerWords),
+                                clock = footerClock,
+                                battery = footerBattery,
+                                palette = palette,
+                                modifier = Modifier.align(Alignment.BottomCenter).padding(start = margin, end = margin, bottom = footerY + 12.dp),
+                                startInset = footerStart,
+                                endInset = footerEnd,
+                            )
+                        }
                     }
                 }
+            }
+        }
+
+        // Scrolling text dissolves under the lines above and below it, or passes under the strip.
+        if (scroll) {
+            // Solid behind the title and the bottom line, fading only over the last few dp before the text.
+            EdgeFade(palette, padding.calculateTopPadding(), top = true, modifier = Modifier.align(Alignment.TopCenter), fade = 18.dp)
+            if (!footer.isEmpty && footer.style == FooterStyle.Strip) {
+                FooterStrip(palette, bottomInset + FooterStripHeight, Modifier.align(Alignment.BottomCenter))
+            } else {
+                EdgeFade(palette, padding.calculateBottomPadding(), top = false, modifier = Modifier.align(Alignment.BottomCenter), fade = 12.dp)
             }
         }
 
@@ -404,14 +466,22 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
             GuideLineOverlay(it, textArea, settings.guideDim.fade, palette)
         }
 
-        val selectedPage = state.page
-        if (selection != null && selectedPage != null) {
+        // Selection and the highlight palette sit on the page they were made on: the current page,
+        // or in the scroll mode the page under the finger, wherever the list has it now.
+        // Reading the list's layout recomposes on every scroll frame, so only while something is open.
+        val focus = if (scroll) focusPage else state.page
+        val focusOrigin = when {
+            !scroll -> contentOrigin
+            selection != null || activeHighlight != null -> focus?.let(locator::originOf)
+            else -> null
+        }
+        if (selection != null && focus != null && focusOrigin != null) {
             val touched = vm.highlightsOverlapping(selection)
             fun done() = vm.select(null)
             SelectionLayer(
-                page = selectedPage,
+                page = focus,
                 selection = selection,
-                origin = Offset(contentLeft, contentTop),
+                origin = focusOrigin,
                 limit = heightPx - with(density) { 90.dp.toPx() },
                 palette = palette,
                 actions = SelectionActions(
@@ -447,59 +517,64 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
             )
         }
 
-        // Note markers at the start of highlights with notes (#78), and the palette of the tapped highlight (#72).
+        // Note markers at the start of highlights with notes (#78); the scroll mode draws them on its pages.
         val shownPage = state.page
-        if (shownPage != null && settings.pageTurn != PageTurn.Scroll) {
-            val markerHalf = with(density) { 11.dp.toPx() }
-            highlights.forEach { h ->
-                val note = h.note ?: return@forEach
-                val span = vm.spanOf(h) ?: return@forEach
-                val (first, _) = PageRenderer.bounds(shownPage, span) ?: return@forEach
-                val color = HighlightColor.of(h.color)
-                NoteMarker(
-                    color = highlightPaint(color, palette, active = true),
-                    palette = palette,
-                    modifier = Modifier.offset {
-                        IntOffset((contentLeft + first.left - markerHalf).roundToInt(), (contentTop + first.top - markerHalf).roundToInt())
-                    },
-                ) { noteFor = NoteTarget(h.id, span, note, color, h.createdAt) }
-            }
-            val active = highlights.firstOrNull { it.id == activeHighlight }
-            val activeSpan = active?.let(vm::spanOf)
-            val activeBounds = activeSpan?.let { PageRenderer.bounds(shownPage, it) }
-            if (active != null && activeBounds != null) {
-                val gap = with(density) { 8.dp.toPx() }
-                val paletteHeight = with(density) { 44.dp.toPx() }
-                val above = contentTop + activeBounds.first.top - gap - paletteHeight
-                val y = if (above > contentTop - with(density) { 30.dp.toPx() }) above else contentTop + activeBounds.second.bottom + gap
-                Box(Modifier.fillMaxWidth().offset { IntOffset(0, y.roundToInt()) }, contentAlignment = Alignment.TopCenter) {
-                    HighlightPalette(palette, onPick = { vm.setHighlightColor(active.id, it.key) })
-                }
+        if (shownPage != null && !scroll) {
+            NoteMarkers(shownPage, contentOrigin, highlights, vm, palette) { noteFor = it }
+        }
+        // The palette of the tapped highlight (#72).
+        val active = highlights.firstOrNull { it.id == activeHighlight }
+        val activeBounds = active?.let(vm::spanOf)?.let { span -> focus?.let { PageRenderer.bounds(it, span) } }
+        if (active != null && activeBounds != null && focusOrigin != null) {
+            val gap = with(density) { 8.dp.toPx() }
+            val paletteHeight = with(density) { 44.dp.toPx() }
+            val above = focusOrigin.y + activeBounds.first.top - gap - paletteHeight
+            val y = if (above > contentTop - with(density) { 30.dp.toPx() }) above else focusOrigin.y + activeBounds.second.bottom + gap
+            Box(Modifier.fillMaxWidth().offset { IntOffset(0, y.roundToInt()) }, contentAlignment = Alignment.TopCenter) {
+                HighlightPalette(palette, onPick = { vm.setHighlightColor(active.id, it.key) })
             }
         }
 
-        // Header: the book title is always there; ↶ / ↷ appear after jumps (white spot 7).
-        val scroll = settings.pageTurn == PageTurn.Scroll
+        // With nothing above the text, the controls get a band of page colour to stand on.
+        AnimatedVisibility(
+            visible = chromeVisible && header == PageHeader.None,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopCenter),
+        ) {
+            EdgeFade(palette, topInset + 64.dp, top = true)
+        }
+
+        // Header: the chosen title; ↶ / ↷ appear with the controls, and ↶ for a moment after a jump (white spot 7).
         ReaderHeader(
-            title = if (scroll) state.title else null,
+            title = if (scroll) headerText(header, state.title, state.chapterTitle) else null,
             history = vm.history,
             pageNumberOf = vm::pageNumberOf,
             palette = palette,
             chromeVisible = chromeVisible,
+            showBack = marks,
             onBack = vm::historyBack,
             onForward = vm::historyForward,
             onClose = onClose,
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = headerY),
+            // Over scrolling text the title sits a little higher, clear of the fade above the text.
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = if (scroll) headerY - 10.dp else headerY),
         )
 
-        // Footer: «6 из 1269» with the controls, just «6» without them (white spot 5).
-        if (scroll) {
-            PageLabel(
-                page = state.globalPage,
-                total = state.totalPages,
-                full = chromeVisible,
+        // Footer: «6 из 1269» with the controls, just «6» without them (white spot 5), plus time and battery.
+        if (scroll && !footer.isEmpty) {
+            val strip = footer.style == FooterStyle.Strip
+            PageFooterBar(
+                center = footerCenter(footer, chromeVisible, state.globalPage, state.totalPages, state.progress, state.pagesLeftInChapter.takeIf { state.page != null }, footerWords),
+                clock = footerClock,
+                battery = footerBattery,
                 palette = palette,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = footerY + 12.dp),
+                modifier = Modifier.align(Alignment.BottomCenter).padding(
+                    start = margin,
+                    end = margin,
+                    bottom = if (strip) bottomInset + (FooterStripHeight - 20.dp) / 2 else footerY + 12.dp,
+                ),
+                startInset = footerStart,
+                endInset = footerEnd,
             )
         }
 
@@ -577,6 +652,32 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
     image?.let { ImageViewer(it, onDismiss = { image = null }) }
 }
 
+/** Round markers at the start of highlights with notes on [page]; [origin] is its content box's top-left (#78). */
+@Composable
+private fun NoteMarkers(
+    page: Page,
+    origin: Offset,
+    highlights: List<HighlightEntity>,
+    vm: ReaderViewModel,
+    palette: ReaderPalette,
+    onOpen: (NoteTarget) -> Unit,
+) {
+    val markerHalf = with(LocalDensity.current) { 11.dp.toPx() }
+    highlights.forEach { h ->
+        val note = h.note ?: return@forEach
+        val span = vm.spanOf(h) ?: return@forEach
+        val (first, _) = PageRenderer.bounds(page, span) ?: return@forEach
+        val color = HighlightColor.of(h.color)
+        NoteMarker(
+            color = highlightPaint(color, palette, active = true),
+            palette = palette,
+            modifier = Modifier.offset {
+                IntOffset((origin.x + first.left - markerHalf).roundToInt(), (origin.y + first.top - markerHalf).roundToInt())
+            },
+        ) { onOpen(NoteTarget(h.id, span, note, color, h.createdAt)) }
+    }
+}
+
 private fun shareBook(context: Context, vm: ReaderViewModel) {
     val file = vm.bookFile(context) ?: return
     BookSharing.share(context, listOf(file to vm.state.title))
@@ -589,19 +690,24 @@ private fun ReaderHeader(
     pageNumberOf: (net.flibustareader.core.model.Position) -> Int?,
     palette: ReaderPalette,
     chromeVisible: Boolean,
+    showBack: Boolean,
     onBack: () -> Unit,
     onForward: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier,
 ) {
     Box(modifier.fillMaxWidth().height(48.dp)) {
-        if (title != null) PageTitle(title, palette, Modifier.align(Alignment.Center), titleMargin(chromeVisible, history))
+        if (title != null) PageTitle(title, palette, Modifier.align(Alignment.Center), titleMargin(showBack, chromeVisible, history))
         history.back.lastOrNull()?.let { target ->
-            HistoryMark(pageNumberOf(target), back = true, palette, Modifier.align(Alignment.CenterStart).padding(start = 22.dp), onBack)
+            AnimatedVisibility(showBack, Modifier.align(Alignment.CenterStart).padding(start = 22.dp), enter = fadeIn(), exit = fadeOut()) {
+                HistoryMark(pageNumberOf(target), back = true, palette, Modifier, onBack)
+            }
         }
         Row(Modifier.align(Alignment.CenterEnd).padding(end = 20.dp), verticalAlignment = Alignment.CenterVertically) {
             history.forward.lastOrNull()?.let { target ->
-                HistoryMark(pageNumberOf(target), back = false, palette, Modifier.padding(end = if (chromeVisible) 10.dp else 4.dp), onForward)
+                AnimatedVisibility(chromeVisible, enter = fadeIn(), exit = fadeOut()) {
+                    HistoryMark(pageNumberOf(target), back = false, palette, Modifier.padding(end = 10.dp), onForward)
+                }
             }
             if (chromeVisible) {
                 RoundButton(Icons.Rounded.Close, stringResource(R.string.reader_close), palette.control(), palette.secondary, Modifier, onClick = onClose)
@@ -633,9 +739,15 @@ private fun HistoryMark(page: Int?, back: Boolean, palette: ReaderPalette, modif
     }
 }
 
-/** «1201 ↷» next to × takes more room than the usual side margin; the title stays centred. */
-private fun titleMargin(chromeVisible: Boolean, history: NavHistory): Dp =
-    if (chromeVisible && history.forward.isNotEmpty()) 150.dp else 96.dp
+/**
+ * Room the title leaves at the sides for what sits next to it: «1201 ↷» and × with the controls,
+ * «↶ 6» while [marks] show; otherwise almost the full width. The title stays centred.
+ */
+private fun titleMargin(marks: Boolean, chromeVisible: Boolean, history: NavHistory): Dp = when {
+    chromeVisible && history.forward.isNotEmpty() -> 150.dp
+    chromeVisible || (marks && history.back.isNotEmpty()) -> 96.dp
+    else -> 24.dp
+}
 
 /** Book title at the top of a page, grey and centred. */
 @Composable
@@ -653,17 +765,6 @@ private fun PageTitle(title: String, palette: ReaderPalette, modifier: Modifier,
             modifier = Modifier.padding(horizontal = margin),
         )
     }
-}
-
-/** «6 из 1269» with the controls, just «6» without them (white spot 5). */
-@Composable
-private fun PageLabel(page: Int?, total: Int?, full: Boolean, palette: ReaderPalette, modifier: Modifier) {
-    val label = when {
-        page != null && total != null && full -> stringResource(R.string.reader_page_of, page, total)
-        page != null -> page.toString()
-        else -> ""
-    }
-    Text(label, color = palette.secondary, fontFamily = UiSans, fontSize = 15.sp, modifier = modifier)
 }
 
 @Composable

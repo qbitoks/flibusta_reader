@@ -7,8 +7,8 @@ if (!(Test-Path -LiteralPath 'local.properties')) {
     if (!(Test-Path -LiteralPath $taskSdkPath)) { throw 'Укажите ANDROID_HOME с установленным Android SDK' }
     ('sdk.dir=' + $taskSdkPath.Replace('\', '/')) | Set-Content -Encoding ascii local.properties
 }
-& ./gradlew.bat :core:opds:test :core:format:test :app:assembleDebug :app:lintDebug --console=plain
+& ./gradlew.bat :core:opds:test :core:format:test :feature:reader:testDebugUnitTest :app:assembleRelease :app:lintDebug --console=plain
 if ($LASTEXITCODE -ne 0) { throw "Сборка завершилась с кодом $LASTEXITCODE" }
 New-Item -ItemType Directory -Force artifacts | Out-Null
-Copy-Item -LiteralPath 'app/build/outputs/apk/debug/app-debug.apk' -Destination 'artifacts/FlibustaReader-0.3.1-debug.apk' -Force
-Get-Item -LiteralPath 'artifacts/FlibustaReader-0.3.1-debug.apk' | Select-Object FullName,Length
+Copy-Item -LiteralPath 'app/build/outputs/apk/release/app-release.apk' -Destination 'artifacts/FlibustaReader-0.3.3-release.apk' -Force
+Get-Item -LiteralPath 'artifacts/FlibustaReader-0.3.3-release.apk' | Select-Object FullName,Length

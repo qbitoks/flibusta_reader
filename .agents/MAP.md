@@ -11,7 +11,8 @@ Agent infrastructure (`.agents/`, `scripts/agent-lint.sh`, tool adapters) is des
 - `core/opds/` — JVM OPDS parser, HTTPS-only requests, safe XML; JUnit tests — `core/opds/AGENTS.md`
 - `core/data/` — Room, files, settings, LibraryRepository, CatalogRepository, DownloadManager (catalog downloads)
 - `core/designsystem/` — Apple Books–style theme, fonts, glass, covers, components
-- `feature/library`, `feature/reader` — screens and ViewModels
+- `feature/library` — «Библиотека» and «Главная» screens and ViewModels
+- `feature/reader/` — reader: page turning, scroll mode, header/footer, selection — `feature/reader/AGENTS.md`
 - `feature/catalog/` — «Каталог»: OPDS home, search, book sheet, downloads — `feature/catalog/AGENTS.md`
 - `baselineprofile/` — baseline profile generator (not generated; it uninstalls the app)
 - `scripts/` — PowerShell doctor, build, emulator regressions, release packaging — `scripts/AGENTS.md`

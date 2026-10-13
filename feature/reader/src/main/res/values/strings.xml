@@ -97,4 +97,27 @@
         <item quantity="other">Found %d matches</item>
     </plurals>
     <string name="image_title">Image</string>
+    <plurals name="footer_left_in_chapter">
+        <item quantity="one">%d page left</item>
+        <item quantity="other">%d pages left</item>
+    </plurals>
+    <string name="reader_chapter_end">last page in chapter</string>
+    <string name="page_chrome_title">Header &amp; Footer</string>
+    <string name="page_chrome_button">Headers</string>
+    <string name="header_group">Above the Text</string>
+    <string name="header_none">Nothing</string>
+    <string name="header_book">Book Title</string>
+    <string name="header_chapter">Chapter Title</string>
+    <string name="footer_group">Bottom Line</string>
+    <string name="footer_page">Page</string>
+    <string name="footer_page_none">Off</string>
+    <string name="footer_page_percent">Percent</string>
+    <string name="footer_pages_left">Pages Left in Chapter</string>
+    <string name="footer_clock">Time</string>
+    <string name="footer_battery">Battery</string>
+    <string name="footer_style">Over Scrolling Text</string>
+    <string name="footer_style_fade">Fade</string>
+    <string name="footer_style_strip">Strip</string>
+    <string name="footer_note">In Scroll the text passes under the line; turned pages always keep room for it. With everything off the text reaches the bottom of the screen.</string>
+    <string name="header_note">With Nothing the text starts at the top of the screen.</string>
 </resources>

@@ -30,6 +30,28 @@ enum class PageTurn { Slide, Curl, Fade, Scroll }
 /** «Затемнение фона» of the guide line: how far the text off the line fades into the page. */
 enum class GuideDim(val fade: Float) { High(0.85f), Medium(0.75f), Low(0.65f), None(0f) }
 
+/** «Сверху страницы»: what the line above the text shows; [None] gives the text the whole height. */
+enum class PageHeader { None, Book, Chapter }
+
+/** Page part of the bottom line: «42», «42 из 586» or the book's percent. */
+enum class FooterPage { None, Number, NumberOfTotal, Percent }
+
+/** How the bottom line sits over text scrolling under it: a fade, or a faint strip at the very bottom. */
+enum class FooterStyle { Fade, Strip }
+
+/** The line under the text: time on the left, the page in the middle, battery on the right. */
+data class PageFooter(
+    val page: FooterPage = FooterPage.Number,
+    /** «ещё 3 стр.» after the page. */
+    val pagesLeft: Boolean = false,
+    val clock: Boolean = true,
+    val battery: Boolean = true,
+    val style: FooterStyle = FooterStyle.Fade,
+) {
+    /** Nothing to show: the text runs to the bottom of the screen. */
+    val isEmpty: Boolean get() = page == FooterPage.None && !pagesLeft && !clock && !battery
+}
+
 enum class LibraryLayout { Grid, List }
 
 enum class LibrarySort { Recent, Title, Author, Manual }
@@ -48,6 +70,8 @@ data class ReaderSettings(
     val guideDim: GuideDim = GuideDim.Low,
     /** Colour of the last highlight; new highlights use it, as in Apple Books. */
     val highlightColor: String = "yellow",
+    val header: PageHeader = PageHeader.None,
+    val footer: PageFooter = PageFooter(),
 ) {
     val themeStyle: ThemeStyle get() = themeStyles.getValue(theme)
     val style: ReaderStyle get() = themeStyle.toReaderStyle(fontSize)
@@ -75,6 +99,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val guideLine = booleanPreferencesKey("guide_line")
         val guideDim = stringPreferencesKey("guide_dim")
         val highlightColor = stringPreferencesKey("highlight_color")
+        val pageHeader = stringPreferencesKey("page_header")
+        val footerPage = stringPreferencesKey("footer_page")
+        val footerPagesLeft = booleanPreferencesKey("footer_pages_left")
+        val footerClock = booleanPreferencesKey("footer_clock")
+        val footerBattery = booleanPreferencesKey("footer_battery")
+        val footerStyle = stringPreferencesKey("footer_style")
         val libraryLayout = stringPreferencesKey("library_layout")
         val librarySort = stringPreferencesKey("library_sort")
         val watchedFolder = stringPreferencesKey("watched_folder")
@@ -93,6 +123,16 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             guideLine = p[Keys.guideLine] ?: false,
             guideDim = enumOr(p[Keys.guideDim], GuideDim.Low),
             highlightColor = p[Keys.highlightColor] ?: "yellow",
+            header = enumOr(p[Keys.pageHeader], PageHeader.None),
+            footer = PageFooter().let { d ->
+                PageFooter(
+                    page = enumOr(p[Keys.footerPage], d.page),
+                    pagesLeft = p[Keys.footerPagesLeft] ?: d.pagesLeft,
+                    clock = p[Keys.footerClock] ?: d.clock,
+                    battery = p[Keys.footerBattery] ?: d.battery,
+                    style = enumOr(p[Keys.footerStyle], d.style),
+                )
+            },
         )
     }.distinctUntilChanged()
 
@@ -154,6 +194,20 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     suspend fun setGuideDim(value: GuideDim) {
         store.edit { it[Keys.guideDim] = value.name }
+    }
+
+    suspend fun setPageHeader(value: PageHeader) {
+        store.edit { it[Keys.pageHeader] = value.name }
+    }
+
+    suspend fun setPageFooter(value: PageFooter) {
+        store.edit {
+            it[Keys.footerPage] = value.page.name
+            it[Keys.footerPagesLeft] = value.pagesLeft
+            it[Keys.footerClock] = value.clock
+            it[Keys.footerBattery] = value.battery
+            it[Keys.footerStyle] = value.style.name
+        }
     }
 
     suspend fun setHighlightColor(value: String) {

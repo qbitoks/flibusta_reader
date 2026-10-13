@@ -103,4 +103,29 @@
         <item quantity="other">Найдено %d совпадения</item>
     </plurals>
     <string name="image_title">Изображение</string>
+    <plurals name="footer_left_in_chapter">
+        <item quantity="one">ещё %d стр.</item>
+        <item quantity="few">ещё %d стр.</item>
+        <item quantity="many">ещё %d стр.</item>
+        <item quantity="other">ещё %d стр.</item>
+    </plurals>
+    <string name="reader_chapter_end">конец главы</string>
+    <string name="page_chrome_title">Колонтитулы</string>
+    <string name="page_chrome_button">Колонтитулы</string>
+    <string name="header_group">Сверху страницы</string>
+    <string name="header_none">Ничего</string>
+    <string name="header_book">Название книги</string>
+    <string name="header_chapter">Название главы</string>
+    <string name="footer_group">Нижняя строка</string>
+    <string name="footer_page">Страница</string>
+    <string name="footer_page_none">Нет</string>
+    <string name="footer_page_percent">Процент</string>
+    <string name="footer_pages_left">Осталось в главе</string>
+    <string name="footer_clock">Время</string>
+    <string name="footer_battery">Заряд батареи</string>
+    <string name="footer_style">Над прокруткой</string>
+    <string name="footer_style_fade">Затухание</string>
+    <string name="footer_style_strip">Полоска</string>
+    <string name="footer_note">В прокрутке текст уходит под строку; при перелистывании под ней всегда остаётся место. Если всё выключить, текст идёт до низа экрана.</string>
+    <string name="header_note">При «Ничего» текст начинается от верха экрана.</string>
 </resources>

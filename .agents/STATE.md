@@ -13,6 +13,9 @@ Branch- or task-specific progress goes to the PR or issue, not here: parallel br
 - Catalog reworked (2026-10-12): home in the «Главная» style, book+author search, book sheet, download
   manager with Range resume (Room v2). Checked on an emulator against flibusta.is: browse, search, EPUB and
   FB2 download, resume after network loss, open in reader. FB2 import on Android was broken (SAX feature), fixed.
+- Reader reworked (2026-10-13): scroll mode (jumps, chapter window,
+  exact position, selection), page turning (thirds, waits for chapter layout), «Колонтитулы» with time and
+  battery, history arrows only with controls. Checked on the `ReaderPhone` emulator, not on a phone.
 - Pick work from the user's task; the lists below are not a backlog to implement on your own.
 
 ## Next steps
@@ -26,3 +29,4 @@ Branch- or task-specific progress goes to the PR or issue, not here: parallel br
 - Wrapper download of Gradle 9.8 was flaky on this machine (connection resets).
 - The `ReaderPhone` emulator's DNS proxy fails behind the host VPN; a fresh AVD with `-dns-server` works.
 - No download notification: progress is visible only in the app («Загрузки»).
+- Paginator: the gap between paragraphs is a few px shorter than the line pitch (guideline § 6.1 wants equal).

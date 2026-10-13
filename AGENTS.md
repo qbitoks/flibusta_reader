@@ -73,12 +73,12 @@ Put knowledge in the deepest file whose scope covers it. This file holds only re
   `gradle/libs.versions.toml`. First build needs Google Maven, Maven Central, Gradle Plugin Portal.
 
 Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGENTS.md`):
-- Check before "done": `./scripts/build.ps1` (JVM tests, debug APK, Android lint) + agent-lint:
+- Check before "done": `./scripts/build.ps1` (JVM tests, release APK, Android lint) + agent-lint:
   `& "$env:ProgramFiles\Git\bin\sh.exe" scripts/agent-lint.sh`. Docs-only change: agent-lint + link check.
 - Setup / env check: `./scripts/doctor.ps1`
-- JVM tests: `./gradlew.bat :core:opds:test :core:format:test --console=plain`
+- JVM tests: `./gradlew.bat :core:opds:test :core:format:test :feature:reader:testDebugUnitTest --console=plain`
 - Test one: `./gradlew.bat :core:opds:test --tests 'net.flibustareader.core.opds.OpdsParserTest' --console=plain`
-- Device checks: install the debug APK and verify by hand (`scripts/AGENTS.md`). The ADB regression
+- Device checks: install the release APK and verify by hand (`scripts/AGENTS.md`). The ADB regression
   scripts target the old Readium UI and are stale until rewritten.
   - Bug in `core`: reproduce with a regression test first.
 - A check you can't run: name the reason; never report it as passed.

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
@@ -39,7 +40,8 @@ fun PageView(
     marks: List<Mark> = emptyList(),
 ) {
     Box(modifier) {
-        Canvas(Modifier.fillMaxSize()) {
+        // Own layer: redrawing the title, time or page number next to the page leaves its text recorded.
+        Canvas(Modifier.fillMaxSize().graphicsLayer()) {
             val p = page ?: return@Canvas
             // Reading the palette here re-runs the draw (not the layout) when the theme changes.
             palette.text

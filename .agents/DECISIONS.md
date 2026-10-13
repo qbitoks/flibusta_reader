@@ -30,3 +30,7 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-12 | ui | App appearance = per-app night mode (UiModeManager); book override by id, absent = follow app | re-themes windows and bars without recreation
 2026-10-12 | ui | Old reader-wide `appearance` key dropped without migration | user decision
 2026-10-13 | release | Tags publish a regular release automatically: draft during upload, `--draft=false` last | user decision; no half-uploaded public release
+2026-10-13 | reader | Header line default «Ничего», footer has time and battery; both configurable | user decision; Apple Books always shows the book title
+2026-10-13 | reader | Tap zones are the outer thirds, not 10 % edges | edges were too narrow: most taps toggled the controls instead of turning
+2026-10-13 | reader | Scroll mode: own window of ±2 chapters, positions by item key, jumps via `ScrollJump` id | index-based reads mixed pages during prepends; stale reports undid jumps
+2026-10-13 | reader | Scroll seams keep the swallowed spacing as `Page.lead`, not a separate ribbon layout | one pagination for both modes; positions and page numbers stay shared

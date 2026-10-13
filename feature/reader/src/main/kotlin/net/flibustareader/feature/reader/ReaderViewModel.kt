@@ -2,6 +2,7 @@ package net.flibustareader.feature.reader
 
 import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
@@ -13,6 +14,8 @@ import net.flibustareader.core.data.library.BookResources
 import net.flibustareader.core.data.library.LibraryRepository
 import net.flibustareader.core.data.settings.Appearance
 import net.flibustareader.core.data.settings.GuideDim
+import net.flibustareader.core.data.settings.PageFooter
+import net.flibustareader.core.data.settings.PageHeader
 import net.flibustareader.core.data.settings.PageTurn
 import net.flibustareader.core.data.settings.ReaderSettings
 import net.flibustareader.core.data.settings.ReaderTheme
@@ -69,6 +72,9 @@ data class ReaderState(
     val page: Page? = null,
     val prev: Page? = null,
     val next: Page? = null,
+    /** The book goes on, even while that page's chapter is still laying out ([prev]/[next] null). */
+    val hasPrev: Boolean = false,
+    val hasNext: Boolean = false,
     val chapterTitle: String? = null,
     val pagesLeftInChapter: Int = 0,
     val globalPage: Int? = null,
@@ -95,6 +101,9 @@ data class SearchHit(
     val matchLength: Int,
     val length: Int,
 )
+
+/** A jump the scroll list must perform; [id] tells repeated jumps to the same place apart. */
+class ScrollJump(val position: Position, val id: Int)
 
 /** Jump history for ↶ / ↷: positions to return to and to come back to. */
 data class NavHistory(val back: List<Position> = emptyList(), val forward: List<Position> = emptyList())
@@ -217,7 +226,15 @@ class ReaderViewModel @Inject constructor(
         val pages = engine.pages(chapter)
         val index = pages.pageIndexOf(target)
         setCurrent(PageRef(chapter, index), keepPosition = target, highlight = highlight)
+        scrollJump = ScrollJump(position, (scrollJump?.id ?: 0) + 1)
     }
+
+    /** The exact reading position: a page start when paging, the top line when scrolling. */
+    val readingPosition: Position get() = position
+
+    /** Latest jump for the scroll mode, which keeps its own list and must follow jumps itself. */
+    var scrollJump by mutableStateOf<ScrollJump?>(null)
+        private set
 
     private fun setCurrent(ref: PageRef, keepPosition: Position? = null, highlight: TextRange? = null) {
         val engine = engine ?: return
@@ -232,6 +249,8 @@ class ReaderViewModel @Inject constructor(
                 page = page,
                 prev = engine.prevRef(ref)?.let(engine::page),
                 next = engine.nextRef(ref)?.let(engine::page),
+                hasPrev = engine.prevRef(ref) != null,
+                hasNext = engine.nextRef(ref) != null,
                 highlight = highlight,
                 layoutGeneration = generation,
             )
@@ -346,13 +365,30 @@ class ReaderViewModel @Inject constructor(
 
     suspend fun chapterPages(chapter: Int) = engine?.takeIf { chapter in 0 until chapterCount }?.pages(chapter)
 
-    /** Scroll mode reports the top visible page; it becomes the reading position. */
-    fun onScrolledTo(page: Page) {
+    /**
+     * Scroll mode reports the line at the top of the text and the page it is on. [jumpId] is the
+     * last jump the list has shown: until it shows the latest one, its reports are stale and would
+     * undo the jump.
+     */
+    fun onScrolledTo(page: Page, top: Position, jumpId: Int) {
+        if (jumpId != (scrollJump?.id ?: 0)) return
+        position = top
+        savedPosition.value = top
         val ref = PageRef(page.chapter, page.index)
         if (state.current == ref) return
-        position = page.start
-        savedPosition.value = position
-        update { it.copy(current = ref, page = page) }
+        val engine = engine ?: return
+        if (state.current?.chapter != ref.chapter) engine.prefetchAround(ref.chapter)
+        // Neighbours too, so switching to page turning from here works at once.
+        update {
+            it.copy(
+                current = ref,
+                page = page,
+                prev = engine.prevRef(ref)?.let(engine::page),
+                next = engine.nextRef(ref)?.let(engine::page),
+                hasPrev = engine.prevRef(ref) != null,
+                hasNext = engine.nextRef(ref) != null,
+            )
+        }
         updateLabels()
         refreshBookmarked()
     }
@@ -363,11 +399,23 @@ class ReaderViewModel @Inject constructor(
      */
     fun goTo(target: Position, highlight: TextRange? = null, record: Boolean = true) {
         if (record) {
-            val here = state.page?.start ?: position
+            val here = position
             history = NavHistory(back = history.back + here, forward = emptyList())
         }
-        viewModelScope.launch { showPosition(target, highlight) }
+        viewModelScope.launch {
+            showPosition(target, highlight)
+            if (record) landedJumps++
+        }
     }
+
+    /** Counts recorded jumps once they land, so the reader can show «↶» for a moment after each. */
+    var landedJumps by mutableIntStateOf(0)
+        private set
+
+    /** Pages after [page] in its chapter; null while the chapter is not laid out. */
+    fun pagesLeftAfter(page: Page): Int? = engine?.peek(page.chapter)?.pages?.size?.let { it - page.index - 1 }
+
+    fun progressOf(page: Page): Float = book?.progressAt(page.start) ?: 0f
 
     /** Page numbers or positions the ↶ / ↷ marks jump to. */
     var history by mutableStateOf(NavHistory())
@@ -375,14 +423,14 @@ class ReaderViewModel @Inject constructor(
 
     fun historyBack() {
         val target = history.back.lastOrNull() ?: return
-        val here = state.page?.start ?: position
+        val here = position
         history = NavHistory(back = history.back.dropLast(1), forward = history.forward + here)
         goTo(target, record = false)
     }
 
     fun historyForward() {
         val target = history.forward.lastOrNull() ?: return
-        val here = state.page?.start ?: position
+        val here = position
         history = NavHistory(back = history.back + here, forward = history.forward.dropLast(1))
         goTo(target, record = false)
     }
@@ -668,6 +716,8 @@ class ReaderViewModel @Inject constructor(
     fun setPageTurn(value: PageTurn) = viewModelScope.launch { settingsRepository.setPageTurn(value) }
     fun setGuideLine(on: Boolean) = viewModelScope.launch { settingsRepository.setGuideLine(on) }
     fun setGuideDim(value: GuideDim) = viewModelScope.launch { settingsRepository.setGuideDim(value) }
+    fun setPageHeader(value: PageHeader) = viewModelScope.launch { settingsRepository.setPageHeader(value) }
+    fun setPageFooter(value: PageFooter) = viewModelScope.launch { settingsRepository.setPageFooter(value) }
 
     // --- Reading sessions (kept for Reading Goals) ---
 
