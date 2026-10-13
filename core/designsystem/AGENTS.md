@@ -17,3 +17,4 @@
 - Supply local cover files to `BookCover`; catalog network loading belongs to `core/data/`.
 - Provide `GlassScope` and its source modifier for backdrop blur; preserve fallback fills for separate popup windows.
 - Keep navigation actions and repository mutations in callers; shared components expose callbacks.
+- Use `IosSlider(enabled = false)` for inactive controls; omit adjustable accessibility actions at the caller.

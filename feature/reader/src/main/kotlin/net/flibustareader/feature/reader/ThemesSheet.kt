@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,10 +22,18 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Surface
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.flibustareader.core.data.settings.Appearance
 import net.flibustareader.core.data.settings.ReaderSettings
@@ -39,25 +48,55 @@ internal fun ThemesSheet(
     settings: ReaderSettings,
     palette: ReaderPalette,
     brightness: Float,
+    manualBrightness: Float,
     onBrightness: (Float) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var section by rememberSaveable { mutableIntStateOf(0) }
     val scrollStates = List(3) { rememberScrollState() }
     val c = Flibusta.colors
-    FlibustaSheet(onDismiss, containerColor = c.groupedBackground) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(
+        usePlatformDefaultWidth = false, dismissOnClickOutside = false, decorFitsSystemWindows = false,
+    )) {
+        val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+        DisposableEffect(window, brightness) {
+            window?.let { it.attributes = it.attributes.apply { screenBrightness = if (brightness < 0) -1f else brightness.coerceIn(0.02f, 1f) } }
+            onDispose { }
+        }
+        Surface(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
+            shape = RoundedCornerShape(topStart = 23.dp, topEnd = 23.dp), color = c.groupedBackground) {
+        Column(Modifier.fillMaxSize()) {
             SheetHeader(stringResource(R.string.themes_title), trailing = {
                 CircleButton(Icons.Rounded.Close, stringResource(R.string.reader_close), onDismiss)
             })
-            SettingsTabs(section) { section = it }
-            Column(Modifier.weight(1f).verticalScroll(scrollStates[section]).padding(bottom = 24.dp)) {
-                when (section) {
-                    0 -> ReaderAppearanceSettings(vm, settings, brightness, onBrightness)
-                    1 -> ReaderTextSettings(vm, settings, palette)
-                    2 -> ReaderPageSettings(vm, settings, palette)
+            BoxWithConstraints(Modifier.weight(1f)) {
+                val wide = maxWidth > maxHeight
+                val previewHeight = (maxHeight * 0.32f).coerceIn(100.dp, 240.dp)
+                @Composable fun Editor(modifier: Modifier) {
+                    Column(modifier) {
+                        SettingsTabs(section) { section = it }
+                        Column(Modifier.weight(1f).verticalScroll(scrollStates[section]).padding(bottom = 24.dp)) {
+                            when (section) {
+                                0 -> ReaderAppearanceSettings(vm, settings, brightness, manualBrightness, onBrightness)
+                                1 -> ReaderTextSettings(vm, settings)
+                                2 -> ReaderPageSettings(vm, settings, palette)
+                            }
+                        }
+                    }
+                }
+                if (wide) {
+                    Row(Modifier.fillMaxSize()) {
+                        PageSettingsPreview(vm, settings, palette, Modifier.weight(0.44f).fillMaxHeight().padding(bottom = 16.dp))
+                        Editor(Modifier.weight(0.56f).fillMaxHeight())
+                    }
+                } else {
+                    Column(Modifier.fillMaxSize()) {
+                        PageSettingsPreview(vm, settings, palette, Modifier.fillMaxWidth().height(previewHeight))
+                        Editor(Modifier.weight(1f))
+                    }
                 }
             }
+        }
         }
     }
 }
@@ -72,7 +111,7 @@ private fun SettingsTabs(selected: Int, onSelect: (Int) -> Unit) {
     val widths = labels.map { with(density) { measurer.measure(it, style).size.width.toDp() } + 12.dp }
     val scroll = rememberScrollState()
     BoxWithConstraints(Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth()
-        .clip(RoundedCornerShape(16.dp)).background(c.fill).padding(4.dp)) {
+        .clip(CircleShape).background(c.fill).padding(3.dp)) {
         val fits = widths.sumOf { it.value.toDouble() } <= maxWidth.value
         LaunchedEffect(selected, fits) {
             if (!fits) scroll.animateScrollTo(with(density) { widths.take(selected).sumOf { it.toPx().toDouble() }.toInt() })
@@ -80,10 +119,10 @@ private fun SettingsTabs(selected: Int, onSelect: (Int) -> Unit) {
         Row((if (fits) Modifier.fillMaxWidth() else Modifier.horizontalScroll(scroll)).selectableGroup()) {
             labels.forEachIndexed { i, label ->
                 Box((if (fits) Modifier.weight(widths[i].value) else Modifier.width(widths[i]))
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(CircleShape)
                     .background(if (i == selected) (if (c.isDark) c.selectedRow else c.card) else androidx.compose.ui.graphics.Color.Transparent)
                     .selectable(i == selected, role = Role.Tab) { onSelect(i) }
-                    .heightIn(min = 48.dp).padding(horizontal = 4.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+                    .heightIn(min = 36.dp).padding(horizontal = 4.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
                     Text(label, style = FlibustaType.subheadline,
                         fontWeight = if (i == selected) FontWeight.SemiBold else FontWeight.Normal,
                         color = c.label, textAlign = TextAlign.Center, maxLines = 1)
@@ -94,59 +133,52 @@ private fun SettingsTabs(selected: Int, onSelect: (Int) -> Unit) {
 }
 
 @Composable
-private fun ReaderAppearanceSettings(vm: ReaderViewModel, settings: ReaderSettings, brightness: Float, onBrightness: (Float) -> Unit) {
+private fun ReaderAppearanceSettings(vm: ReaderViewModel, settings: ReaderSettings, brightness: Float, manualBrightness: Float, onBrightness: (Float) -> Unit) {
     val appearance by vm.appearance.collectAsStateWithLifecycle()
     // Resolve swatches from appearance, not from the low-contrast Quiet palette.
     val dark = ReaderPalettes.isDark(appearance ?: Appearance.Auto, androidx.compose.foundation.isSystemInDarkTheme())
-    GroupHeader(stringResource(R.string.settings_themes))
-    Column(Modifier.padding(horizontal = 16.dp).selectableGroup(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        ReaderTheme.entries.chunked(3).forEach { themes ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                themes.forEach { theme ->
-                    ThemeTile(theme, settings, ReaderPalettes.of(theme, dark), Modifier.weight(1f)) { vm.setTheme(theme) }
-                }
+    ValueGroupHeader(stringResource(R.string.settings_themes), themeName(settings.theme))
+    GroupedCard {
+        Row(Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            ReaderTheme.entries.forEach { theme ->
+                ThemeSwatch(theme, settings, ReaderPalettes.of(theme, dark), Modifier.weight(1f)) { vm.setTheme(theme) }
             }
         }
-    }
-    SettingsNote(stringResource(R.string.settings_theme_note))
-    GroupHeader(stringResource(R.string.settings_book_appearance))
-    GroupedCard {
-        SettingsChoice(stringResource(R.string.settings_appearance), appearance,
-            listOf(null to stringResource(R.string.appearance_app), Appearance.Light to stringResource(R.string.appearance_light),
-                Appearance.Dark to stringResource(R.string.appearance_dark)), vm::setAppearance)
+        BookAppearanceChoices(appearance, vm::setAppearance)
     }
     GroupHeader(stringResource(R.string.settings_brightness))
     GroupedCard {
-        var local by remember(brightness) { mutableFloatStateOf(if (brightness < 0) 0.5f else brightness) }
-        SettingsSlider(stringResource(R.string.settings_brightness), local, 0f..1f, 0.01f,
-            if (brightness < 0) stringResource(R.string.settings_device_brightness) else "${(local * 100).toInt()} %",
-            onChange = { local = it; onBrightness(it) })
-        SettingRow(stringResource(R.string.settings_device_brightness), onClick = { onBrightness(-1f) }) {
-            if (brightness < 0) SettingsCheck()
-        }
+        SettingsToggle(stringResource(R.string.settings_device_brightness), brightness < 0) { onBrightness(if (it) -1f else manualBrightness) }
+        SettingsDivider()
+        BrightnessSlider(brightness, manualBrightness, onBrightness)
     }
+    if (brightness < 0) SettingsNote(stringResource(R.string.settings_device_brightness_note))
+    SettingsNote(stringResource(R.string.settings_appearance_scope))
 }
 
 @Composable
-private fun ThemeTile(theme: ReaderTheme, settings: ReaderSettings, palette: ReaderPalette, modifier: Modifier, onClick: () -> Unit) {
+private fun themeName(theme: ReaderTheme) = stringResource(when (theme) {
+    ReaderTheme.Original -> R.string.theme_original
+    ReaderTheme.Quiet -> R.string.theme_quiet
+    ReaderTheme.Paper -> R.string.theme_paper
+    ReaderTheme.Bold -> R.string.theme_bold
+    ReaderTheme.Calm -> R.string.theme_calm
+    ReaderTheme.Focus -> R.string.theme_focus
+})
+
+/** A compact «Aa» sample in the theme's own palette and font; the name is spoken and shown in the header. */
+@Composable
+private fun ThemeSwatch(theme: ReaderTheme, settings: ReaderSettings, palette: ReaderPalette, modifier: Modifier, onClick: () -> Unit) {
     val selected = settings.theme == theme
     val style = settings.themeStyles.getValue(theme)
-    val font = ReaderFont.of(style.font).composeFamily
-    val shape = RoundedCornerShape(16.dp)
-    Column(modifier.clip(shape).background(palette.background)
+    val shape = RoundedCornerShape(12.dp)
+    val name = themeName(theme)
+    Box(modifier.clip(shape).background(palette.background)
         .border(if (selected) 2.dp else 0.5.dp, if (selected) Flibusta.colors.label else Flibusta.colors.separator, shape)
         .selectable(selected, role = Role.RadioButton, onClick = onClick)
-        .heightIn(min = 102.dp).padding(horizontal = 4.dp, vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Text("Aa", fontFamily = font, fontSize = 30.sp, color = palette.text,
-            fontWeight = if (style.boldText) FontWeight.Bold else FontWeight.Normal)
-        Text(stringResource(when (theme) {
-            ReaderTheme.Original -> R.string.theme_original
-            ReaderTheme.Quiet -> R.string.theme_quiet
-            ReaderTheme.Paper -> R.string.theme_paper
-            ReaderTheme.Bold -> R.string.theme_bold
-            ReaderTheme.Calm -> R.string.theme_calm
-            ReaderTheme.Focus -> R.string.theme_focus
-        }), style = FlibustaType.subheadline, color = palette.text, textAlign = TextAlign.Center)
+        .semantics { contentDescription = name }
+        .heightIn(min = 52.dp), contentAlignment = Alignment.Center) {
+        Text("Aa", fontFamily = ReaderFont.of(style.font).composeFamily, fontSize = 20.sp, color = palette.text, maxLines = 1,
+            fontWeight = if (style.boldText) FontWeight.Bold else FontWeight.Normal, modifier = Modifier.clearAndSetSemantics { })
     }
 }

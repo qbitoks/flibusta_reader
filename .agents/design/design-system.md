@@ -58,7 +58,7 @@
 | Reading-theme tile | 104 × 92 | 16 |
 | Sheet card | Width minus 16 per side | 20 |
 | Sheet | Top near 61, below status bar | Top corners 23 |
-| Settings theme tile | Adaptive width, min height 102 | 16 |
+| Settings theme swatch | Six per row, min height 52 | 12 |
 | Pull-down menu | Width 242–243 | 19 |
 | Book cover | Preserve aspect ratio | 2–3, soft shadow |
 

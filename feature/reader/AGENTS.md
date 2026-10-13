@@ -16,8 +16,9 @@
 - `ChapterProgress` — shared TOC rows, titles and remaining pages; `GuideNavigation` — line state after successful turns.
 - Settings: `core/data/src/main/kotlin/net/flibustareader/core/data/settings/SettingsRepository.kt`.
 
-- Use `ThemesSheet` as the sole settings modal; keep text/page controls in `ReaderTextSettings` / `ReaderPageSettings`.
-- Apply settings immediately; use inline `SettingsChoice` and preserve per-tab scrolling. See `.agents/design/reader.md`.
+- Use the fixed `ThemesSheet` dialog for settings; close with X/Back, never drag. Keep other sheets unchanged.
+- Pin `PageSettingsPreview` outside per-tab scrolling; use `Paginator`/`PageView` with an isolated bounded excerpt.
+- Apply settings immediately; use `SettingsSegments` (falls back to `SettingsOptions`) for short choices, `SettingsChoice` for fonts. See `.agents/design/reader.md`.
 
 ## Rules
 - Header/footer settings change the text insets, so they re-paginate (new `layoutGeneration`) like a font
@@ -29,7 +30,7 @@
 - Hide the guide during turns; apply direction only to an actual landing. Keep footer taps ahead of guide stepping.
 - Pure logic goes into small top-level functions with tests in `src/test` (`ReaderGesturesTest` is the example).
 - Search example: `feature/reader/src/test/kotlin/net/flibustareader/feature/reader/ReaderSearchTest.kt`.
-- Keep reader overlay state in `ReaderControls`; keep settings tab/scroll state scoped to `ThemesSheet`.
+- Keep reader overlays and last manual brightness in `ReaderControls`; keep settings tab/scroll state in `ThemesSheet`.
 - Keep annotation flows and `viewModelScope.launch` in the ViewModel; helpers must preserve persistence order and read timing.
 - Tests: `./gradlew.bat :feature:reader:testDebugUnitTest --console=plain`.
 

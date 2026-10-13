@@ -19,8 +19,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,12 +34,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
@@ -86,6 +92,7 @@ fun IosSlider(
     steps: Float = 0f,
     onValueChangeFinished: () -> Unit = {},
     contentDescription: String? = null,
+    enabled: Boolean = true,
 ) {
     val c = Flibusta.colors
     val density = LocalDensity.current
@@ -99,7 +106,11 @@ fun IosSlider(
         modifier
             .fillMaxWidth()
             .height(30.dp)
-            .semantics { if (contentDescription != null) this.contentDescription = contentDescription },
+            .alpha(if (enabled) 1f else 0.4f)
+            .semantics {
+                if (contentDescription != null) this.contentDescription = contentDescription
+                if (!enabled) disabled()
+            },
         contentAlignment = Alignment.CenterStart,
     ) {
         val thumbW = 36.dp
@@ -124,7 +135,7 @@ fun IosSlider(
                     onValueChange(snap(dragStart))
                 }
             }
-        Box(Modifier.fillMaxWidth().fillMaxHeight().then(gestures), contentAlignment = Alignment.CenterStart) {
+        Box(Modifier.fillMaxWidth().fillMaxHeight().then(if (enabled) gestures else Modifier), contentAlignment = Alignment.CenterStart) {
             Box(
                 Modifier
                     .padding(horizontal = thumbW / 2)
@@ -153,13 +164,20 @@ fun IosSlider(
     }
 }
 
-/** iOS segmented control: grey capsule with the selected segment raised on a lighter capsule. */
+/**
+ * iOS segmented control: grey capsule with the selected segment raised on a lighter capsule.
+ * [icons] lead the labels (an empty label leaves an icon-only segment); [descriptions] replace
+ * the spoken labels; [role] is [Role.RadioButton] when the control picks a value.
+ */
 @Composable
 fun SegmentedControl(
     options: List<String>,
     selected: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    icons: List<ImageVector?>? = null,
+    descriptions: List<String>? = null,
+    role: Role = Role.Tab,
 ) {
     val c = Flibusta.colors
     Row(
@@ -168,22 +186,28 @@ fun SegmentedControl(
             .height(36.dp)
             .clip(CircleShape)
             .background(c.fill)
-            .padding(3.dp),
+            .padding(3.dp)
+            .selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         options.forEachIndexed { i, label ->
             val isSelected = i == selected
-            Box(
+            Row(
                 Modifier
                     .weight(1f)
                     .fillMaxHeight()
                     .then(if (isSelected) Modifier.shadow(2.dp, CircleShape) else Modifier)
                     .clip(CircleShape)
                     .background(if (isSelected) (if (c.isDark) Color(0xFF636366) else Color.White) else Color.Transparent)
-                    .clickable(role = Role.Tab) { onSelect(i) },
-                contentAlignment = Alignment.Center,
+                    .selectable(isSelected, role = role) { onSelect(i) }
+                    .then(descriptions?.getOrNull(i)?.let { d -> Modifier.semantics { contentDescription = d } } ?: Modifier)
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(label, style = if (isSelected) FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.subheadline, color = c.label)
+                icons?.getOrNull(i)?.let { Icon(it, null, tint = c.label, modifier = Modifier.size(18.dp)) }
+                if (label.isNotEmpty()) Text(label, style = if (isSelected) FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.subheadline,
+                    color = c.label, maxLines = 1, softWrap = false)
             }
         }
     }

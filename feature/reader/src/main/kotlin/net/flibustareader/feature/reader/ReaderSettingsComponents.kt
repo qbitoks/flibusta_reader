@@ -2,6 +2,8 @@ package net.flibustareader.feature.reader
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -14,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -24,6 +27,10 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.setProgress
 import net.flibustareader.core.designsystem.components.IosSlider
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import net.flibustareader.core.designsystem.components.SegmentedControl
 import androidx.compose.ui.unit.dp
 import net.flibustareader.core.designsystem.Flibusta
 import net.flibustareader.core.designsystem.FlibustaType
@@ -49,7 +56,8 @@ internal fun <T> SettingsChoice(
                 null, tint = c.secondaryLabel, modifier = Modifier.padding(start = 12.dp).size(22.dp))
         }
         AnimatedVisibility(expanded) {
-            Column(Modifier.selectableGroup()) {
+            Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
+                .clip(RoundedCornerShape(12.dp)).background(c.fill).selectableGroup()) {
                 options.forEach { (value, label) ->
                     SettingsDivider()
                     Row(Modifier.fillMaxWidth().selectable(value == current, role = Role.RadioButton) {
@@ -61,6 +69,69 @@ internal fun <T> SettingsChoice(
                 }
             }
         }
+    }
+}
+
+/** Short option sets stay visible and form a separate radio group, never a nested menu. */
+@Composable
+internal fun <T> SettingsOptions(
+    current: T,
+    options: List<Pair<T, String>>,
+    onSelect: (T) -> Unit,
+    sample: (@Composable (T) -> Unit)? = null,
+) {
+    val c = Flibusta.colors
+    Column(Modifier.selectableGroup()) {
+        options.forEachIndexed { index, (value, label) ->
+            if (index > 0) SettingsDivider()
+            Row(Modifier.fillMaxWidth().selectable(value == current, role = Role.RadioButton) { onSelect(value) }
+                .heightIn(min = 54.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(Modifier.size(22.dp), contentAlignment = Alignment.Center) { if (value == current) SettingsCheck() }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(label, style = FlibustaType.body, color = c.label)
+                    sample?.invoke(value)
+                }
+            }
+        }
+    }
+}
+
+internal class SegmentOption<T>(val value: T, val label: String, val description: String = label, val icon: ImageVector? = null)
+
+/**
+ * Short choices as one segmented row inside a card. Falls back to the visible radio list when
+ * large text or long labels would not fit a segment, so no choice is ever truncated.
+ */
+@Composable
+internal fun <T> SettingsSegments(current: T, options: List<SegmentOption<T>>, onSelect: (T) -> Unit) {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val style = FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val segment = (maxWidth - 24.dp - 6.dp - 2.dp * (options.size - 1)) / options.size
+        val fits = density.fontScale <= 1.3f && options.all { o ->
+            val text = if (o.label.isEmpty()) 0.dp else with(density) { measurer.measure(o.label, style).size.width.toDp() }
+            text + (if (o.icon != null) 22.dp else 0.dp) + 12.dp <= segment
+        }
+        if (fits) {
+            SegmentedControl(options.map { it.label }, options.indexOfFirst { it.value == current }, { onSelect(options[it].value) },
+                Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                icons = options.map { it.icon }, descriptions = options.map { it.description }, role = Role.RadioButton)
+        } else {
+            SettingsOptions(current, options.map { it.value to it.description }, onSelect)
+        }
+    }
+}
+
+/** Group title with the current choice at the trailing edge, as iOS settings show values. */
+@Composable
+internal fun ValueGroupHeader(title: String, value: String?) {
+    Row(Modifier.fillMaxWidth().padding(start = 36.dp, end = 36.dp, top = 20.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.Bottom) {
+        Text(title, style = FlibustaType.title3, color = Flibusta.colors.label, modifier = Modifier.weight(1f))
+        if (value != null) Text(value, style = FlibustaType.subheadline, color = Flibusta.colors.secondaryLabel,
+            maxLines = 1, modifier = Modifier.padding(start = 12.dp))
     }
 }
 

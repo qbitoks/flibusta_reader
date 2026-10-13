@@ -14,7 +14,11 @@ internal fun ReaderSheets(vm: ReaderViewModel, settings: ReaderSettings, palette
         ReaderSheet.Themes -> ThemesSheet(
             vm, settings, palette,
             brightness = controls.brightness,
-            onBrightness = { controls.brightness = it },
+            manualBrightness = controls.manualBrightness,
+            onBrightness = {
+                if (it >= 0f) controls.manualBrightness = it
+                controls.brightness = it
+            },
             onDismiss = { controls.sheet = null },
         )
         null -> Unit

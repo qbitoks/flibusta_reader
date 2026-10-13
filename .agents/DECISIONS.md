@@ -38,4 +38,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-13 | reader | Fade page labels under controls without changing number format | replaces number expansion from earlier design; user-approved plan
 2026-10-13 | reader | Use TOC ranges for chapter progress and title; guide direction follows successful landings | user-approved fixes
 2026-10-13 | code | Split by responsibility; aim for files <400 lines, composables <150 (soft targets) | targeted reads save context; avoid fragments with no independent purpose
-2026-10-13 | reader settings | One sheet with Appearance/Text/Page tabs and immediate edits replaces nested customization/chrome sheets | user-approved design
+2026-10-13 | reader settings | Fixed dialog, pinned native-text preview, separate choice cards and descriptive styles; preserve settings keys | user-approved redesign
+2026-10-13 | reader settings | Compact: theme swatches, segments, style chips; radio list only as large-text fallback | user: tiles and lists too tall

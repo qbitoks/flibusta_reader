@@ -14,7 +14,7 @@
     strip behind the top buttons. With no footer content, let text extend to the bottom.
   - Put clock at footer left, page/percent plus «ещё N стр.» at center, battery at right.
     Fade header/footer out with controls shown; retain the chosen number format and stable title margins.
-  - Offer Quiet/Classic/Book/Clear visual presets separately for upper and lower labels; keep content controls.
+  - Offer descriptive Small muted/Large regular/Book font/Bold contrast choices for upper and lower labels.
     Inherit each line from reader defaults unless the book overrides it; provide a reset for each line.
     Reuse `readerChromeTextStyle` in cards and pages; derive reserved space from scaled line height.
   - In scroll mode, fix the header on a solid background slightly higher, with text fading over
@@ -65,23 +65,31 @@
   finish with «Поиск завершен / Найдено N совпадений». Highlight the jumped-to match blue on the page.
 
 ## Themes and customization
-- Use one `FlibustaSheet` for «Темы и настройки», with a fixed header, close control and
-  «Оформление / Текст / Страница» tabs. Preserve each tab scroll position; keep the body scrollable.
+- Use a fixed dialog for «Темы и настройки», with X/Back dismissal and no drag or outside dismissal.
+  Keep the header and «Оформление / Текст / Страница» tabs fixed; scroll each tab independently.
+- Pin a readable book excerpt above controls (beside them in landscape); reuse `Paginator` and `PageView`.
+  Bound the excerpt; paginate it off-thread without changing the reader viewport or reading position.
+  Prefer body text after leading headings so a large chapter title cannot consume the compact preview.
+  Show header/footer with actual settings; keep the preview visible while any setting is edited.
 - Apply edits immediately through existing settings setters; use inline disclosures instead of
   opening «Настроить» or a separate «Колонтитулы» sheet. Close never discards edits.
 - Use semantic interface colors, shared grouped cards with 16 dp insets, adaptive rows and labelled controls.
   Keep the reading palette inside theme tiles and previews; keep selected states accessible.
-- In «Оформление», show six theme tiles, book appearance (follow app/light/dark), and window brightness.
+- In «Оформление», show one row of six «Aa» theme swatches (selected name in the group header) and a
+  book-only «Авто / Светлое / Тёмное» segment in the same card, then window brightness.
+  Use a device-brightness switch and disable the manual slider while on; retain the last manual value.
   Resolve tile palettes from appearance, not from the current theme darkness; Quiet stays low contrast.
-- In «Текст», show a text preview, size, font samples, bold, and a collapsible custom-spacing group.
+- In «Текст», show size, font samples, bold, and a collapsible custom-spacing group below the pinned preview.
   Keep ranges: size 13–42, line spacing 0.80–2.50, letter spacing ±10%, word spacing ±20%, margins ±10%.
   Keep justification in the spacing group and hyphenation enabled without a toggle.
 - Reset only the selected theme typography; label that scope and leave the shared font size unchanged.
-- In «Страница», show page-turn choice, a schematic preview, then upper and lower line groups.
-  Keep content and appearance together. Hide upper style when its content is None, lower style when empty,
-  and scrolling-background choices outside Scroll mode.
-- Put inherited/default style in each line's inline style selector, alongside four compact font samples;
-  selecting default removes the book override. Reuse `readerChromeTextStyle` for samples and preview.
+- In «Страница», use three cards: page turning (icon segments, name in the group header), upper line
+  (content segment + style chips) and lower line (progress segment with concrete examples as labels,
+  «осталось в главе» / time / battery switches, style chips, scroll background segment in Scroll mode).
+  Short choices are segments that fall back to the radio list for large text or labels that do not fit.
+  Hide upper style when its content is None, lower style when empty.
+- Style chips sit on the page colour and draw their short name in their own style (`readerChromeTextStyle`);
+  spoken names stay descriptive. The default chip shows the inherited style; selecting it removes only that override.
 - Explain scope: theme, text, page turning and line content are shared; appearance and line-style overrides
   belong to the current book. Preserve all existing preference keys and independent line inheritance.
 - Use licensed Cyrillic fonts from `ReaderFonts`; EPUB publisher `@font-face` remains unsupported.

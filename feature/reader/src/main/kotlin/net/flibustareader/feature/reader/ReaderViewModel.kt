@@ -15,6 +15,7 @@ import net.flibustareader.core.data.library.LibraryRepository
 import net.flibustareader.core.data.settings.Appearance
 import net.flibustareader.core.data.settings.BookChromeStyles
 import net.flibustareader.core.data.settings.ChromeStyle
+import net.flibustareader.core.data.settings.ChromeStyles
 import net.flibustareader.core.data.settings.resolveChromeStyles
 import net.flibustareader.core.data.settings.GuideDim
 import net.flibustareader.core.data.settings.PageFooter
@@ -114,6 +115,9 @@ class ReaderViewModel @Inject constructor(
 
     val bookChromeStyles: StateFlow<BookChromeStyles> = settingsRepository.bookChromeStyles(bookId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, BookChromeStyles())
+
+    val defaultChromeStyles: StateFlow<ChromeStyles> = settingsRepository.reader.map { it.chromeStyles }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ChromeStyles())
 
     val settings: StateFlow<ReaderSettings> = combine(settingsRepository.reader, bookChromeStyles) { defaults, overrides ->
         defaults.copy(chromeStyles = resolveChromeStyles(defaults.chromeStyles, overrides))
