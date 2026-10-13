@@ -96,4 +96,5 @@
     </plurals>
     <string name="import_exists">Уже есть в библиотеке</string>
     <string name="import_failed">Не удалось открыть %1$s</string>
+    <string name="library_reading_settings">Настройки чтения</string>
 </resources>

@@ -3,6 +3,7 @@ package net.flibustareader.feature.reader
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
@@ -104,33 +105,40 @@ internal class SegmentOption<T>(val value: T, val label: String, val description
  * large text or long labels would not fit a segment, so no choice is ever truncated.
  */
 @Composable
-internal fun <T> SettingsSegments(current: T, options: List<SegmentOption<T>>, onSelect: (T) -> Unit) {
+internal fun <T> SettingsSegments(current: T, options: List<SegmentOption<T>>, stacked: Boolean = false, onSelect: (T) -> Unit) {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    val style = FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight)
+    val style = (if (stacked) FlibustaType.caption else FlibustaType.subheadline).copy(fontWeight = FlibustaType.headline.fontWeight)
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val segment = (maxWidth - 24.dp - 6.dp - 2.dp * (options.size - 1)) / options.size
         val fits = density.fontScale <= 1.3f && options.all { o ->
             val text = if (o.label.isEmpty()) 0.dp else with(density) { measurer.measure(o.label, style).size.width.toDp() }
-            text + (if (o.icon != null) 22.dp else 0.dp) + 12.dp <= segment
+            text + (if (o.icon != null && !stacked) 22.dp else 0.dp) + 12.dp <= segment
         }
         if (fits) {
             SegmentedControl(options.map { it.label }, options.indexOfFirst { it.value == current }, { onSelect(options[it].value) },
                 Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                icons = options.map { it.icon }, descriptions = options.map { it.description }, role = Role.RadioButton)
+                icons = options.map { it.icon }, descriptions = options.map { it.description }, role = Role.RadioButton, stacked = stacked)
         } else {
             SettingsOptions(current, options.map { it.value to it.description }, onSelect)
         }
     }
 }
 
-/** Group title with the current choice at the trailing edge, as iOS settings show values. */
+/**
+ * Group title with the current choice at the trailing edge, as iOS settings show values. A dot marks
+ * a group this book sets itself while its own settings are edited.
+ */
 @Composable
-internal fun ValueGroupHeader(title: String, value: String?) {
+internal fun SettingsGroupHeader(title: String, value: String? = null, own: Boolean = false) {
+    val c = Flibusta.colors
+    val ownLabel = stringResource(R.string.settings_own_mark)
     Row(Modifier.fillMaxWidth().padding(start = 36.dp, end = 36.dp, top = 20.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.Bottom) {
-        Text(title, style = FlibustaType.title3, color = Flibusta.colors.label, modifier = Modifier.weight(1f))
-        if (value != null) Text(value, style = FlibustaType.subheadline, color = Flibusta.colors.secondaryLabel,
+        verticalAlignment = Alignment.CenterVertically) {
+        if (own) Box(Modifier.padding(end = 8.dp).size(7.dp).clip(CircleShape).background(c.accent)
+            .semantics { contentDescription = ownLabel })
+        Text(title, style = FlibustaType.title3, color = c.label, modifier = Modifier.weight(1f))
+        if (value != null) Text(value, style = FlibustaType.subheadline, color = c.secondaryLabel,
             maxLines = 1, modifier = Modifier.padding(start = 12.dp))
     }
 }
@@ -169,12 +177,6 @@ internal fun SettingsSlider(title: String, value: Float, range: ClosedFloatingPo
     }
 }
 
-@Composable
-internal fun FontSizeSetting(size: Float, onChange: (Float) -> Unit) {
-    GroupedCard {
-        SettingsSlider(stringResource(R.string.settings_font_size), size, 13f..42f, 1f, "${size.roundToInt()}", onChange)
-    }
-}
 
 
 /** The whole labelled row is one accessible switch with a generous tap target. */

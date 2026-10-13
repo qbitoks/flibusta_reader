@@ -14,8 +14,8 @@ android {
         applicationId = "net.flibustareader"
         minSdk = 34
         targetSdk = 37
-        versionCode = 10
-        versionName = "0.3.6"
+        versionCode = 11
+        versionName = "0.3.7"
     }
 
     androidResources {

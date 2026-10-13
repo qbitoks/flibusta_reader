@@ -8,9 +8,12 @@ import android.os.BatteryManager
 import android.text.format.DateFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -139,7 +143,8 @@ internal fun rememberBattery(enabled: Boolean): State<BatteryInfo?> {
 
 /**
  * The bottom line: time on the left, [center] in the middle, battery on the right, in the grey of
- * the page labels. Empty sides keep their room so the middle stays centred.
+ * the page labels. Empty sides keep their room so the middle stays centred. Without [spread] all
+ * parts sit together in the middle; a [rule] colour draws a hairline above the line.
  */
 @Composable
 internal fun PageFooterBar(
@@ -151,6 +156,8 @@ internal fun PageFooterBar(
     startInset: Dp = 0.dp,
     endInset: Dp = 0.dp,
     textStyle: TextStyle = TextStyle(color = palette.secondary, fontFamily = UiSans, fontSize = 15.sp),
+    spread: Boolean = true,
+    rule: Color? = null,
     onCenterTap: (() -> Unit)? = null,
 ) {
     val density = LocalDensity.current
@@ -159,20 +166,35 @@ internal fun PageFooterBar(
     val batteryWidth = battery?.let {
         with(density) { measurer.measure("${it.level}%", textStyle, maxLines = 1).size.width.toDp() + textStyle.fontSize.toDp() * 1.6f } + 4.dp
     } ?: 0.dp
-    BoxWithConstraints(modifier.fillMaxWidth()) {
+    val centerTap = if (onCenterTap != null && center.isNotEmpty()) Modifier.clickable(onClick = onCenterTap) else Modifier
+    Column(modifier.fillMaxWidth()) {
+    if (rule != null) {
+        LineRule(rule)
+        Spacer(Modifier.height(FooterRuleSpace - 0.5.dp))
+    }
+    if (!spread) {
+        Row(Modifier.fillMaxWidth().padding(start = startInset, end = endInset), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally)) {
+            if (clock != null) FooterText(clock, textStyle)
+            if (center.isNotEmpty()) FooterText(center, textStyle, Modifier.weight(1f, fill = false).then(centerTap))
+            if (battery != null) ReaderBatteryLabel(battery.level, battery.charging, palette, textStyle)
+        }
+        return@Column
+    }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
         val side = maxOf(clockWidth + startInset, batteryWidth + endInset).coerceAtMost(maxWidth * 0.45f)
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.width(side).padding(start = startInset), contentAlignment = Alignment.CenterStart) {
                 if (clock != null) FooterText(clock, textStyle)
             }
-            Box(Modifier.weight(1f).then(if (onCenterTap != null && center.isNotEmpty()) Modifier.clickable(onClick = onCenterTap) else Modifier),
-                contentAlignment = Alignment.Center) {
+            Box(Modifier.weight(1f).then(centerTap), contentAlignment = Alignment.Center) {
                 FooterText(center, textStyle, Modifier.fillMaxWidth(), TextAlign.Center)
             }
             Box(Modifier.width(side).padding(end = endInset), contentAlignment = Alignment.CenterEnd) {
                 if (battery != null) ReaderBatteryLabel(battery.level, battery.charging, palette, textStyle)
             }
         }
+    }
     }
 }
 

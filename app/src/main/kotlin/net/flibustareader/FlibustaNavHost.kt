@@ -62,6 +62,7 @@ import net.flibustareader.feature.library.SearchScreen
 import net.flibustareader.feature.library.Shelf
 import net.flibustareader.feature.library.ShelfScreen
 import net.flibustareader.feature.reader.ReaderRoute
+import net.flibustareader.feature.reader.ReadingDefaultsSheet
 import net.flibustareader.feature.catalog.CatalogScreen
 import net.flibustareader.feature.catalog.CatalogViewModel
 import net.flibustareader.feature.catalog.R as CatalogR
@@ -155,6 +156,7 @@ private fun MainTabs(onOpen: (String) -> Unit, vm: LibraryViewModel = hiltViewMo
     val context = LocalContext.current
     val resources = LocalResources.current
     var collectionsOpen by rememberSaveable { mutableStateOf(false) }
+    var readingSettingsOpen by rememberSaveable { mutableStateOf(false) }
     var addToCollection by remember { mutableStateOf<Set<String>?>(null) }
 
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { vm.import(it) }
@@ -190,6 +192,7 @@ private fun MainTabs(onOpen: (String) -> Unit, vm: LibraryViewModel = hiltViewMo
         onAbout = { inner.navigate(ABOUT) },
         onCollections = { collectionsOpen = true },
         onAddToCollection = { addToCollection = it },
+        onReadingSettings = { readingSettingsOpen = true },
     )
 
     GlassScope { source ->
@@ -250,6 +253,7 @@ private fun MainTabs(onOpen: (String) -> Unit, vm: LibraryViewModel = hiltViewMo
     }
 
     if (collectionsOpen) CollectionsSheet(vm, onOpen = openShelf, onDismiss = { collectionsOpen = false })
+    if (readingSettingsOpen) ReadingDefaultsSheet(onDismiss = { readingSettingsOpen = false })
     addToCollection?.let { ids -> AddToCollectionSheet(vm, ids, onDone = { addToCollection = null; vm.endSelection() }) }
 }
 

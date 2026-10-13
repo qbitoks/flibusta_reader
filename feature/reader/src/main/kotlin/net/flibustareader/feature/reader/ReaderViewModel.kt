@@ -1,10 +1,10 @@
 package net.flibustareader.feature.reader
 
+import androidx.compose.runtime.setValue
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,17 +12,9 @@ import net.flibustareader.core.data.db.BookmarkEntity
 import net.flibustareader.core.data.db.HighlightEntity
 import net.flibustareader.core.data.library.BookResources
 import net.flibustareader.core.data.library.LibraryRepository
-import net.flibustareader.core.data.settings.Appearance
-import net.flibustareader.core.data.settings.BookChromeStyles
-import net.flibustareader.core.data.settings.ChromeStyle
-import net.flibustareader.core.data.settings.ChromeStyles
-import net.flibustareader.core.data.settings.resolveChromeStyles
+import net.flibustareader.core.data.settings.BookOverrides
 import net.flibustareader.core.data.settings.GuideDim
-import net.flibustareader.core.data.settings.PageFooter
-import net.flibustareader.core.data.settings.PageHeader
-import net.flibustareader.core.data.settings.PageTurn
 import net.flibustareader.core.data.settings.ReaderSettings
-import net.flibustareader.core.data.settings.ReaderTheme
 import net.flibustareader.core.data.settings.SettingsRepository
 import net.flibustareader.core.data.settings.ThemeStyle
 import net.flibustareader.core.designsystem.ResourceTypefaceProvider
@@ -113,19 +105,17 @@ class ReaderViewModel @Inject constructor(
     private val typefaces = ResourceTypefaceProvider(context)
     val ink = Ink()
 
-    val bookChromeStyles: StateFlow<BookChromeStyles> = settingsRepository.bookChromeStyles(bookId)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, BookChromeStyles())
+    /** Settings shared by all books. */
+    val sharedSettings: StateFlow<ReaderSettings> = settingsRepository.reader
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
 
-    val defaultChromeStyles: StateFlow<ChromeStyles> = settingsRepository.reader.map { it.chromeStyles }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, ChromeStyles())
+    /** What this book changes over [sharedSettings]. */
+    val ownSettings: StateFlow<BookOverrides> = settingsRepository.bookOverrides(bookId)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, BookOverrides())
 
-    val settings: StateFlow<ReaderSettings> = combine(settingsRepository.reader, bookChromeStyles) { defaults, overrides ->
-        defaults.copy(chromeStyles = resolveChromeStyles(defaults.chromeStyles, overrides))
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
-
-    /** This book's own Light/Dark; null follows the app's appearance. */
-    val appearance: StateFlow<Appearance?> =
-        settingsRepository.bookAppearance(bookId).stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    /** The book as it is read: shared settings with its own on top. */
+    val settings: StateFlow<ReaderSettings> = combine(sharedSettings, ownSettings) { shared, own -> own.applyTo(shared) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
 
     val bookmarks: StateFlow<List<BookmarkEntity>> =
         library.bookmarks(bookId).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -588,22 +578,24 @@ class ReaderViewModel @Inject constructor(
 
     // --- Settings passthrough ---
 
-    fun setFontSize(size: Float) = viewModelScope.launch { settingsRepository.setFontSize(size) }
-    fun saveThemeStyle(theme: ReaderTheme, style: ThemeStyle) = viewModelScope.launch { settingsRepository.setThemeStyle(theme, style) }
-    fun resetThemeStyle(theme: ReaderTheme) = viewModelScope.launch { settingsRepository.resetThemeStyle(theme) }
+    /** Saves an edit to this book's own settings ([book]) or to the shared ones; closing the panel never cancels it. */
+    fun saveSettings(book: Boolean, change: (ReaderSettings) -> ReaderSettings) = viewModelScope.launch {
+        if (book) settingsRepository.updateBookReader(bookId, change) else settingsRepository.updateReader(change)
+    }
+
+    /** «Вернуть общий текст» for the book, or the theme's default typography for all books. */
+    fun textReset(book: Boolean): (ReaderSettings) -> ReaderSettings = {
+        it.withThemeStyle(if (book) sharedSettings.value.themeStyles.getValue(it.theme) else ThemeStyle.defaultFor(it.theme))
+    }
+
+    fun shareOwnSettings() = viewModelScope.launch { settingsRepository.shareBookReader(bookId) }
+    fun resetOwnSettings() = viewModelScope.launch { settingsRepository.resetBookReader(bookId) }
 
     /** Original book file, for «Поделиться». */
     fun bookFile(context: Context): File? =
         File(context.filesDir, "books").listFiles { f -> f.name.startsWith("$bookId.") }?.firstOrNull()
-    fun setTheme(theme: ReaderTheme) = viewModelScope.launch { settingsRepository.setTheme(theme) }
-    fun setAppearance(value: Appearance?) = viewModelScope.launch { settingsRepository.setBookAppearance(bookId, value) }
-    fun setPageTurn(value: PageTurn) = viewModelScope.launch { settingsRepository.setPageTurn(value) }
     fun setGuideLine(on: Boolean) = viewModelScope.launch { settingsRepository.setGuideLine(on) }
     fun setGuideDim(value: GuideDim) = viewModelScope.launch { settingsRepository.setGuideDim(value) }
-    fun setPageHeader(value: PageHeader) = viewModelScope.launch { settingsRepository.setPageHeader(value) }
-    fun setHeaderChromeStyle(value: ChromeStyle?) = viewModelScope.launch { settingsRepository.setBookHeaderChromeStyle(bookId, value) }
-    fun setFooterChromeStyle(value: ChromeStyle?) = viewModelScope.launch { settingsRepository.setBookFooterChromeStyle(bookId, value) }
-    fun setPageFooter(value: PageFooter) = viewModelScope.launch { settingsRepository.setPageFooter(value) }
 
     // --- Reading sessions (kept for Reading Goals) ---
 

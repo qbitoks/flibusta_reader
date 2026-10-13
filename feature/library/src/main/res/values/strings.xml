@@ -92,4 +92,5 @@
     </plurals>
     <string name="import_exists">Already in your library</string>
     <string name="import_failed">Couldn’t open %1$s</string>
+    <string name="library_reading_settings">Reading Settings</string>
 </resources>

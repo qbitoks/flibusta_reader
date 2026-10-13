@@ -1,11 +1,11 @@
 package net.flibustareader.feature.library
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,9 +15,6 @@ import net.flibustareader.core.data.library.FolderScanner
 import net.flibustareader.core.data.library.ImportResult
 import net.flibustareader.core.data.library.LibraryRepository
 import net.flibustareader.core.data.settings.Appearance
-import net.flibustareader.core.data.settings.BookChromeStyles
-import net.flibustareader.core.data.settings.ChromeStyle
-import net.flibustareader.core.data.settings.ReaderSettings
 import net.flibustareader.core.data.settings.LibraryLayout
 import net.flibustareader.core.data.settings.LibrarySettings
 import net.flibustareader.core.data.settings.LibrarySort
@@ -33,7 +30,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -112,12 +108,6 @@ class LibraryViewModel @Inject constructor(
         settings.appAppearance.stateIn(viewModelScope, SharingStarted.Eagerly, Appearance.Auto)
 
     fun setAppAppearance(value: Appearance) = viewModelScope.launch { settings.setAppAppearance(value) }
-
-    val defaultReaderSettings: StateFlow<ReaderSettings> =
-        settings.reader.stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
-
-    fun setHeaderChromeStyle(value: ChromeStyle) = viewModelScope.launch { settings.setHeaderChromeStyle(value) }
-    fun setFooterChromeStyle(value: ChromeStyle) = viewModelScope.launch { settings.setFooterChromeStyle(value) }
 
     val collections: StateFlow<List<CollectionEntity>> =
         library.collections.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -276,8 +266,7 @@ class LibraryViewModel @Inject constructor(
     fun delete(ids: Collection<String>) = viewModelScope.launch {
         ids.forEach {
             library.delete(it)
-            settings.setBookAppearance(it, null)
-            settings.setBookChromeStyles(it, BookChromeStyles())
+            settings.resetBookReader(it)
         }
     }
 

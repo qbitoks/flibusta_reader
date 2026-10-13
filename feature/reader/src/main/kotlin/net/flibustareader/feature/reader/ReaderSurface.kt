@@ -1,5 +1,7 @@
 package net.flibustareader.feature.reader
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -10,10 +12,8 @@ import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -27,13 +27,11 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import net.flibustareader.core.data.db.HighlightEntity
 import net.flibustareader.core.data.settings.FooterStyle
-import net.flibustareader.core.data.settings.PageHeader
 import net.flibustareader.core.data.settings.PageTurn
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import net.flibustareader.core.designsystem.ReaderPalette
-import net.flibustareader.core.designsystem.readerChromeTextStyle
 import net.flibustareader.core.layout.PageRenderer
 import net.flibustareader.core.layout.Mark
 import net.flibustareader.core.layout.MarkStyle
@@ -45,9 +43,12 @@ internal data class ReaderLayout(
     val bottomInset: Dp,
     val height: Int,
     val origin: Offset,
+    /** «Отступ от края» of the lines. */
+    val headerEdge: Dp = 0.dp,
+    val footerEdge: Dp = 0.dp,
 ) {
-    val headerY: Dp get() = topInset + 14.dp
-    val footerY: Dp get() = bottomInset + 16.dp
+    val headerY: Dp get() = topInset + 14.dp + headerEdge
+    val footerY: Dp get() = bottomInset + 16.dp + footerEdge
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -69,21 +70,12 @@ internal fun ReaderSurface(
     // Insets ignoring visibility: showing or hiding the bars must never re-paginate the book.
     val topInset = with(density) { WindowInsets.statusBarsIgnoringVisibility.getTop(density).toDp() }
     val bottomInset = with(density) { WindowInsets.navigationBarsIgnoringVisibility.getBottom(density).toDp() }
-    val header = settings.header
-    val footer = settings.footer
+    val footer = settings.shownFooter
     val margin = settings.style.margin.dp
-    val headerStyle = readerChromeTextStyle(settings.chromeStyles.header, palette, settings.style.font)
-    val footerStyle = readerChromeTextStyle(settings.chromeStyles.footer, palette, settings.style.font)
-    val headerHeight = with(density) { headerStyle.lineHeight.toDp() } + 16.dp
-    val footerHeight = with(density) { footerStyle.lineHeight.toDp() } + 48.dp
-    // Without a line above, the text starts right under the status bar area; without anything
-    // below, it runs to the bottom. Changing either re-paginates, as a font change does.
-    val padding = PaddingValues(
-        start = margin,
-        end = margin,
-        top = topInset + if (header == PageHeader.None) 12.dp else headerHeight.coerceAtLeast(32.dp) + 22.dp,
-        bottom = bottomInset + if (footer.isEmpty) 20.dp else footerHeight,
-    )
+    val headerStyle = headerLook(settings, palette).style
+    val footerStyle = footerLook(settings, palette).style
+    val (topSpace, bottomSpace) = textInsets(settings, with(density) { headerStyle.lineHeight.toDp() }, with(density) { footerStyle.lineHeight.toDp() })
+    val padding = PaddingValues(start = margin, end = margin, top = topInset + topSpace, bottom = bottomInset + bottomSpace)
 
     // «↶» shows by itself for a moment after a jump, until the first page turn; otherwise only with the controls.
     var backFlash by remember { mutableStateOf(false) }
@@ -147,7 +139,8 @@ internal fun ReaderSurface(
             controls.activeHighlight = null
         }
         val contentOrigin = Offset(contentLeft, contentTop)
-        val layout = ReaderLayout(padding, topInset, bottomInset, heightPx, contentOrigin)
+        val layout = ReaderLayout(padding, topInset, bottomInset, heightPx, contentOrigin,
+            settings.shownHeaderLayout.edge.dp, settings.shownFooterLayout.edge.dp)
         val interaction = readerInteractions(vm, controls, guidePlate, guideLines, contentOrigin) { event ->
             controls.guideMoving = event.active
             val landed = event.to
@@ -166,7 +159,7 @@ internal fun ReaderSurface(
             EdgeFade(palette, padding.calculateTopPadding(), top = true, modifier = Modifier.align(Alignment.TopCenter), fade = 18.dp)
             if (!footer.isEmpty && footer.style == FooterStyle.Strip) {
                 val stripHeight = (with(density) { footerStyle.lineHeight.toDp() } + 10.dp).coerceAtLeast(FooterStripHeight)
-                FooterStrip(palette, bottomInset + stripHeight, Modifier.align(Alignment.BottomCenter))
+                FooterStrip(palette, bottomInset + stripHeight + layout.footerEdge, Modifier.align(Alignment.BottomCenter))
             } else {
                 EdgeFade(palette, padding.calculateBottomPadding(), top = false, modifier = Modifier.align(Alignment.BottomCenter), fade = 12.dp)
             }

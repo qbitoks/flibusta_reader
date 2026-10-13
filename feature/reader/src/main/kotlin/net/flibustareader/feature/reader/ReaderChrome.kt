@@ -1,5 +1,7 @@
 package net.flibustareader.feature.reader
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -29,8 +31,6 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,21 +41,17 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.flibustareader.core.data.library.BookSharing
 import net.flibustareader.core.data.settings.FooterStyle
-import net.flibustareader.core.data.settings.PageHeader
+import net.flibustareader.core.data.settings.LineAlign
 import net.flibustareader.core.data.settings.PageTurn
 import net.flibustareader.core.designsystem.ReaderPalette
-import net.flibustareader.core.designsystem.readerChromeTextStyle
 import net.flibustareader.core.designsystem.readerChromeSeparator
 import net.flibustareader.core.designsystem.Flibusta
 import net.flibustareader.core.designsystem.UiSans
@@ -91,15 +87,16 @@ internal fun BoxScope.ReaderChrome(
     val scroll = settings.pageTurn == PageTurn.Scroll
     val guideOn = settings.guideLine && !scroll
     val header = settings.header
-    val footer = settings.footer
+    val footer = settings.shownFooter
     val margin = settings.style.margin.dp
     val topInset = layout.topInset
     val bottomInset = layout.bottomInset
     val headerY = layout.headerY
     val footerY = layout.footerY
     // Time/battery repeat the status bar; the guide button and bookmark need space at the corners.
-    val headerStyle = readerChromeTextStyle(settings.chromeStyles.header, palette, settings.style.font)
-    val footerStyle = readerChromeTextStyle(settings.chromeStyles.footer, palette, settings.style.font)
+    val headerLook = headerLook(settings, palette)
+    val footerLook = footerLook(settings, palette)
+    val footerStyle = footerLook.style
     val footerEnd = if (state.bookmarked) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
     val footerLineHeight = with(LocalDensity.current) { footerStyle.lineHeight.toDp() }
     val stripHeight = (footerLineHeight + 10.dp).coerceAtLeast(FooterStripHeight)
@@ -116,11 +113,12 @@ internal fun BoxScope.ReaderChrome(
 
     // Header: the chosen title; ↶ / ↷ appear with the controls, and ↶ for a moment after a jump (white spot 7).
     ReaderHeader(
-        title = if (scroll) headerText(header, state.title, state.chapterTitle) else null,
+        title = if (scroll) headerText(header, state.title, state.chapterTitle)?.let(headerLook::text) else null,
         history = vm.history,
         pageNumberOf = vm::pageNumberOf,
         palette = palette,
-        textStyle = headerStyle,
+        look = headerLook,
+        textMargin = margin,
         chromeVisible = controls.chromeVisible,
         showBack = marks,
         onBack = vm::historyBack,
@@ -134,16 +132,18 @@ internal fun BoxScope.ReaderChrome(
     if (scroll && !footer.isEmpty) {
         val strip = footer.style == FooterStyle.Strip
         PageFooterBar(
-            center = footerCenter(footer, state.globalPage, state.totalPages, state.progress, state.pagesLeftInChapter.takeIf { state.page != null }, footerWords, readerChromeSeparator(settings.chromeStyles.footer)),
+            center = footerLook.text(footerCenter(footer, state.globalPage, state.totalPages, state.progress, state.pagesLeftInChapter.takeIf { state.page != null }, footerWords, readerChromeSeparator(settings.chromeStyles.footer))),
             clock = clock,
             battery = battery,
             palette = palette,
             modifier = Modifier.align(Alignment.BottomCenter).padding(
                 start = margin,
                 end = margin,
-                bottom = if (strip) bottomInset + (stripHeight - footerLineHeight) / 2 else footerY + 12.dp,
+                bottom = if (strip) bottomInset + layout.footerEdge + (stripHeight - footerLineHeight) / 2 else footerY + 12.dp,
             ).alpha(footerAlpha),
             textStyle = footerStyle,
+            spread = footerLook.layout.align == LineAlign.Spread,
+            rule = footerLook.ruleColor.takeIf { footerLook.layout.rule && !strip },
             endInset = footerEnd,
             onCenterTap = onFooterTap,
         )
@@ -206,7 +206,8 @@ internal fun ReaderHeader(
     history: NavHistory,
     pageNumberOf: (net.flibustareader.core.model.Position) -> Int?,
     palette: ReaderPalette,
-    textStyle: TextStyle,
+    look: LineLook,
+    textMargin: Dp,
     chromeVisible: Boolean,
     showBack: Boolean,
     onBack: () -> Unit,
@@ -214,10 +215,10 @@ internal fun ReaderHeader(
     onClose: () -> Unit,
     modifier: Modifier,
 ) {
-    val headerHeight = (with(LocalDensity.current) { textStyle.lineHeight.toDp() } + 16.dp).coerceAtLeast(32.dp)
+    val headerHeight = (with(LocalDensity.current) { look.style.lineHeight.toDp() } + 16.dp).coerceAtLeast(32.dp)
     Box(modifier.fillMaxWidth().height(headerHeight)) {
         val alpha by animateFloatAsState(if (chromeVisible || showBack) 0f else 1f, tween(150), label = "scrollHeader")
-        if (title != null) PageTitle(title, palette, Modifier.align(Alignment.Center).alpha(alpha), 24.dp, textStyle)
+        if (title != null) PageTitle(title, palette, Modifier.align(Alignment.Center).alpha(alpha), look.titleMargin(24.dp, textMargin), look)
         history.back.lastOrNull()?.let { target ->
             AnimatedVisibility(showBack, Modifier.align(Alignment.CenterStart).padding(start = 22.dp), enter = fadeIn(), exit = fadeOut()) {
                 HistoryMark(pageNumberOf(target), back = true, palette, Modifier, onBack)
@@ -269,21 +270,20 @@ internal fun titleMargin(marks: Boolean, chromeVisible: Boolean, history: NavHis
     else -> 24.dp
 }
 
-/** Book title at the top of a page, grey and centred. */
+/** Title at the top of a page in the line's look; a rule, when chosen, runs under it at the text side. */
 @Composable
-internal fun PageTitle(title: String, palette: ReaderPalette, modifier: Modifier, margin: Dp,
-    textStyle: TextStyle = TextStyle(color = palette.secondary, fontFamily = UiSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, lineHeight = 20.sp),
-) {
-    val height = with(LocalDensity.current) { textStyle.lineHeight.toDp() } + 16.dp
-    Box(modifier.fillMaxWidth().height(height.coerceAtLeast(32.dp)), contentAlignment = Alignment.Center) {
+internal fun PageTitle(title: String, palette: ReaderPalette, modifier: Modifier, margin: Dp, look: LineLook) {
+    val height = with(LocalDensity.current) { look.style.lineHeight.toDp() } + 16.dp
+    Box(modifier.fillMaxWidth().height(height.coerceAtLeast(32.dp)), contentAlignment = look.alignment) {
         Text(
             title,
-            style = textStyle,
+            style = look.style,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
+            textAlign = look.textAlign,
             modifier = Modifier.padding(horizontal = margin),
         )
+        if (look.layout.rule) LineRule(look.ruleColor, Modifier.align(Alignment.BottomCenter).padding(horizontal = margin))
     }
 }
 

@@ -1,15 +1,16 @@
 package net.flibustareader.feature.reader
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import net.flibustareader.core.data.settings.Appearance
+import net.flibustareader.core.data.settings.ReaderSettings
+import net.flibustareader.core.designsystem.ReaderPalette
 import net.flibustareader.core.designsystem.ReaderPalettes
 import net.flibustareader.core.designsystem.FlibustaTheme
 
@@ -26,10 +27,7 @@ fun ReaderRoute(onClose: () -> Unit, viewModel: ReaderViewModel = hiltViewModel(
 @Composable
 fun ReaderScreen(vm: ReaderViewModel, onClose: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
-    val appearance by vm.appearance.collectAsStateWithLifecycle()
-    // isSystemInDarkTheme() already reflects the app's own appearance (per-app night mode).
-    val dark = ReaderPalettes.isDark(appearance ?: Appearance.Auto, isSystemInDarkTheme())
-    val palette = ReaderPalettes.of(settings.theme, dark)
+    val palette = readerPalette(settings)
     FlibustaTheme(dark = palette.isDark) { ReaderContent(vm, onClose) }
 }
 
@@ -38,9 +36,7 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     val bookmarks by vm.bookmarks.collectAsStateWithLifecycle()
     val highlights by vm.highlights.collectAsStateWithLifecycle()
-    val appearance by vm.appearance.collectAsStateWithLifecycle()
-    val dark = ReaderPalettes.isDark(appearance ?: Appearance.Auto, isSystemInDarkTheme())
-    val palette = ReaderPalettes.of(settings.theme, dark)
+    val palette = readerPalette(settings)
     val controls = rememberReaderControls()
     vm.ink.apply {
         text = palette.text.toArgb()
@@ -55,3 +51,8 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
     ReaderSurface(vm, settings, palette, controls, bookmarks.size + highlights.size, highlights, onClose)
     ReaderSheets(vm, settings, palette, controls)
 }
+
+/** Page palette of [settings]; isSystemInDarkTheme() already reflects the app's own appearance (per-app night mode). */
+@Composable
+internal fun readerPalette(settings: ReaderSettings): ReaderPalette =
+    ReaderPalettes.of(settings.theme, ReaderPalettes.isDark(settings.appearance, isSystemInDarkTheme()))

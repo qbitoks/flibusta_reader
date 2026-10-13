@@ -3,9 +3,7 @@ package net.flibustareader.core.data.settings
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -50,6 +48,9 @@ data class PageFooter(
 ) {
     /** Nothing to show: the text runs to the bottom of the screen. */
     val isEmpty: Boolean get() = page == FooterPage.None && !pagesLeft && !clock && !battery
+
+    /** Time and battery without «ещё N стр.», fading under scrolling text: what the line shows without «Свои параметры». */
+    val hasDefaultContent: Boolean get() = PageFooter(page = page) == this
 }
 
 enum class LibraryLayout { Grid, List }
@@ -72,11 +73,28 @@ data class ReaderSettings(
     val highlightColor: String = "yellow",
     val header: PageHeader = PageHeader.None,
     val footer: PageFooter = PageFooter(),
-    /** Reader defaults; a book can override each line independently. */
+    /** Visual presets of the lines. */
     val chromeStyles: ChromeStyles = ChromeStyles(),
+    /** Light/Dark of the reading page; Auto follows the app. */
+    val appearance: Appearance = Appearance.Auto,
+    val headerLayout: LineLayout = LineLayout.HEADER,
+    val footerLayout: LineLayout = LineLayout.FOOTER,
 ) {
     val themeStyle: ThemeStyle get() = themeStyles.getValue(theme)
     val style: ReaderStyle get() = themeStyle.toReaderStyle(fontSize)
+
+    fun withThemeStyle(value: ThemeStyle): ReaderSettings = copy(themeStyles = themeStyles + (theme to value))
+
+    /** Line parameters as drawn: the stored ones only while «Свои параметры» is on. */
+    val shownHeaderLayout: LineLayout get() = if (headerLayout.customize) headerLayout else LineLayout.HEADER
+    val shownFooterLayout: LineLayout get() = if (footerLayout.customize) footerLayout else LineLayout.FOOTER
+
+    /** «Нет» hides the whole bottom line; its parts beyond the page number are «Свои параметры». */
+    val shownFooter: PageFooter get() = when {
+        footer.page == FooterPage.None -> PageFooter(page = FooterPage.None, clock = false, battery = false)
+        footerLayout.customize -> footer
+        else -> PageFooter(page = footer.page)
+    }
 }
 
 data class LibrarySettings(
@@ -93,51 +111,21 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     private val store = context.dataStore
 
     private object Keys {
-        val fontSize = floatPreferencesKey("font_size")
-        val theme = stringPreferencesKey("theme")
         // "appearance" held the reader-wide appearance before the app-wide one; left unread (no migration, user decision).
         val appAppearance = stringPreferencesKey("app_appearance")
-        val pageTurn = stringPreferencesKey("page_turn")
-        val guideLine = booleanPreferencesKey("guide_line")
-        val guideDim = stringPreferencesKey("guide_dim")
-        val highlightColor = stringPreferencesKey("highlight_color")
-        val pageHeader = stringPreferencesKey("page_header")
-        val footerPage = stringPreferencesKey("footer_page")
-        val footerPagesLeft = booleanPreferencesKey("footer_pages_left")
-        val footerClock = booleanPreferencesKey("footer_clock")
-        val footerBattery = booleanPreferencesKey("footer_battery")
-        val footerStyle = stringPreferencesKey("footer_style")
         val libraryLayout = stringPreferencesKey("library_layout")
         val librarySort = stringPreferencesKey("library_sort")
         val watchedFolder = stringPreferencesKey("watched_folder")
         val hiddenSystem = stringSetPreferencesKey("hidden_system_collections")
-        fun themeStyle(theme: ReaderTheme) = stringPreferencesKey("theme_style_${theme.name}")
-        fun bookAppearance(bookId: String) = stringPreferencesKey("book_appearance_$bookId")
     }
 
-    val reader: Flow<ReaderSettings> = store.data.map { p ->
-        ReaderSettings(
-            fontSize = p[Keys.fontSize] ?: ReaderStyle().fontSize,
-            theme = enumOr(p[Keys.theme], ReaderTheme.Original),
-            themeStyles = ReaderTheme.entries.associateWith { ThemeStyle.decode(p[Keys.themeStyle(it)], it) },
-            // "None" was the old name of «Быстрое выцветание».
-            pageTurn = if (p[Keys.pageTurn] == "None") PageTurn.Fade else enumOr(p[Keys.pageTurn], PageTurn.Slide),
-            guideLine = p[Keys.guideLine] ?: false,
-            guideDim = enumOr(p[Keys.guideDim], GuideDim.Low),
-            highlightColor = p[Keys.highlightColor] ?: "yellow",
-            header = enumOr(p[Keys.pageHeader], PageHeader.None),
-            footer = PageFooter().let { d ->
-                PageFooter(
-                    page = enumOr(p[Keys.footerPage], d.page),
-                    pagesLeft = p[Keys.footerPagesLeft] ?: d.pagesLeft,
-                    clock = p[Keys.footerClock] ?: d.clock,
-                    battery = p[Keys.footerBattery] ?: d.battery,
-                    style = enumOr(p[Keys.footerStyle], d.style),
-                )
-            },
-            chromeStyles = ChromeStylePreferences.readDefaults(p),
-        )
-    }.distinctUntilChanged()
+    /** Settings shared by all books. */
+    val reader: Flow<ReaderSettings> = store.data.map(ReaderPreferences::read).distinctUntilChanged()
+
+    /** What a book changes over [reader]. */
+    fun bookOverrides(bookId: String): Flow<BookOverrides> = store.data
+        .map { ReaderPreferences.readBook(it, bookId) }
+        .distinctUntilChanged()
 
     val library: Flow<LibrarySettings> = store.data.map { p ->
         LibrarySettings(
@@ -152,100 +140,43 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     /** Appearance of the whole app; Auto follows the system. */
     val appAppearance: Flow<Appearance> = store.data.map { enumOr(it[Keys.appAppearance], Appearance.Auto) }.distinctUntilChanged()
 
-    /** A book's own Light/Dark; null means it follows [appAppearance]. */
-    fun bookAppearance(bookId: String): Flow<Appearance?> = store.data
-        .map { p -> p[Keys.bookAppearance(bookId)]?.let { runCatching { Appearance.valueOf(it) }.getOrNull() }?.takeIf { it != Appearance.Auto } }
-        .distinctUntilChanged()
-
-    /** Missing overrides follow the current defaults from [reader]. */
-    fun bookChromeStyles(bookId: String): Flow<BookChromeStyles> = store.data
-        .map { ChromeStylePreferences.readBook(it, bookId) }
-        .distinctUntilChanged()
-
     suspend fun currentReader(): ReaderSettings = reader.first()
 
-    suspend fun setFontSize(size: Float) {
-        store.edit { it[Keys.fontSize] = size }
+    suspend fun updateReader(change: (ReaderSettings) -> ReaderSettings) {
+        store.edit { ReaderPreferences.write(it, change(ReaderPreferences.read(it))) }
     }
 
-    suspend fun setThemeStyle(theme: ReaderTheme, style: ThemeStyle) {
-        store.edit { it[Keys.themeStyle(theme)] = style.encode() }
+    /** Edits the book as it looks now; whatever ends up equal to the shared value stops being its own. */
+    suspend fun updateBookReader(bookId: String, change: (ReaderSettings) -> ReaderSettings) {
+        store.edit {
+            val shared = ReaderPreferences.read(it)
+            val edited = change(ReaderPreferences.readBook(it, bookId).applyTo(shared))
+            ReaderPreferences.writeBook(it, bookId, BookOverrides.between(shared, edited))
+        }
     }
 
-    suspend fun resetThemeStyle(theme: ReaderTheme) {
-        store.edit { it.remove(Keys.themeStyle(theme)) }
+    /** «Сделать общими для всех книг»: the book's look becomes the shared one. */
+    suspend fun shareBookReader(bookId: String) {
+        store.edit {
+            ReaderPreferences.write(it, ReaderPreferences.readBook(it, bookId).applyTo(ReaderPreferences.read(it)))
+            ReaderPreferences.writeBook(it, bookId, BookOverrides())
+        }
     }
 
-    suspend fun setTheme(theme: ReaderTheme) {
-        store.edit { it[Keys.theme] = theme.name }
+    /** «Вернуть общие настройки», and cleanup when the book is deleted. */
+    suspend fun resetBookReader(bookId: String) {
+        store.edit { ReaderPreferences.writeBook(it, bookId, BookOverrides()) }
     }
 
     suspend fun setAppAppearance(value: Appearance) {
         store.edit { it[Keys.appAppearance] = value.name }
     }
 
-    /** null (or Auto) makes the book follow the app again. */
-    suspend fun setBookAppearance(bookId: String, value: Appearance?) {
-        store.edit {
-            if (value == null || value == Appearance.Auto) it.remove(Keys.bookAppearance(bookId))
-            else it[Keys.bookAppearance(bookId)] = value.name
-        }
-    }
+    suspend fun setGuideLine(on: Boolean) = updateReader { it.copy(guideLine = on) }
 
-    suspend fun setChromeStyles(value: ChromeStyles) {
-        store.edit { ChromeStylePreferences.writeDefaults(it, value) }
-    }
+    suspend fun setGuideDim(value: GuideDim) = updateReader { it.copy(guideDim = value) }
 
-    suspend fun setHeaderChromeStyle(value: ChromeStyle) {
-        store.edit { ChromeStylePreferences.writeDefaults(it, ChromeStylePreferences.readDefaults(it).copy(header = value)) }
-    }
-
-    suspend fun setFooterChromeStyle(value: ChromeStyle) {
-        store.edit { ChromeStylePreferences.writeDefaults(it, ChromeStylePreferences.readDefaults(it).copy(footer = value)) }
-    }
-
-    suspend fun setBookHeaderChromeStyle(bookId: String, value: ChromeStyle?) {
-        store.edit { ChromeStylePreferences.writeBook(it, bookId, ChromeStylePreferences.readBook(it, bookId).copy(header = value)) }
-    }
-
-    suspend fun setBookFooterChromeStyle(bookId: String, value: ChromeStyle?) {
-        store.edit { ChromeStylePreferences.writeBook(it, bookId, ChromeStylePreferences.readBook(it, bookId).copy(footer = value)) }
-    }
-
-    /** null removes the override for that line, so later default changes apply. */
-    suspend fun setBookChromeStyles(bookId: String, value: BookChromeStyles) {
-        store.edit { ChromeStylePreferences.writeBook(it, bookId, value) }
-    }
-
-    suspend fun setPageTurn(value: PageTurn) {
-        store.edit { it[Keys.pageTurn] = value.name }
-    }
-
-    suspend fun setGuideLine(on: Boolean) {
-        store.edit { it[Keys.guideLine] = on }
-    }
-
-    suspend fun setGuideDim(value: GuideDim) {
-        store.edit { it[Keys.guideDim] = value.name }
-    }
-
-    suspend fun setPageHeader(value: PageHeader) {
-        store.edit { it[Keys.pageHeader] = value.name }
-    }
-
-    suspend fun setPageFooter(value: PageFooter) {
-        store.edit {
-            it[Keys.footerPage] = value.page.name
-            it[Keys.footerPagesLeft] = value.pagesLeft
-            it[Keys.footerClock] = value.clock
-            it[Keys.footerBattery] = value.battery
-            it[Keys.footerStyle] = value.style.name
-        }
-    }
-
-    suspend fun setHighlightColor(value: String) {
-        store.edit { it[Keys.highlightColor] = value }
-    }
+    suspend fun setHighlightColor(value: String) = updateReader { it.copy(highlightColor = value) }
 
     suspend fun setLibraryLayout(value: LibraryLayout) {
         store.edit { it[Keys.libraryLayout] = value.name }

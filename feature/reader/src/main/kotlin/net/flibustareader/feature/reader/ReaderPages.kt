@@ -1,5 +1,6 @@
 package net.flibustareader.feature.reader
 
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -11,7 +12,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,9 +21,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import net.flibustareader.core.data.db.HighlightEntity
+import net.flibustareader.core.data.settings.LineAlign
 import net.flibustareader.core.data.settings.PageTurn
 import net.flibustareader.core.designsystem.ReaderPalette
-import net.flibustareader.core.designsystem.readerChromeTextStyle
 import net.flibustareader.core.designsystem.readerChromeSeparator
 import net.flibustareader.core.layout.Mark
 import androidx.compose.foundation.layout.BoxScope
@@ -53,12 +53,12 @@ internal fun BoxScope.ReaderPages(
     val padding = layout.padding
     val contentOrigin = layout.origin
     val header = settings.header
-    val footer = settings.footer
+    val footer = settings.shownFooter
     val headerY = layout.headerY
     val footerY = layout.footerY
     val margin = settings.style.margin.dp
-    val headerStyle = readerChromeTextStyle(settings.chromeStyles.header, palette, settings.style.font)
-    val footerStyle = readerChromeTextStyle(settings.chromeStyles.footer, palette, settings.style.font)
+    val headerLook = headerLook(settings, palette)
+    val footerLook = footerLook(settings, palette)
     val footerStart = if (settings.guideLine && !scroll) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
     val footerEnd = if (state.bookmarked) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
     val headerAlpha by animateFloatAsState(if (marks) 0f else 1f, tween(150), label = "pageHeader")
@@ -134,20 +134,24 @@ internal fun BoxScope.ReaderPages(
                         modifier = Modifier.fillMaxSize().padding(padding),
                         marks = if (page != null && page === state.page && selection != null) savedMarks + Mark(selection, selectionColor) else savedMarks,
                     )
-                    headerText(header, state.title, page?.let { vm.chapterTitleAt(vm.chapterPositionOf(it)) })?.let { title ->
+                    // Like a printed book, a chapter's opening page may go without its running title.
+                    val chapterStart = page != null && page.index == 0 && headerLook.layout.hideOnChapterStart
+                    headerText(header, state.title, page?.let { vm.chapterTitleAt(vm.chapterPositionOf(it)) })?.takeUnless { chapterStart }?.let { title ->
                         PageTitle(
-                            title, palette, Modifier.align(Alignment.TopCenter).padding(top = headerY).alpha(headerAlpha),
-                            24.dp, headerStyle,
+                            headerLook.text(title), palette, Modifier.align(Alignment.TopCenter).padding(top = headerY).alpha(headerAlpha),
+                            headerLook.titleMargin(24.dp, margin), headerLook,
                         )
                     }
                     if (!footer.isEmpty && page != null) {
                         PageFooterBar(
-                            center = footerCenter(footer, vm.pageNumberOf(page.start), state.totalPages, vm.progressOf(page), vm.pagesLeftAfter(page), footerWords, readerChromeSeparator(settings.chromeStyles.footer)),
+                            center = footerLook.text(footerCenter(footer, vm.pageNumberOf(page.start), state.totalPages, vm.progressOf(page), vm.pagesLeftAfter(page), footerWords, readerChromeSeparator(settings.chromeStyles.footer))),
                             clock = clock,
                             battery = battery,
                             palette = palette,
                             modifier = Modifier.align(Alignment.BottomCenter).padding(start = margin, end = margin, bottom = footerY + 12.dp).alpha(footerAlpha),
-                            textStyle = footerStyle,
+                            textStyle = footerLook.style,
+                            spread = footerLook.layout.align == LineAlign.Spread,
+                            rule = footerLook.ruleColor.takeIf { footerLook.layout.rule },
                             startInset = footerStart,
                             endInset = footerEnd,
                             onCenterTap = interaction.onFooterTap,

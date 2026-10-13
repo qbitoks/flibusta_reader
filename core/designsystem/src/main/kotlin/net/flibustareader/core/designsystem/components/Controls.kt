@@ -11,6 +11,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -166,8 +167,9 @@ fun IosSlider(
 
 /**
  * iOS segmented control: grey capsule with the selected segment raised on a lighter capsule.
- * [icons] lead the labels (an empty label leaves an icon-only segment); [descriptions] replace
- * the spoken labels; [role] is [Role.RadioButton] when the control picks a value.
+ * [icons] lead the labels (an empty label leaves an icon-only segment), or sit above small
+ * captions when [stacked]; [descriptions] replace the spoken labels; [role] is [Role.RadioButton]
+ * when the control picks a value.
  */
 @Composable
 fun SegmentedControl(
@@ -178,13 +180,16 @@ fun SegmentedControl(
     icons: List<ImageVector?>? = null,
     descriptions: List<String>? = null,
     role: Role = Role.Tab,
+    stacked: Boolean = false,
 ) {
     val c = Flibusta.colors
+    val outer = if (stacked) RoundedCornerShape(16.dp) else CircleShape
+    val inner = if (stacked) RoundedCornerShape(13.dp) else CircleShape
     Row(
         modifier
             .fillMaxWidth()
-            .height(36.dp)
-            .clip(CircleShape)
+            .height(if (stacked) 58.dp else 36.dp)
+            .clip(outer)
             .background(c.fill)
             .padding(3.dp)
             .selectableGroup(),
@@ -192,22 +197,29 @@ fun SegmentedControl(
     ) {
         options.forEachIndexed { i, label ->
             val isSelected = i == selected
-            Row(
-                Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .then(if (isSelected) Modifier.shadow(2.dp, CircleShape) else Modifier)
-                    .clip(CircleShape)
-                    .background(if (isSelected) (if (c.isDark) Color(0xFF636366) else Color.White) else Color.Transparent)
-                    .selectable(isSelected, role = role) { onSelect(i) }
-                    .then(descriptions?.getOrNull(i)?.let { d -> Modifier.semantics { contentDescription = d } } ?: Modifier)
-                    .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                icons?.getOrNull(i)?.let { Icon(it, null, tint = c.label, modifier = Modifier.size(18.dp)) }
-                if (label.isNotEmpty()) Text(label, style = if (isSelected) FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.subheadline,
-                    color = c.label, maxLines = 1, softWrap = false)
+            val segment = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .then(if (isSelected) Modifier.shadow(2.dp, inner) else Modifier)
+                .clip(inner)
+                .background(if (isSelected) (if (c.isDark) Color(0xFF636366) else Color.White) else Color.Transparent)
+                .selectable(isSelected, role = role) { onSelect(i) }
+                .then(descriptions?.getOrNull(i)?.let { d -> Modifier.semantics { contentDescription = d } } ?: Modifier)
+                .padding(horizontal = 4.dp)
+            val icon = icons?.getOrNull(i)
+            if (stacked) {
+                Column(segment, verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                    icon?.let { Icon(it, null, tint = c.label, modifier = Modifier.size(22.dp)) }
+                    Text(label, style = if (isSelected) FlibustaType.caption.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.caption,
+                        color = c.label, maxLines = 1, softWrap = false)
+                }
+            } else {
+                Row(segment, horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    icon?.let { Icon(it, null, tint = c.label, modifier = Modifier.size(18.dp)) }
+                    if (label.isNotEmpty()) Text(label, style = if (isSelected) FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.subheadline,
+                        color = c.label, maxLines = 1, softWrap = false)
+                }
             }
         }
     }
