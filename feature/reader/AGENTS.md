@@ -12,13 +12,18 @@
 - `ReaderViewModel` — snapshot `state`, `PaginationEngine`, navigation/history, eager flows and coroutine scope.
 - `ReaderSearch` / `searchBook` — search job/state, normalization and snippets; `ReaderAnnotations` — range/text and persistence.
 - `HorizontalPageTurner` — Slide/Curl/Fade; `tapZone` — pure gesture math; `ScrollReader` / `planScrollWindow` — scroll/window.
-- `footerCenter`, `headerText`, `rememberClock`, `rememberBattery` — page chrome; `ThemesSheet` — appearance/header/footer settings.
+- `footerCenter`, `headerText`, `rememberClock`, `rememberBattery` — page chrome; `PageChromeSheet` — header/footer settings.
+- `ChapterProgress` — shared TOC rows, titles and remaining pages; `GuideNavigation` — line state after successful turns.
 - Settings: `core/data/src/main/kotlin/net/flibustareader/core/data/settings/SettingsRepository.kt`.
 
 ## Rules
 - Header/footer settings change the text insets, so they re-paginate (new `layoutGeneration`) like a font
   change. Keep the position (`ReaderViewModel.readingPosition`), never the page index.
 - Page title and footer are part of the page in paged mode (they slide with it); in scroll mode they are fixed.
+- Fade page labels when controls appear; retain their chosen text format and fixed margins. Keep visibility out of pagination inputs.
+- Resolve header/footer styles independently: book override, reader defaults, then Quiet; reuse the preset preview typography.
+- Count remaining pages from TOC ranges, not parser chapters; leave unknown counts and pre-TOC text unlabeled.
+- Hide the guide during turns; apply direction only to an actual landing. Keep footer taps ahead of guide stepping.
 - Pure logic goes into small top-level functions with tests in `src/test` (`ReaderGesturesTest` is the example).
 - Search example: `feature/reader/src/test/kotlin/net/flibustareader/feature/reader/ReaderSearchTest.kt`.
 - Keep UI state ownership in `ReaderControls`; only chrome visibility, rotation lock and brightness are saveable.

@@ -55,7 +55,7 @@ fun PullDownMenu(
         onDismissRequest = onDismiss,
         offset = offset,
         shape = RoundedCornerShape(22.dp),
-        containerColor = c.glassFallback,
+        containerColor = c.glassFallback.copy(alpha = 0.98f),
         tonalElevation = 0.dp,
         shadowElevation = 16.dp,
         border = BorderStroke(0.5.dp, if (c.isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.06f)),

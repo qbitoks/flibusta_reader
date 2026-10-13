@@ -67,6 +67,12 @@ class PaginationEngine(
         return if (i >= 0) i else (-i - 2).coerceAtLeast(0)
     }
 
+    /** Cached start of the page containing [position], including evicted chapters. */
+    fun pageStartOf(position: Position): Position? {
+        val index = pageIndexOf(position) ?: return null
+        return pageStarts[position.chapter]?.getOrNull(index)
+    }
+
     fun page(ref: PageRef): Page? = peek(ref.chapter)?.pages?.getOrNull(ref.index)
 
     fun prefetchAround(chapter: Int) {

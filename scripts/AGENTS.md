@@ -39,3 +39,4 @@ $taskAdb = Join-Path $env:LOCALAPPDATA 'Android/Sdk/platform-tools/adb.exe'
 - Preserve PowerShell 5.1 support where it exists; packaging/CI uses PowerShell 7. Do not change system execution policy.
 - Linux/macOS: set SDK configuration and use `bash ./gradlew` with the Gradle tasks in root `AGENTS.md`; local ADB scripts are unverified there.
 - Check dependency repository access before treating a network fetch failure as a Kotlin error.
+- Escape the drive colon in generated `sdk.dir`; Android lint rejects an unescaped Windows path.

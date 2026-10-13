@@ -6,18 +6,15 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import android.text.format.DateFormat
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -26,13 +23,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +40,7 @@ import net.flibustareader.core.data.settings.PageFooter
 import net.flibustareader.core.data.settings.PageHeader
 import net.flibustareader.core.designsystem.ReaderPalette
 import net.flibustareader.core.designsystem.UiSans
+import net.flibustareader.core.designsystem.components.ReaderBatteryLabel
 import java.util.Date
 
 /** Text of the line above the page; null when it shows nothing. A chapter without a title falls back to the book. */
@@ -60,24 +59,22 @@ internal class FooterWords(
 )
 
 /**
- * Middle of the bottom line: the page, then «ещё N стр.». With the controls up ([chrome]) a bare
- * number grows to «42 из 586». Until the book is counted ([number] or [total] null) the percent
+ * Middle of the bottom line: the chosen page format, then «ещё N стр.». Until the book is counted ([number] or [total] null) the percent
  * stands in for numbers that would otherwise jump.
  */
-internal fun footerCenter(footer: PageFooter, chrome: Boolean, number: Int?, total: Int?, progress: Float, left: Int?, words: FooterWords): String {
+internal fun footerCenter(footer: PageFooter, number: Int?, total: Int?, progress: Float, left: Int?, words: FooterWords, separator: String = " · "): String {
     val percent = words.percent((progress * 100).toInt().coerceIn(0, 100))
     val page = when (footer.page) {
         FooterPage.None -> null
         FooterPage.Percent -> percent
         FooterPage.Number -> when {
             number == null -> percent
-            chrome && total != null -> words.pageOf(number, total)
             else -> number.toString()
         }
         FooterPage.NumberOfTotal -> if (number != null && total != null) words.pageOf(number, total) else percent
     }
     val rest = if (footer.pagesLeft && left != null) (if (left > 0) words.pagesLeft(left) else words.chapterEnd) else null
-    return listOfNotNull(page, rest).joinToString(" · ")
+    return listOfNotNull(page, rest).joinToString(separator)
 }
 
 internal class BatteryInfo(val level: Int, val charging: Boolean)
@@ -153,45 +150,35 @@ internal fun PageFooterBar(
     modifier: Modifier = Modifier,
     startInset: Dp = 0.dp,
     endInset: Dp = 0.dp,
+    textStyle: TextStyle = TextStyle(color = palette.secondary, fontFamily = UiSans, fontSize = 15.sp),
+    onCenterTap: (() -> Unit)? = null,
 ) {
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f).padding(start = startInset), contentAlignment = Alignment.CenterStart) {
-            if (clock != null) FooterText(clock, palette)
-        }
-        FooterText(center, palette)
-        Box(Modifier.weight(1f).padding(end = endInset), contentAlignment = Alignment.CenterEnd) {
-            if (battery != null) BatteryLabel(battery, palette)
+    val density = LocalDensity.current
+    val measurer = rememberTextMeasurer()
+    val clockWidth = clock?.let { with(density) { measurer.measure(it, textStyle, maxLines = 1).size.width.toDp() } } ?: 0.dp
+    val batteryWidth = battery?.let {
+        with(density) { measurer.measure("${it.level}%", textStyle, maxLines = 1).size.width.toDp() + textStyle.fontSize.toDp() * 1.6f } + 4.dp
+    } ?: 0.dp
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val side = maxOf(clockWidth + startInset, batteryWidth + endInset).coerceAtMost(maxWidth * 0.45f)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.width(side).padding(start = startInset), contentAlignment = Alignment.CenterStart) {
+                if (clock != null) FooterText(clock, textStyle)
+            }
+            Box(Modifier.weight(1f).then(if (onCenterTap != null && center.isNotEmpty()) Modifier.clickable(onClick = onCenterTap) else Modifier),
+                contentAlignment = Alignment.Center) {
+                FooterText(center, textStyle, Modifier.fillMaxWidth(), TextAlign.Center)
+            }
+            Box(Modifier.width(side).padding(end = endInset), contentAlignment = Alignment.CenterEnd) {
+                if (battery != null) ReaderBatteryLabel(battery.level, battery.charging, palette, textStyle)
+            }
         }
     }
 }
 
 @Composable
-private fun FooterText(text: String, palette: ReaderPalette) {
-    Text(text, color = palette.secondary, fontFamily = UiSans, fontSize = 15.sp, maxLines = 1)
-}
-
-@Composable
-private fun BatteryLabel(battery: BatteryInfo, palette: ReaderPalette) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-        FooterText("${battery.level}%", palette)
-        Box(contentAlignment = Alignment.Center) {
-            val tint = palette.secondary
-            Canvas(Modifier.size(width = 24.dp, height = 12.dp)) {
-                val stroke = 1.dp.toPx()
-                val cap = 2.dp.toPx()
-                val body = Size(size.width - cap - stroke, size.height - stroke)
-                val radius = CornerRadius(3.dp.toPx())
-                drawRoundRect(tint, Offset(stroke / 2, stroke / 2), body, radius, style = Stroke(stroke))
-                val inner = 2.dp.toPx()
-                val fill = (body.width - inner * 2) * battery.level.coerceIn(0, 100) / 100f
-                drawRoundRect(tint, Offset(stroke / 2 + inner, stroke / 2 + inner), Size(fill, body.height - inner * 2), CornerRadius(1.5.dp.toPx()))
-                drawRoundRect(tint, Offset(size.width - cap, size.height / 3), Size(cap, size.height / 3), CornerRadius(1.dp.toPx()))
-            }
-            if (battery.charging) {
-                Icon(Icons.Rounded.Bolt, null, tint = palette.background, modifier = Modifier.size(12.dp))
-            }
-        }
-    }
+private fun FooterText(text: String, textStyle: TextStyle, modifier: Modifier = Modifier, align: TextAlign = TextAlign.Start) {
+    Text(text, style = textStyle, modifier = modifier, textAlign = align, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
 /** Height of the faint «Полоска» under scrolling text, above the navigation inset. */

@@ -6,6 +6,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,11 +34,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +55,9 @@ import net.flibustareader.core.data.settings.FooterStyle
 import net.flibustareader.core.data.settings.PageHeader
 import net.flibustareader.core.data.settings.PageTurn
 import net.flibustareader.core.designsystem.ReaderPalette
+import net.flibustareader.core.designsystem.readerChromeTextStyle
+import net.flibustareader.core.designsystem.readerChromeSeparator
+import net.flibustareader.core.designsystem.Flibusta
 import net.flibustareader.core.designsystem.UiSans
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -75,6 +83,7 @@ internal fun BoxScope.ReaderChrome(
     clock: String?,
     battery: BatteryInfo?,
     onClose: () -> Unit,
+    onFooterTap: () -> Unit,
 ) {
     val state = vm.state
     val context = LocalContext.current
@@ -89,13 +98,15 @@ internal fun BoxScope.ReaderChrome(
     val headerY = layout.headerY
     val footerY = layout.footerY
     // Time/battery repeat the status bar; the guide button and bookmark need space at the corners.
-    val footerClock = clock.takeIf { !controls.chromeVisible }
-    val footerBattery = battery.takeIf { !controls.chromeVisible }
-    val footerStart = if (guideOn) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
-    val footerEnd = if (state.bookmarked && !controls.chromeVisible) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
+    val headerStyle = readerChromeTextStyle(settings.chromeStyles.header, palette, settings.style.font)
+    val footerStyle = readerChromeTextStyle(settings.chromeStyles.footer, palette, settings.style.font)
+    val footerEnd = if (state.bookmarked) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
+    val footerLineHeight = with(LocalDensity.current) { footerStyle.lineHeight.toDp() }
+    val stripHeight = (footerLineHeight + 10.dp).coerceAtLeast(FooterStripHeight)
+    val footerAlpha by animateFloatAsState(if (controls.chromeVisible) 0f else 1f, tween(150), label = "scrollFooter")
     // With nothing above the text, the controls get a band of page colour to stand on.
     AnimatedVisibility(
-        visible = controls.chromeVisible && header == PageHeader.None,
+        visible = controls.chromeVisible,
         enter = fadeIn(),
         exit = fadeOut(),
         modifier = Modifier.align(Alignment.TopCenter),
@@ -109,6 +120,7 @@ internal fun BoxScope.ReaderChrome(
         history = vm.history,
         pageNumberOf = vm::pageNumberOf,
         palette = palette,
+        textStyle = headerStyle,
         chromeVisible = controls.chromeVisible,
         showBack = marks,
         onBack = vm::historyBack,
@@ -122,17 +134,18 @@ internal fun BoxScope.ReaderChrome(
     if (scroll && !footer.isEmpty) {
         val strip = footer.style == FooterStyle.Strip
         PageFooterBar(
-            center = footerCenter(footer, controls.chromeVisible, state.globalPage, state.totalPages, state.progress, state.pagesLeftInChapter.takeIf { state.page != null }, footerWords),
-            clock = footerClock,
-            battery = footerBattery,
+            center = footerCenter(footer, state.globalPage, state.totalPages, state.progress, state.pagesLeftInChapter.takeIf { state.page != null }, footerWords, readerChromeSeparator(settings.chromeStyles.footer)),
+            clock = clock,
+            battery = battery,
             palette = palette,
             modifier = Modifier.align(Alignment.BottomCenter).padding(
                 start = margin,
                 end = margin,
-                bottom = if (strip) bottomInset + (FooterStripHeight - 20.dp) / 2 else footerY + 12.dp,
-            ),
-            startInset = footerStart,
+                bottom = if (strip) bottomInset + (stripHeight - footerLineHeight) / 2 else footerY + 12.dp,
+            ).alpha(footerAlpha),
+            textStyle = footerStyle,
             endInset = footerEnd,
+            onCenterTap = onFooterTap,
         )
     }
 
@@ -150,7 +163,8 @@ internal fun BoxScope.ReaderChrome(
         MenuButton(palette, bookmarked = state.bookmarked, modifier = cornerButton) { controls.menuVisible = !controls.menuVisible }
     } else if (state.bookmarked) {
         // A bookmarked page shows a red bookmark where the menu button sits (white spot 4).
-        RoundButton(Icons.Rounded.Bookmark, stringResource(R.string.reader_bookmark), BookmarkRed, Color.White, cornerButton) { vm.toggleBookmark() }
+        RoundButton(Icons.Rounded.Bookmark, stringResource(R.string.reader_bookmark), BookmarkRed, Color.White,
+            cornerButton) { vm.toggleBookmark() }
     }
 
     AnimatedVisibility(
@@ -192,6 +206,7 @@ internal fun ReaderHeader(
     history: NavHistory,
     pageNumberOf: (net.flibustareader.core.model.Position) -> Int?,
     palette: ReaderPalette,
+    textStyle: TextStyle,
     chromeVisible: Boolean,
     showBack: Boolean,
     onBack: () -> Unit,
@@ -199,8 +214,10 @@ internal fun ReaderHeader(
     onClose: () -> Unit,
     modifier: Modifier,
 ) {
-    Box(modifier.fillMaxWidth().height(48.dp)) {
-        if (title != null) PageTitle(title, palette, Modifier.align(Alignment.Center), titleMargin(showBack, chromeVisible, history))
+    val headerHeight = (with(LocalDensity.current) { textStyle.lineHeight.toDp() } + 16.dp).coerceAtLeast(32.dp)
+    Box(modifier.fillMaxWidth().height(headerHeight)) {
+        val alpha by animateFloatAsState(if (chromeVisible || showBack) 0f else 1f, tween(150), label = "scrollHeader")
+        if (title != null) PageTitle(title, palette, Modifier.align(Alignment.Center).alpha(alpha), 24.dp, textStyle)
         history.back.lastOrNull()?.let { target ->
             AnimatedVisibility(showBack, Modifier.align(Alignment.CenterStart).padding(start = 22.dp), enter = fadeIn(), exit = fadeOut()) {
                 HistoryMark(pageNumberOf(target), back = true, palette, Modifier, onBack)
@@ -213,7 +230,7 @@ internal fun ReaderHeader(
                 }
             }
             if (chromeVisible) {
-                RoundButton(Icons.Rounded.Close, stringResource(R.string.reader_close), palette.control(), palette.secondary, Modifier, onClick = onClose)
+                RoundButton(Icons.Rounded.Close, stringResource(R.string.reader_close), palette.control(), Flibusta.colors.label, Modifier, onClick = onClose)
             }
         }
     }
@@ -254,14 +271,14 @@ internal fun titleMargin(marks: Boolean, chromeVisible: Boolean, history: NavHis
 
 /** Book title at the top of a page, grey and centred. */
 @Composable
-internal fun PageTitle(title: String, palette: ReaderPalette, modifier: Modifier, margin: Dp) {
-    Box(modifier.fillMaxWidth().height(48.dp), contentAlignment = Alignment.Center) {
+internal fun PageTitle(title: String, palette: ReaderPalette, modifier: Modifier, margin: Dp,
+    textStyle: TextStyle = TextStyle(color = palette.secondary, fontFamily = UiSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, lineHeight = 20.sp),
+) {
+    val height = with(LocalDensity.current) { textStyle.lineHeight.toDp() } + 16.dp
+    Box(modifier.fillMaxWidth().height(height.coerceAtLeast(32.dp)), contentAlignment = Alignment.Center) {
         Text(
             title,
-            color = palette.secondary,
-            fontFamily = UiSans,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 15.sp,
+            style = textStyle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,

@@ -14,6 +14,8 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   after import. `cache/catalog-covers/<sha1 of url>` — OPDS cover thumbnails (safe to clear).
 - DataStore `settings`: reader/library prefs; `app_appearance` (app-wide), `book_appearance_<book id>`
   (absent = follow the app; removed on delete). Old `appearance` key is no longer read (no migration).
+- Preserve `footer_style` for scrolling backgrounds; keep visual presets in `ChromeStylePreferences` keys.
+- Remove absent book line overrides instead of copying current defaults; later default changes must propagate.
 - `shared_prefs/catalog.xml`: `catalog`, `downloads` HTTPS origins; `recent` — catalog searches, newline-joined.
 
 ## Changing any of this

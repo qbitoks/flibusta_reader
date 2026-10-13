@@ -72,6 +72,8 @@ data class ReaderSettings(
     val highlightColor: String = "yellow",
     val header: PageHeader = PageHeader.None,
     val footer: PageFooter = PageFooter(),
+    /** Reader defaults; a book can override each line independently. */
+    val chromeStyles: ChromeStyles = ChromeStyles(),
 ) {
     val themeStyle: ThemeStyle get() = themeStyles.getValue(theme)
     val style: ReaderStyle get() = themeStyle.toReaderStyle(fontSize)
@@ -133,6 +135,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
                     style = enumOr(p[Keys.footerStyle], d.style),
                 )
             },
+            chromeStyles = ChromeStylePreferences.readDefaults(p),
         )
     }.distinctUntilChanged()
 
@@ -152,6 +155,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     /** A book's own Light/Dark; null means it follows [appAppearance]. */
     fun bookAppearance(bookId: String): Flow<Appearance?> = store.data
         .map { p -> p[Keys.bookAppearance(bookId)]?.let { runCatching { Appearance.valueOf(it) }.getOrNull() }?.takeIf { it != Appearance.Auto } }
+        .distinctUntilChanged()
+
+    /** Missing overrides follow the current defaults from [reader]. */
+    fun bookChromeStyles(bookId: String): Flow<BookChromeStyles> = store.data
+        .map { ChromeStylePreferences.readBook(it, bookId) }
         .distinctUntilChanged()
 
     suspend fun currentReader(): ReaderSettings = reader.first()
@@ -182,6 +190,31 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             if (value == null || value == Appearance.Auto) it.remove(Keys.bookAppearance(bookId))
             else it[Keys.bookAppearance(bookId)] = value.name
         }
+    }
+
+    suspend fun setChromeStyles(value: ChromeStyles) {
+        store.edit { ChromeStylePreferences.writeDefaults(it, value) }
+    }
+
+    suspend fun setHeaderChromeStyle(value: ChromeStyle) {
+        store.edit { ChromeStylePreferences.writeDefaults(it, ChromeStylePreferences.readDefaults(it).copy(header = value)) }
+    }
+
+    suspend fun setFooterChromeStyle(value: ChromeStyle) {
+        store.edit { ChromeStylePreferences.writeDefaults(it, ChromeStylePreferences.readDefaults(it).copy(footer = value)) }
+    }
+
+    suspend fun setBookHeaderChromeStyle(bookId: String, value: ChromeStyle?) {
+        store.edit { ChromeStylePreferences.writeBook(it, bookId, ChromeStylePreferences.readBook(it, bookId).copy(header = value)) }
+    }
+
+    suspend fun setBookFooterChromeStyle(bookId: String, value: ChromeStyle?) {
+        store.edit { ChromeStylePreferences.writeBook(it, bookId, ChromeStylePreferences.readBook(it, bookId).copy(footer = value)) }
+    }
+
+    /** null removes the override for that line, so later default changes apply. */
+    suspend fun setBookChromeStyles(bookId: String, value: BookChromeStyles) {
+        store.edit { ChromeStylePreferences.writeBook(it, bookId, value) }
     }
 
     suspend fun setPageTurn(value: PageTurn) {

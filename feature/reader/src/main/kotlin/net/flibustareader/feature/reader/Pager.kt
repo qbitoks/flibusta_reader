@@ -56,6 +56,8 @@ import kotlin.math.abs
 
 enum class TapAction { Next, Prev, ToggleChrome, Handled }
 
+data class PageTurnEvent(val active: Boolean, val direction: Int = 0, val from: Page? = null, val to: Page? = null)
+
 /**
  * Horizontal page turner. Only three pages exist at any time (previous, current, next),
  * so turning never depends on knowing the total page count.
@@ -87,12 +89,14 @@ fun HorizontalPageTurner(
     onLongPress: (Offset) -> Boolean = { false },
     onLongPressDrag: (Offset) -> Unit = {},
     modifier: Modifier = Modifier,
+    onTurnEvent: (PageTurnEvent) -> Unit = {},
     content: @Composable (Page?) -> Unit,
 ) {
     /** Offset of an animation; while a finger drags, [dragOffset] is shown instead. */
     val offset = remember { Animatable(0f) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var dragging by remember { mutableStateOf(false) }
+    var gesturing by remember { mutableStateOf(false) }
     /** Cross-fade progress towards the page in [fadeDirection] (Fade mode only). */
     val fade = remember { Animatable(0f) }
     var fadeDirection by remember { mutableIntStateOf(0) }
@@ -105,6 +109,7 @@ fun HorizontalPageTurner(
     val flingVelocity = with(density) { 350.dp.toPx() }
     val latestNext by rememberUpdatedState(next)
     val latestPrev by rememberUpdatedState(prev)
+    val latestCurrent by rememberUpdatedState(current)
     val latestCanNext by rememberUpdatedState(canNext)
     val latestCanPrev by rememberUpdatedState(canPrev)
     val latestOnNext by rememberUpdatedState(onNext)
@@ -114,8 +119,11 @@ fun HorizontalPageTurner(
     val latestOnSwipeDown by rememberUpdatedState(onSwipeDown)
     val latestOnLongPress by rememberUpdatedState(onLongPress)
     val latestOnLongPressDrag by rememberUpdatedState(onLongPressDrag)
+    val latestOnTurnEvent by rememberUpdatedState(onTurnEvent)
     val latestMode by rememberUpdatedState(mode)
     var turnJob by remember { mutableStateOf<Job?>(null) }
+    var committedFrom by remember { mutableStateOf<Page?>(null) }
+    var committedTo by remember { mutableStateOf<Page?>(null) }
     /** Where the finger went down; tilts the «Загиб» fold. Taps on the edge curl from low on the page. */
     var curlAnchorY by remember { mutableFloatStateOf(0f) }
     var height by remember { mutableFloatStateOf(1f) }
@@ -140,23 +148,39 @@ fun HorizontalPageTurner(
                 it.cancel()
                 it.join()
             }
-            takeOver(from)
-            fun target() = if (direction > 0) latestNext else latestPrev
-            val possible = if (direction > 0) latestCanNext else latestCanPrev
-            if (possible && target() == null) {
-                // The next chapter is still laying out: hold the page and wait rather than bounce.
-                waiting = true
-                try {
-                    withTimeoutOrNull(WAIT_FOR_PAGE_MS) { snapshotFlow { target() }.first { it != null } }
-                } finally {
-                    waiting = false
+            val departed = committedFrom
+            val landed = committedTo
+            if (landed != null && latestCurrent === departed) {
+                // Navigation is synchronous, but new page/neighbor parameters arrive at recomposition.
+                withTimeoutOrNull(WAIT_FOR_PAGE_MS) {
+                    snapshotFlow { latestCurrent }.first { it === landed || it !== departed }
                 }
             }
-            if (!possible || target() == null) {
-                offset.animateTo(0f, spring(stiffness = 600f))
-                return@launch
-            }
+            committedFrom = null
+            committedTo = null
+            takeOver(from)
+            val origin = latestCurrent
+            var destination: Page? = null
+            var commit = false
+            latestOnTurnEvent(PageTurnEvent(active = true))
+            fun target() = if (direction > 0) latestNext else latestPrev
+            val possible = if (direction > 0) latestCanNext else latestCanPrev
             try {
+                if (possible && target() == null) {
+                    // The next chapter is still laying out: hold the page and wait rather than bounce.
+                    waiting = true
+                    try {
+                        withTimeoutOrNull(WAIT_FOR_PAGE_MS) { snapshotFlow { target() }.first { it != null } }
+                    } finally {
+                        waiting = false
+                    }
+                }
+                destination = target()
+                if (!possible || destination == null || latestCurrent !== origin) {
+                    offset.animateTo(0f, spring(stiffness = 600f))
+                    return@launch
+                }
+                commit = true
                 when (latestMode) {
                     TurnMode.Slide, TurnMode.Curl -> {
                         val goal = -direction * step
@@ -179,10 +203,16 @@ fun HorizontalPageTurner(
                 }
             } finally {
                 withContext(NonCancellable) {
-                    if (direction > 0) latestOnNext() else latestOnPrev()
+                    val moved = commit && latestCurrent === origin &&
+                        if (direction > 0) latestOnNext() else latestOnPrev()
+                    if (moved) {
+                        committedFrom = origin
+                        committedTo = destination
+                    }
                     offset.snapTo(0f)
                     fade.snapTo(0f)
                     fadeDirection = 0
+                    latestOnTurnEvent(PageTurnEvent(active = gesturing || dragging, direction = direction, from = origin, to = destination.takeIf { moved }))
                 }
             }
         }
@@ -191,7 +221,12 @@ fun HorizontalPageTurner(
     fun settleBack(scope: CoroutineScope, from: Float) {
         turnJob = scope.launch {
             takeOver(from)
-            offset.animateTo(0f, spring(stiffness = 700f))
+            latestOnTurnEvent(PageTurnEvent(active = true))
+            try {
+                offset.animateTo(0f, spring(stiffness = 700f))
+            } finally {
+                latestOnTurnEvent(PageTurnEvent(active = gesturing || dragging || offset.value != 0f))
+            }
         }
     }
 
@@ -254,15 +289,22 @@ fun HorizontalPageTurner(
                         return@awaitEachGesture
                     }
                     latestOnDragStart()
+                    gesturing = true
                     turnJob?.cancel()
+                    latestOnTurnEvent(PageTurnEvent(active = true))
                     if (latestMode == TurnMode.Fade) {
                         // Fade mode does not follow the finger: the swipe only picks the direction.
                         var dx = overSlop
-                        horizontalDrag(drag.id) { change ->
+                        val released = horizontalDrag(drag.id) { change ->
                             dx += change.positionChange().x
                             change.consume()
                         }
-                        if (dx < 0f) turn(scope, +1) else turn(scope, -1)
+                        gesturing = false
+                        if (released) {
+                            if (dx < 0f) turn(scope, +1) else turn(scope, -1)
+                        } else {
+                            latestOnTurnEvent(PageTurnEvent(active = false))
+                        }
                         return@awaitEachGesture
                     }
                     // Past the first/last page the page follows the finger with resistance.
@@ -270,11 +312,16 @@ fun HorizontalPageTurner(
                     var raw = overSlop
                     dragOffset = resist(raw)
                     dragging = true
-                    horizontalDrag(drag.id) { change ->
+                    val released = horizontalDrag(drag.id) { change ->
                         tracker.addPosition(change.uptimeMillis, change.position)
                         raw += change.positionChange().x
                         change.consume()
                         dragOffset = resist(raw)
+                    }
+                    gesturing = false
+                    if (!released) {
+                        settleBack(scope, dragOffset)
+                        return@awaitEachGesture
                     }
                     val velocity = tracker.calculateVelocity().x
                     val o = dragOffset

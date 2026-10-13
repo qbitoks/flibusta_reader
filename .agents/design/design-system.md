@@ -23,7 +23,7 @@
 | «НОВАЯ» badge | Sans | 13 | Semibold, uppercase |
 | Slider label | Sans | 15 | Regular, uppercase, secondary |
 | Tab label | Sans | 11–12 | Medium |
-| Reader header/footer | Sans | 15 | Semibold, secondary |
+| Reader header/footer | Preset; see `.agents/design/reader.md` | Preset | Preset |
 
 ## Measured colors
 | Token | Light | Dark |

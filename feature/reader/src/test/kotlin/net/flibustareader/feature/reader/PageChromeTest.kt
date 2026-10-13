@@ -16,12 +16,11 @@ class PageChromeTest {
         chapterEnd = "конец главы",
     )
 
-    private fun center(footer: PageFooter, chrome: Boolean = false, number: Int? = 42, total: Int? = 586, progress: Float = 0.07f, left: Int? = 3) =
-        footerCenter(footer, chrome, number, total, progress, left, words)
+    private fun center(footer: PageFooter, number: Int? = 42, total: Int? = 586, progress: Float = 0.07f, left: Int? = 3) =
+        footerCenter(footer, number, total, progress, left, words)
 
-    @Test fun bareNumberWhileReadingGrowsWithTheControls() {
+    @Test fun bareNumberDoesNotExpandWithKnownTotal() {
         assertEquals("42", center(PageFooter(page = FooterPage.Number)))
-        assertEquals("42 из 586", center(PageFooter(page = FooterPage.Number), chrome = true))
     }
 
     @Test fun pageOptions() {
@@ -34,7 +33,7 @@ class PageChromeTest {
         assertEquals("7 %", center(PageFooter(page = FooterPage.Number), number = null, total = null))
         assertEquals("7 %", center(PageFooter(page = FooterPage.NumberOfTotal), total = null))
         // The number is known but not the total: no «из N» even with the controls up.
-        assertEquals("42", center(PageFooter(page = FooterPage.Number), chrome = true, total = null))
+        assertEquals("42", center(PageFooter(page = FooterPage.Number), total = null))
     }
 
     @Test fun pagesLeftInChapterFollowTheNumber() {

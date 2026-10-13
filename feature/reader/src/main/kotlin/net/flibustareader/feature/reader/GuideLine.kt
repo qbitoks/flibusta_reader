@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -40,41 +41,43 @@ import net.flibustareader.core.designsystem.components.PullDownMenu
 @Composable
 internal fun GuideLineOverlay(plate: Rect, text: Rect, fade: Float, palette: ReaderPalette, modifier: Modifier = Modifier) {
     Canvas(modifier.fillMaxSize()) {
-        val radius = CornerRadius(9.dp.toPx())
-        val round = RoundRect(plate, radius)
-        if (fade > 0f) {
-            val outside = Path().apply {
+        clipRect(text.left, text.top, text.right, text.bottom) {
+            val radius = CornerRadius(9.dp.toPx())
+            val round = RoundRect(plate, radius)
+            if (fade > 0f) {
+                val outside = Path().apply {
+                    fillType = PathFillType.EvenOdd
+                    addRect(text)
+                    addRoundRect(round)
+                }
+                drawPath(outside, palette.background.copy(alpha = fade))
+            }
+            // Soft shadow just outside the plate, then the hairline border.
+            val shadow = Path().apply {
                 fillType = PathFillType.EvenOdd
-                addRect(text)
+                addRect(Rect(Offset.Zero, size))
                 addRoundRect(round)
             }
-            drawPath(outside, palette.background.copy(alpha = fade))
-        }
-        // Soft shadow just outside the plate, then the hairline border.
-        val shadow = Path().apply {
-            fillType = PathFillType.EvenOdd
-            addRect(Rect(Offset.Zero, size))
-            addRoundRect(round)
-        }
-        clipPath(shadow) {
-            val shade = if (palette.isDark) Color.Black else Color.Black.copy(alpha = 0.55f)
-            for (i in 1..6) {
-                val grow = i * 2.dp.toPx()
-                drawRoundRect(
-                    shade.copy(alpha = shade.alpha * 0.035f),
-                    topLeft = plate.topLeft - Offset(grow / 2, grow / 2 - 1.dp.toPx()),
-                    size = Size(plate.width + grow, plate.height + grow),
-                    cornerRadius = CornerRadius(radius.x + grow / 2),
-                )
+            clipPath(shadow) {
+                val shade = if (palette.isDark) Color.Black else Color.Black.copy(alpha = 0.55f)
+                for (i in 1..6) {
+                    val grow = i * 2.dp.toPx()
+                    drawRoundRect(
+                        shade.copy(alpha = shade.alpha * 0.035f),
+                        topLeft = plate.topLeft - Offset(grow / 2, grow / 2 - 1.dp.toPx()),
+                        size = Size(plate.width + grow, plate.height + grow),
+                        cornerRadius = CornerRadius(radius.x + grow / 2),
+                    )
+                }
             }
+            drawRoundRect(
+                (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.09f),
+                topLeft = plate.topLeft,
+                size = plate.size,
+                cornerRadius = radius,
+                style = Stroke(1.dp.toPx()),
+            )
         }
-        drawRoundRect(
-            (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.09f),
-            topLeft = plate.topLeft,
-            size = plate.size,
-            cornerRadius = radius,
-            style = Stroke(1.dp.toPx()),
-        )
     }
 }
 
@@ -97,7 +100,7 @@ internal fun GuideLineButton(
             Modifier,
         ) { open = true }
         // Apple shows this menu dark even over a light page.
-        FlibustaTheme(dark = true) {
+        FlibustaTheme(dark = palette.isDark) {
             PullDownMenu(
                 expanded = open,
                 onDismiss = { open = false },

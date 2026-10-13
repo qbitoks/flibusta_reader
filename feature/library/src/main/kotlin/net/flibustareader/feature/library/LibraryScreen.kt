@@ -43,6 +43,7 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.MoreHoriz
+import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -228,6 +229,11 @@ private fun LibraryMenuButton(vm: LibraryViewModel, actions: LibraryHostActions)
     val prefs by vm.librarySettings.collectAsStateWithLifecycle()
     val appearance by vm.appAppearance.collectAsStateWithLifecycle()
     var open by remember { mutableStateOf(false) }
+    var chromeDefaults by remember { mutableStateOf(false) }
+    if (chromeDefaults) {
+        val reader by vm.defaultReaderSettings.collectAsStateWithLifecycle()
+        ChromeDefaultsSheet(reader, vm::setHeaderChromeStyle, vm::setFooterChromeStyle) { chromeDefaults = false }
+    }
     Box {
         CircleButton(Icons.Rounded.MoreHoriz, stringResource(R.string.library_more), { open = true })
         PullDownMenu(open, { open = false }, checkColumn = true) {
@@ -253,6 +259,8 @@ private fun LibraryMenuButton(vm: LibraryViewModel, actions: LibraryHostActions)
             Item(stringResource(R.string.library_appearance_auto), { vm.setAppAppearance(Appearance.Auto) }, icon = Icons.Rounded.BrightnessAuto, checked = appearance == Appearance.Auto)
             Item(stringResource(R.string.library_appearance_light), { vm.setAppAppearance(Appearance.Light) }, icon = Icons.Rounded.LightMode, checked = appearance == Appearance.Light)
             Item(stringResource(R.string.library_appearance_dark), { vm.setAppAppearance(Appearance.Dark) }, icon = Icons.Rounded.DarkMode, checked = appearance == Appearance.Dark)
+            Item(stringResource(net.flibustareader.core.designsystem.R.string.chrome_defaults_title),
+                { chromeDefaults = true }, icon = Icons.Rounded.TextFields)
             Divider()
             Item(stringResource(R.string.library_about), actions.onAbout, icon = Icons.Rounded.Info)
         }

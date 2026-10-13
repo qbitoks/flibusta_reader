@@ -13,13 +13,18 @@
   - With no header, start text below the status-bar inset; when controls are shown, put a page-color
     strip behind the top buttons. With no footer content, let text extend to the bottom.
   - Put clock at footer left, page/percent plus «ещё N стр.» at center, battery at right.
-    With controls shown, hide clock/battery and expand «42» to «42 из 586».
+    Fade header/footer out with controls shown; retain the chosen number format and stable title margins.
+  - Offer Quiet/Classic/Book/Clear visual presets separately for upper and lower labels; keep content controls.
+    Inherit each line from reader defaults unless the book overrides it; provide a reset for each line.
+    Reuse `readerChromeTextStyle` in cards and pages; derive reserved space from scaled line height.
   - In scroll mode, fix the header on a solid background slightly higher, with text fading over
     about 18 dp before it; use a 12 dp lower fade or «Полоска» tinted nearly opaque page color.
     In paged mode, reserve space below the footer.
   - Show history «↶ / ↷» with controls; briefly show «↶» after a jump for 3 s or until first turn.
   - Use left/right thirds for tap turning; an edge tap with controls visible turns and hides them.
 - Keep the header/footer inside each paged page so they travel with it; fix them in scroll mode.
+- Use `ChapterProgress` TOC ranges for title, contents selection and remaining pages across all levels.
+  Use the current reading position for current labels and page starts for neighboring layers; omit unknown/pre-TOC remainder.
   Do not restore Apple's always-visible book title or 10% edge tap zones.
 
 ## Chrome, menus and navigation
@@ -33,6 +38,8 @@
 - Add four 62 × 44 dp controls below: «Поделиться», rotation lock, «Направляющая линия», «Закладка».
 - Mark bookmarks red (`#FF3B30`), including menu badge and hidden-mode bookmark circle;
   reveal «Закладки и фрагменты» when bookmarks/highlights exist.
+- Use semantic interface text/icon colours in reader menus, including low-contrast reading palettes.
+- Reserve footer side space for the guide/bookmark controls; size equal side columns from actual label widths.
 - Record jumps from search, contents and links in history; display neighboring page numbers with
   «↶ / ↷», supporting both directions. Use history for returning from footnotes.
 - Navigate ordinary note/internal links to their section with history; open a popup when the parser
@@ -92,6 +99,10 @@
   but EPUB `@font-face` is currently skipped, so do not describe publisher-font support as implemented.
 
 ## Turning and scroll reference
+- Step the guide by visual row with left/right-half taps; a tap on its row toggles controls.
+- Land on the first row forward and the last row backward, for taps and swipes; no-op/canceled turns retain the row.
+- Hide the guide during drag, animation, rollback and waits; clip it to the text viewport.
+- Reset the guide after jumps or pagination changes; keep links, selection dismissal and footer taps ahead of row stepping.
 - For «Скольжение», slide the current page left over a stationary next page; reverse by bringing the
   previous page from the left. Use overlapping pages without gaps or gray background between them.
 - While moving, round the upper page about 27 dp; add a weak right-edge shadow about 7 dp wide.

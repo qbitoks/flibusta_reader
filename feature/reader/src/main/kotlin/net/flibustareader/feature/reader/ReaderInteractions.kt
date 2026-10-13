@@ -23,6 +23,8 @@ internal class ReaderInteractions(
     val tapOnPage: (Page?, Offset) -> Boolean,
     val startSelection: (Page, Offset) -> Boolean,
     val extendSelection: (Page, Offset) -> Unit,
+    val onTurnEvent: (PageTurnEvent) -> Unit,
+    val onFooterTap: () -> Unit,
 )
 
 @Composable
@@ -32,11 +34,12 @@ internal fun readerInteractions(
     guidePlate: Rect?,
     guideLines: List<RectF>,
     contentOrigin: Offset,
+    onTurnEvent: (PageTurnEvent) -> Unit,
 ): ReaderInteractions {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     var anchor by remember { mutableStateOf<TextSpan?>(null) }
-    // The pager keeps its first callback, so guide geometry must be read at call time.
+    // Read the latest guide geometry throughout a gesture and after page transitions.
     val currentGuidePlate by rememberUpdatedState(guidePlate)
     val currentGuideLines by rememberUpdatedState(guideLines)
     /** Long press at [local] (content-box coordinates of [page]) selects the word there. */
@@ -97,8 +100,10 @@ internal fun readerInteractions(
             // up a line, crossing pages at the ends; a tap on the line itself toggles the controls.
             return when {
                 plate.contains(offset) -> { controls.chromeVisible = !controls.chromeVisible; TapAction.ToggleChrome }
-                offset.x >= width / 2 -> if (controls.guideIndex < currentGuideLines.lastIndex) { controls.guideIndex++; TapAction.Handled } else TapAction.Next
-                else -> if (controls.guideIndex > 0) { controls.guideIndex--; TapAction.Handled } else { controls.guideToLast = true; TapAction.Prev }
+                else -> controls.guide.step(if (offset.x >= width / 2) 1 else -1, currentGuideLines.size).let {
+                    controls.guide = it.navigation
+                    it.action
+                }
             }
         }
         // Outer thirds turn the page (and put the controls away); the middle toggles them.
@@ -111,5 +116,8 @@ internal fun readerInteractions(
             }
         }
     }
-    return ReaderInteractions(::onTap, ::tapOnPage, ::startSelection, ::extendSelection)
+    fun onFooterTap() {
+        if (!tapOnPage(null, Offset.Zero)) controls.chromeVisible = !controls.chromeVisible
+    }
+    return ReaderInteractions(::onTap, ::tapOnPage, ::startSelection, ::extendSelection, onTurnEvent, ::onFooterTap)
 }

@@ -1,6 +1,8 @@
 package net.flibustareader.feature.reader
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,6 +11,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -19,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import net.flibustareader.core.data.db.HighlightEntity
 import net.flibustareader.core.data.settings.PageTurn
 import net.flibustareader.core.designsystem.ReaderPalette
+import net.flibustareader.core.designsystem.readerChromeTextStyle
+import net.flibustareader.core.designsystem.readerChromeSeparator
 import net.flibustareader.core.layout.Mark
 import androidx.compose.foundation.layout.BoxScope
 import net.flibustareader.core.data.settings.ReaderSettings
@@ -51,11 +57,12 @@ internal fun BoxScope.ReaderPages(
     val headerY = layout.headerY
     val footerY = layout.footerY
     val margin = settings.style.margin.dp
-    val footerClock = clock.takeIf { !controls.chromeVisible }
-    val footerBattery = battery.takeIf { !controls.chromeVisible }
-    val guideOn = settings.guideLine && !scroll
-    val footerStart = if (guideOn) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
-    val footerEnd = if (state.bookmarked && !controls.chromeVisible) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
+    val headerStyle = readerChromeTextStyle(settings.chromeStyles.header, palette, settings.style.font)
+    val footerStyle = readerChromeTextStyle(settings.chromeStyles.footer, palette, settings.style.font)
+    val footerStart = if (settings.guideLine && !scroll) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
+    val footerEnd = if (state.bookmarked) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
+    val headerAlpha by animateFloatAsState(if (marks) 0f else 1f, tween(150), label = "pageHeader")
+    val footerAlpha by animateFloatAsState(if (controls.chromeVisible) 0f else 1f, tween(150), label = "pageFooter")
     when {
         state.error -> Text(
             stringResource(R.string.reader_error),
@@ -101,6 +108,7 @@ internal fun BoxScope.ReaderPages(
             onNext = vm::next,
             onPrev = vm::prev,
             onTap = interaction.onTap,
+            onTurnEvent = interaction.onTurnEvent,
             onDragStart = {
                 controls.chromeVisible = false
                 controls.menuVisible = false
@@ -126,21 +134,23 @@ internal fun BoxScope.ReaderPages(
                         modifier = Modifier.fillMaxSize().padding(padding),
                         marks = if (page != null && page === state.page && selection != null) savedMarks + Mark(selection, selectionColor) else savedMarks,
                     )
-                    headerText(header, state.title, page?.let { vm.chapterTitleAt(it.start) })?.let { title ->
+                    headerText(header, state.title, page?.let { vm.chapterTitleAt(vm.chapterPositionOf(it)) })?.let { title ->
                         PageTitle(
-                            title, palette, Modifier.align(Alignment.TopCenter).padding(top = headerY),
-                            titleMargin(marks, controls.chromeVisible, vm.history),
+                            title, palette, Modifier.align(Alignment.TopCenter).padding(top = headerY).alpha(headerAlpha),
+                            24.dp, headerStyle,
                         )
                     }
                     if (!footer.isEmpty && page != null) {
                         PageFooterBar(
-                            center = footerCenter(footer, controls.chromeVisible, vm.pageNumberOf(page.start), state.totalPages, vm.progressOf(page), vm.pagesLeftAfter(page), footerWords),
-                            clock = footerClock,
-                            battery = footerBattery,
+                            center = footerCenter(footer, vm.pageNumberOf(page.start), state.totalPages, vm.progressOf(page), vm.pagesLeftAfter(page), footerWords, readerChromeSeparator(settings.chromeStyles.footer)),
+                            clock = clock,
+                            battery = battery,
                             palette = palette,
-                            modifier = Modifier.align(Alignment.BottomCenter).padding(start = margin, end = margin, bottom = footerY + 12.dp),
+                            modifier = Modifier.align(Alignment.BottomCenter).padding(start = margin, end = margin, bottom = footerY + 12.dp).alpha(footerAlpha),
+                            textStyle = footerStyle,
                             startInset = footerStart,
                             endInset = footerEnd,
+                            onCenterTap = interaction.onFooterTap,
                         )
                     }
                 }

@@ -1,7 +1,6 @@
 package net.flibustareader.feature.reader
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -30,8 +29,8 @@ internal class ReaderControls(
     var sheet by mutableStateOf<ReaderSheet?>(null)
     var note by mutableStateOf<List<Block>?>(null)
     var image by mutableStateOf<File?>(null)
-    var guideIndex by mutableIntStateOf(0)
-    var guideToLast by mutableStateOf(false)
+    var guide by mutableStateOf(GuideNavigation())
+    var guideMoving by mutableStateOf(false)
     var noteFor by mutableStateOf<NoteTarget?>(null)
     var activeHighlight by mutableStateOf<Long?>(null)
     var focusPage by mutableStateOf<Page?>(null)

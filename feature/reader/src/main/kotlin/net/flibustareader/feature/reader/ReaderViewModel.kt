@@ -13,6 +13,9 @@ import net.flibustareader.core.data.db.HighlightEntity
 import net.flibustareader.core.data.library.BookResources
 import net.flibustareader.core.data.library.LibraryRepository
 import net.flibustareader.core.data.settings.Appearance
+import net.flibustareader.core.data.settings.BookChromeStyles
+import net.flibustareader.core.data.settings.ChromeStyle
+import net.flibustareader.core.data.settings.resolveChromeStyles
 import net.flibustareader.core.data.settings.GuideDim
 import net.flibustareader.core.data.settings.PageFooter
 import net.flibustareader.core.data.settings.PageHeader
@@ -72,7 +75,8 @@ data class ReaderState(
     val hasPrev: Boolean = false,
     val hasNext: Boolean = false,
     val chapterTitle: String? = null,
-    val pagesLeftInChapter: Int = 0,
+    val currentTocIndex: Int? = null,
+    val pagesLeftInChapter: Int? = null,
     val globalPage: Int? = null,
     val totalPages: Int? = null,
     val progress: Float = 0f,
@@ -108,8 +112,12 @@ class ReaderViewModel @Inject constructor(
     private val typefaces = ResourceTypefaceProvider(context)
     val ink = Ink()
 
-    val settings: StateFlow<ReaderSettings> =
-        settingsRepository.reader.stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
+    val bookChromeStyles: StateFlow<BookChromeStyles> = settingsRepository.bookChromeStyles(bookId)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, BookChromeStyles())
+
+    val settings: StateFlow<ReaderSettings> = combine(settingsRepository.reader, bookChromeStyles) { defaults, overrides ->
+        defaults.copy(chromeStyles = resolveChromeStyles(defaults.chromeStyles, overrides))
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
 
     /** This book's own Light/Dark; null follows the app's appearance. */
     val appearance: StateFlow<Appearance?> =
@@ -150,12 +158,14 @@ class ReaderViewModel @Inject constructor(
         private set
     private lateinit var resources: BookResources
     private var engine: PaginationEngine? = null
+    private var chapterProgress: ChapterProgress? = null
     private var position: Position = Position.Start
     private var generation = 0
     private var sessionStart = 0L
     private var finishedMarked = false
 
     val toc: List<TocEntry> get() = book?.toc.orEmpty()
+    internal val tocRows: List<ChapterTocRow> get() = chapterProgress?.rows.orEmpty()
 
     /** Library thumbnail of the cover for the contents header. */
     val coverFile: File? = library.coverFile(bookId).takeIf { it.exists() }
@@ -168,6 +178,7 @@ class ReaderViewModel @Inject constructor(
                 return@launch
             }
             book = loaded
+            chapterProgress = ChapterProgress(loaded)
             resources = library.resources(bookId)
             val entity = library.book(bookId).first()
             finishedMarked = entity?.isFinished == true
@@ -280,16 +291,16 @@ class ReaderViewModel @Inject constructor(
         val engine = engine ?: return
         val book = book ?: return
         val ref = state.current ?: return
-        val pages = engine.peek(ref.chapter) ?: return
+        if (engine.page(ref) == null) return
         val offsets = engine.pageOffsets.value
-        val page = pages.pages.getOrNull(ref.index) ?: return
         update {
             it.copy(
-                chapterTitle = chapterTitleAt(page.start),
-                pagesLeftInChapter = pages.pages.size - ref.index - 1,
+                chapterTitle = chapterTitleAt(position),
+                currentTocIndex = chapterProgress?.currentRowAt(position),
+                pagesLeftInChapter = pagesLeftAt(position, ref),
                 globalPage = offsets?.let { o -> o[ref.chapter] + ref.index + 1 },
                 totalPages = offsets?.last(),
-                progress = book.progressAt(page.start),
+                progress = book.progressAt(position),
             )
         }
     }
@@ -307,19 +318,7 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    fun chapterTitleAt(position: Position): String? {
-        var best: TocEntry? = null
-        fun walk(entries: List<TocEntry>) {
-            for (e in entries) {
-                if (e.position <= position) {
-                    best = e
-                    walk(e.children)
-                }
-            }
-        }
-        walk(toc)
-        return best?.title ?: book?.chapters?.getOrNull(position.chapter)?.title
-    }
+    fun chapterTitleAt(position: Position): String? = chapterProgress?.titleAt(position)
 
     /** Moves one page forward; returns false at the end of the book or while the next chapter lays out. */
     fun next(): Boolean {
@@ -369,7 +368,10 @@ class ReaderViewModel @Inject constructor(
         position = top
         savedPosition.value = top
         val ref = PageRef(page.chapter, page.index)
-        if (state.current == ref) return
+        if (state.current == ref) {
+            updateLabels()
+            return
+        }
         val engine = engine ?: return
         if (state.current?.chapter != ref.chapter) engine.prefetchAround(ref.chapter)
         // Neighbours too, so switching to page turning from here works at once.
@@ -406,8 +408,20 @@ class ReaderViewModel @Inject constructor(
     var landedJumps by mutableIntStateOf(0)
         private set
 
-    /** Pages after [page] in its chapter; null while the chapter is not laid out. */
-    fun pagesLeftAfter(page: Page): Int? = engine?.peek(page.chapter)?.pages?.size?.let { it - page.index - 1 }
+    /** Pages after [page] before the next TOC target; null while the boundary's pagination is unknown. */
+    fun pagesLeftAfter(page: Page): Int? = pagesLeftAt(chapterPositionOf(page), PageRef(page.chapter, page.index))
+
+    internal fun chapterPositionOf(page: Page): Position = if (page === state.page) position else page.start
+
+    private fun pagesLeftAt(position: Position, ref: PageRef): Int? {
+        val engine = engine ?: return null
+        return chapterProgress?.remainingPages(
+            position, ref, engine.pageOffsets.value,
+            pageIndexOf = engine::pageIndexOf,
+            pageStartOf = engine::pageStartOf,
+            pageCountOf = { chapter -> engine.peek(chapter)?.pages?.size },
+        )
+    }
 
     fun progressOf(page: Page): Float = book?.progressAt(page.start) ?: 0f
 
@@ -583,6 +597,8 @@ class ReaderViewModel @Inject constructor(
     fun setGuideLine(on: Boolean) = viewModelScope.launch { settingsRepository.setGuideLine(on) }
     fun setGuideDim(value: GuideDim) = viewModelScope.launch { settingsRepository.setGuideDim(value) }
     fun setPageHeader(value: PageHeader) = viewModelScope.launch { settingsRepository.setPageHeader(value) }
+    fun setHeaderChromeStyle(value: ChromeStyle?) = viewModelScope.launch { settingsRepository.setBookHeaderChromeStyle(bookId, value) }
+    fun setFooterChromeStyle(value: ChromeStyle?) = viewModelScope.launch { settingsRepository.setBookFooterChromeStyle(bookId, value) }
     fun setPageFooter(value: PageFooter) = viewModelScope.launch { settingsRepository.setPageFooter(value) }
 
     // --- Reading sessions (kept for Reading Goals) ---

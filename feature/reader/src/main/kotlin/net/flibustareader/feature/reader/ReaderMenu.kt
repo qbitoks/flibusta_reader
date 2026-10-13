@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.flibustareader.core.designsystem.ReaderPalette
+import net.flibustareader.core.designsystem.Flibusta
 import net.flibustareader.core.designsystem.UiSans
 
 /** Reader menu (guideline § 6.3, white spots 3–4): capsules, then a row of square buttons. */
@@ -108,9 +109,9 @@ private fun MenuCapsule(title: String, icon: ImageVector, palette: ReaderPalette
             .padding(start = 18.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, color = palette.text, fontFamily = UiSans, fontSize = 17.sp, maxLines = 1, modifier = Modifier.weight(1f))
-        if (trailingText != null) Text(trailingText, color = palette.secondary, fontFamily = UiSans, fontSize = 15.sp, modifier = Modifier.padding(end = 10.dp))
-        Icon(icon, contentDescription = null, tint = palette.text, modifier = Modifier.size(22.dp))
+        Text(title, color = Flibusta.colors.label, fontFamily = UiSans, fontSize = 17.sp, maxLines = 1, modifier = Modifier.weight(1f))
+        if (trailingText != null) Text(trailingText, color = Flibusta.colors.secondaryLabel, fontFamily = UiSans, fontSize = 15.sp, modifier = Modifier.padding(end = 10.dp))
+        Icon(icon, contentDescription = null, tint = Flibusta.colors.label, modifier = Modifier.size(22.dp))
     }
 }
 
@@ -124,8 +125,8 @@ private fun MenuSquare(
     activeColor: Color? = null,
     onClick: () -> Unit,
 ) {
-    val container = activeColor ?: if (active) palette.text else palette.menuCapsule()
-    val tint = if (activeColor != null) Color.White else if (active) palette.background else palette.text
+    val container = activeColor ?: if (active) Flibusta.colors.label else palette.menuCapsule()
+    val tint = if (activeColor != null) Color.White else if (active) Flibusta.colors.background else Flibusta.colors.label
     Box(
         modifier
             .height(46.dp)

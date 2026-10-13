@@ -5,6 +5,7 @@
 - Use `core/designsystem/src/main/kotlin/net/flibustareader/core/designsystem/Theme.kt` for semantic colours and `FlibustaType`.
 - Use `core/designsystem/src/main/kotlin/net/flibustareader/core/designsystem/ReaderPalette.kt` for reading-surface colours.
 - Use `core/designsystem/src/main/kotlin/net/flibustareader/core/designsystem/ReaderFonts.kt` for font keys and `TypefaceProvider`.
+- Use `readerChromeTextStyle` and `ChromeStylePicker` for page labels and their preset previews.
 - Use `core/designsystem/src/main/kotlin/net/flibustareader/core/designsystem/BookCover.kt` for local-file and generated covers.
 - Use `core/designsystem/src/main/kotlin/net/flibustareader/core/designsystem/components/Sections.kt` as the canonical themed component example.
 - Use `core/designsystem/src/main/kotlin/net/flibustareader/core/designsystem/components/Glass.kt` for backdrop source and glass fallback.

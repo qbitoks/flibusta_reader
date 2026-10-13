@@ -8,6 +8,7 @@
 - Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/Common.kt` for context-sensitive book menus and confirmation dialogs.
 - Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/CollectionsSheet.kt` for built-in/user collection editing.
 - Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/SearchScreen.kt` for local search and recent queries.
+- Use `ChromeDefaultsSheet` from the library menu for shared header/footer styles; reuse `ChromeStylePicker`.
 
 ## Invariants
 - Keep picker and navigation actions in host callbacks; import and scan through the ViewModel repositories.
@@ -16,6 +17,6 @@
 - Preserve search across display title, original title and authors, including the existing Cyrillic normalization.
 - Store selection by book ID and lazy-item keys; drag reordering switches to persisted manual sorting.
 - Route shared book actions through `BookMenu` and `MenuContext`; preserve each shelf's removal semantics.
-- Preserve delete confirmation and removal of the book appearance override when deleting a book.
+- Preserve delete confirmation; remove book appearance and chrome style overrides when deleting a book.
 - Pair `bookTransition` source keys with `BookTransition.open` when adding an entry point to the reader.
 - Add text to `feature/library/src/main/res/values/strings.xml` and `feature/library/src/main/res/values-ru/strings.xml`.

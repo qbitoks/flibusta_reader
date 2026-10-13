@@ -33,6 +33,7 @@ import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import net.flibustareader.core.designsystem.ReaderPalette
+import net.flibustareader.core.designsystem.readerChromeTextStyle
 import net.flibustareader.core.layout.PageRenderer
 import net.flibustareader.core.layout.Mark
 import net.flibustareader.core.layout.MarkStyle
@@ -71,13 +72,17 @@ internal fun ReaderSurface(
     val header = settings.header
     val footer = settings.footer
     val margin = settings.style.margin.dp
+    val headerStyle = readerChromeTextStyle(settings.chromeStyles.header, palette, settings.style.font)
+    val footerStyle = readerChromeTextStyle(settings.chromeStyles.footer, palette, settings.style.font)
+    val headerHeight = with(density) { headerStyle.lineHeight.toDp() } + 16.dp
+    val footerHeight = with(density) { footerStyle.lineHeight.toDp() } + 48.dp
     // Without a line above, the text starts right under the status bar area; without anything
     // below, it runs to the bottom. Changing either re-paginates, as a font change does.
     val padding = PaddingValues(
         start = margin,
         end = margin,
-        top = topInset + if (header == PageHeader.None) 12.dp else 56.dp,
-        bottom = bottomInset + if (footer.isEmpty) 20.dp else 60.dp,
+        top = topInset + if (header == PageHeader.None) 12.dp else headerHeight.coerceAtLeast(32.dp) + 22.dp,
+        bottom = bottomInset + if (footer.isEmpty) 20.dp else footerHeight,
     )
 
     // «↶» shows by itself for a moment after a jump, until the first page turn; otherwise only with the controls.
@@ -112,11 +117,16 @@ internal fun ReaderSurface(
         val guideOn = settings.guideLine && !scroll
         val marks = controls.chromeVisible || backFlash
         val guideLines = remember(state.page, guideOn) { state.page?.takeIf { guideOn }?.let(PageRenderer::lines).orEmpty() }
-        LaunchedEffect(state.page) {
-            controls.guideIndex = if (controls.guideToLast) guideLines.lastIndex.coerceAtLeast(0) else 0
-            controls.guideToLast = false
+        val jumpId = vm.scrollJump?.id ?: 0
+        val guide = controls.guide.landed(state.current, state.layoutGeneration, guideLines.size, jumpId = jumpId)
+        LaunchedEffect(state.page, state.layoutGeneration, jumpId) {
+            controls.guide = controls.guide.landed(state.current, state.layoutGeneration, guideLines.size, jumpId = jumpId)
         }
-        val guidePlate: Rect? = if (!guideOn) null else guideLines.getOrNull(controls.guideIndex.coerceAtMost(guideLines.lastIndex))?.let { line ->
+        LaunchedEffect(guideOn) {
+            controls.guideMoving = false
+            controls.guide = controls.guide.landed(state.current, state.layoutGeneration, guideLines.size, reset = true, jumpId = jumpId)
+        }
+        val guidePlate: Rect? = if (!guideOn) null else guideLines.getOrNull(guide.index)?.let { line ->
             val padX = with(density) { 14.dp.toPx() }
             val padY = with(density) { 3.dp.toPx() }
             Rect(contentLeft + line.left - padX, contentTop + line.top - padY, contentLeft + line.right + padX, contentTop + line.bottom + padY)
@@ -138,23 +148,34 @@ internal fun ReaderSurface(
         }
         val contentOrigin = Offset(contentLeft, contentTop)
         val layout = ReaderLayout(padding, topInset, bottomInset, heightPx, contentOrigin)
-        val interaction = readerInteractions(vm, controls, guidePlate, guideLines, contentOrigin)
+        val interaction = readerInteractions(vm, controls, guidePlate, guideLines, contentOrigin) { event ->
+            controls.guideMoving = event.active
+            val landed = event.to
+            // A requested direction is useful only after that exact page becomes current.
+            if (landed != null && landed !== event.from && vm.state.page === landed) {
+                controls.guide = controls.guide.landed(
+                    PageRef(landed.chapter, landed.index), vm.state.layoutGeneration,
+                    PageRenderer.lines(landed).size, direction = event.direction, jumpId = vm.scrollJump?.id ?: 0,
+                )
+            }
+        }
         ReaderPages(vm, settings, palette, controls, layout, savedMarks, highlights, marks, interaction, locator, footerWords, clock, battery, onClose)
         // Scrolling text dissolves under the lines above and below it, or passes under the strip.
         if (scroll) {
             // Solid behind the title and the bottom line, fading only over the last few dp before the text.
             EdgeFade(palette, padding.calculateTopPadding(), top = true, modifier = Modifier.align(Alignment.TopCenter), fade = 18.dp)
             if (!footer.isEmpty && footer.style == FooterStyle.Strip) {
-                FooterStrip(palette, bottomInset + FooterStripHeight, Modifier.align(Alignment.BottomCenter))
+                val stripHeight = (with(density) { footerStyle.lineHeight.toDp() } + 10.dp).coerceAtLeast(FooterStripHeight)
+                FooterStrip(palette, bottomInset + stripHeight, Modifier.align(Alignment.BottomCenter))
             } else {
                 EdgeFade(palette, padding.calculateBottomPadding(), top = false, modifier = Modifier.align(Alignment.BottomCenter), fade = 12.dp)
             }
         }
-        guidePlate?.let {
-            val textArea = Rect(0f, contentTop - with(density) { 6.dp.toPx() }, widthPx.toFloat(), heightPx - with(density) { padding.calculateBottomPadding().toPx() - 6.dp.toPx() })
+        guidePlate?.takeUnless { controls.guideMoving }?.let {
+            val textArea = Rect(0f, contentTop, widthPx.toFloat(), heightPx - with(density) { padding.calculateBottomPadding().toPx() })
             GuideLineOverlay(it, textArea, settings.guideDim.fade, palette)
         }
         ReaderSelectionOverlays(vm, settings, palette, controls, layout, highlights, locator)
-        ReaderChrome(vm, settings, palette, controls, layout, fragments, marks, footerWords, clock, battery, onClose)
+        ReaderChrome(vm, settings, palette, controls, layout, fragments, marks, footerWords, clock, battery, onClose, interaction.onFooterTap)
     }
 }

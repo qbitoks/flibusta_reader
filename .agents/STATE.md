@@ -7,8 +7,8 @@ status: active
 - Work from the user's task; follow-ups below need an explicit task, not autonomous implementation.
 - 0.3.x uses the prototype engine; OPDS is the «Каталог» tab. No data migration from 0.2.x (user decision).
 - Catalog browse/search, EPUB/FB2 downloads and Range resume were checked against flibusta.is on an emulator.
-- Reader scroll positions/window, selection, tap thirds, history and page chrome were checked on the
-  `ReaderPhone` emulator; physical-phone verification is still missing.
+- ReaderPhone checks cover upgrade/restart, presets, menu palettes and guide landings in Slide/Curl/Fade.
+- Finish on-device default/book reset checks and physical-phone verification before distribution.
 
 ## Next steps
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.

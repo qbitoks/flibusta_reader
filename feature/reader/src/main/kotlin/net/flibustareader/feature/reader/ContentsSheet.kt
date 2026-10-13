@@ -57,13 +57,10 @@ import net.flibustareader.core.designsystem.components.FlibustaSheet
 import net.flibustareader.core.designsystem.components.SegmentedControl
 import net.flibustareader.core.designsystem.components.SheetHeader
 import net.flibustareader.core.model.Position
-import net.flibustareader.core.model.TocEntry
 import java.text.DateFormat
 import java.util.Date
 import androidx.compose.ui.text.font.FontFamily
 import net.flibustareader.core.data.db.HighlightEntity
-
-private data class TocRow(val entry: TocEntry, val depth: Int)
 
 internal fun ReaderPalette.sheet(): Color = if (isDark) Color(0xFF242424) else Color(0xFFF4F4F4)
 private fun ReaderPalette.selectedRow(): Color = if (isDark) Color(0xFF414143) else Color(0xFFE3E3E6)
@@ -94,10 +91,9 @@ internal fun ContentsSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismis
             CircleButton(Icons.Rounded.Close, stringResource(R.string.reader_close), onDismiss)
         }
         HorizontalDivider(color = palette.rule(), thickness = 0.5.dp)
-        val rows = remember(vm.toc) { ArrayList<TocRow>().also { flatten(vm.toc, 0, it) } }
-        val currentStart = state.page?.start ?: Position.Start
-        val currentIndex = rows.indexOfLast { it.entry.position <= currentStart }.coerceAtLeast(0)
-        val listState = rememberLazyListState(initialFirstVisibleItemIndex = (currentIndex - 3).coerceAtLeast(0))
+        val rows = vm.tocRows
+        val currentIndex = state.currentTocIndex
+        val listState = rememberLazyListState(initialFirstVisibleItemIndex = ((currentIndex ?: 0) - 3).coerceAtLeast(0))
         LazyColumn(state = listState, modifier = Modifier.fillMaxHeight()) {
             items(rows.size) { i ->
                 val row = rows[i]
@@ -113,7 +109,7 @@ internal fun ContentsSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismis
                             onDismiss()
                         }
                         .heightIn(min = 50.dp)
-                        .padding(start = 17.dp + (row.depth * 16).dp, end = 17.dp, top = 12.dp, bottom = 12.dp),
+                        .padding(start = 17.dp + (row.depth.coerceAtMost(3) * 16).dp, end = 17.dp, top = 12.dp, bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -135,13 +131,6 @@ internal fun ContentsSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismis
                 }
             }
         }
-    }
-}
-
-private fun flatten(list: List<TocEntry>, depth: Int, out: MutableList<TocRow>) {
-    list.forEach {
-        out += TocRow(it, depth)
-        if (depth < 2) flatten(it.children, depth + 1, out)
     }
 }
 
