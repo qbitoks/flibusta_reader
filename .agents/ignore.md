@@ -61,6 +61,7 @@ go.sum
 *.g.dart
 *.freezed.dart
 *_generated.*
+core/data/schemas/
 *.log
 # project tooling and outputs
 .tools/

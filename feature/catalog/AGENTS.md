@@ -15,7 +15,7 @@ downloads live in `core/data/.../catalog/` (`CatalogRepository`, `DownloadManage
   WorkManager work per download; Range resume, retries, import
 
 ## Conventions
-- Layout follows `.agents/design/apple-books-guidelines.md`: `LargeTitleHeader`, `SectionBand`, `SectionTitle`
+- Layout follows `.agents/design/design-system.md`: `LargeTitleHeader`, `SectionBand`, `SectionTitle`
   from `core/designsystem` (shared with «Главная»); plain rows with 32 dp inset; sheets via `FlibustaSheet`.
 - Errors travel as `NetworkErrors` codes and become text in `errorText()`; no raw exception text for known cases.
 - Books the app can't open (PDF-only) are hidden from lists with a count note, never shown as downloadable.

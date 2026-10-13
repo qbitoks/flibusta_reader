@@ -34,3 +34,4 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-13 | reader | Tap zones are the outer thirds, not 10 % edges | edges were too narrow: most taps toggled the controls instead of turning
 2026-10-13 | reader | Scroll mode: own window of ±2 chapters, positions by item key, jumps via `ScrollJump` id | index-based reads mixed pages during prepends; stale reports undid jumps
 2026-10-13 | reader | Scroll seams keep the swallowed spacing as `Page.lead`, not a separate ribbon layout | one pagination for both modes; positions and page numbers stay shared
+2026-10-13 | code | Split by responsibility; aim for files <400 lines, composables <150 (soft targets) | targeted reads save context; avoid fragments with no independent purpose

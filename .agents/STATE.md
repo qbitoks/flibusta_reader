@@ -3,30 +3,22 @@ status: active
 ---
 # STATE
 
-Volatile status only. Rewrite it (don't append) and keep it short. Stable facts and commands live in
-root `AGENTS.md` → Project; history lives in git and `.agents/DECISIONS.md`.
-Branch- or task-specific progress goes to the PR or issue, not here: parallel branches would conflict.
-
 ## Current focus
-- 0.3.x: Prototype codebase merged in as the app; OPDS catalog is the «Каталог» tab.
-  No data migration from 0.2.x (user decision). Builds, JVM tests and lint pass.
-- Catalog reworked (2026-10-12): home in the «Главная» style, book+author search, book sheet, download
-  manager with Range resume (Room v2). Checked on an emulator against flibusta.is: browse, search, EPUB and
-  FB2 download, resume after network loss, open in reader. FB2 import on Android was broken (SAX feature), fixed.
-- Reader reworked (2026-10-13): scroll mode (jumps, chapter window,
-  exact position, selection), page turning (thirds, waits for chapter layout), «Колонтитулы» with time and
-  battery, history arrows only with controls. Checked on the `ReaderPhone` emulator, not on a phone.
-- Pick work from the user's task; the lists below are not a backlog to implement on your own.
+- Work from the user's task; follow-ups below need an explicit task, not autonomous implementation.
+- 0.3.x uses the prototype engine; OPDS is the «Каталог» tab. No data migration from 0.2.x (user decision).
+- Catalog browse/search, EPUB/FB2 downloads and Range resume were checked against flibusta.is on an emulator.
+- Reader scroll positions/window, selection, tap thirds, history and page chrome were checked on the
+  `ReaderPhone` emulator; physical-phone verification is still missing.
 
 ## Next steps
-- v0.3.2 (app-wide + per-book appearance) published as pre-release; checked on an emulator only.
-- Rewrite ADB scripts (`smoke-test`, `reader-regression`, `reader-background-regression`) for the new UI;
-  CI uses only the launch check (`scripts/ci-emulator.ps1`) meanwhile.
-- Prototype roadmap leftovers: `.agents/design/prototype-roadmap.md`; baseline profile not generated.
+- Generate the baseline profile on a disposable emulator; the generator uninstalls the app.
+- Replace archived Readium regressions with checks for the current UI; CI uses `scripts/ci-emulator.ps1`.
+- Potential reader follow-up: add the roadmap's scroll scrubber with chapter/page bubble.
 - Collect dependency licenses before distributing beyond testing.
 
 ## Known issues / verification gaps
 - Wrapper download of Gradle 9.8 was flaky on this machine (connection resets).
-- The `ReaderPhone` emulator's DNS proxy fails behind the host VPN; a fresh AVD with `-dns-server` works.
+- The emulator's DNS proxy fails behind the host VPN; a fresh AVD with `-dns-server` works.
 - No download notification: progress is visible only in the app («Загрузки»).
-- Paginator: the gap between paragraphs is a few px shorter than the line pitch (guideline § 6.1 wants equal).
+- Paragraph seam pitch is a few px shorter than a line pitch; see `.agents/design/reader.md`.
+- The archived prototype roadmap is historical: `.agents/archive/prototype-roadmap.md`.

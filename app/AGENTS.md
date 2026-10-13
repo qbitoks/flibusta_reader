@@ -10,6 +10,7 @@ Android entry: Application (Hilt, WorkManager), `MainActivity` (edge-to-edge,
 
 ## Conventions
 - Tabs stay composed (`TabStack`); add a tab by adding a child there and a `TabSpec`.
+- For tab/search layout and shared screen headers, read `.agents/design/design-system.md`.
 
 ## Commands
 - `./gradlew.bat :app:assembleDebug :app:lintDebug --console=plain`

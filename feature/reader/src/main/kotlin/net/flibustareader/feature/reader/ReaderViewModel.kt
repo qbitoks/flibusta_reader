@@ -41,13 +41,10 @@ import net.flibustareader.core.model.parseInternalTarget
 import net.flibustareader.core.model.progressAt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -57,7 +54,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 
@@ -93,22 +89,11 @@ sealed interface TapTarget {
     data class Image(val file: File) : TapTarget
 }
 
-data class SearchHit(
-    val position: Position,
-    val chapterTitle: String?,
-    val snippet: String,
-    val matchStart: Int,
-    val matchLength: Int,
-    val length: Int,
-)
-
 /** A jump the scroll list must perform; [id] tells repeated jumps to the same place apart. */
 class ScrollJump(val position: Position, val id: Int)
 
 /** Jump history for ↶ / ↷: positions to return to and to come back to. */
 data class NavHistory(val back: List<Position> = emptyList(), val forward: List<Position> = emptyList())
-
-data class SearchState(val query: String = "", val results: List<SearchHit> = emptyList(), val searching: Boolean = false)
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -145,8 +130,18 @@ class ReaderViewModel @Inject constructor(
         state = transform(state)
     }
 
-    private val _search = MutableStateFlow(SearchState())
-    val search: StateFlow<SearchState> = _search.asStateFlow()
+    private val bookSearch = ReaderSearch(viewModelScope, { book }, ::chapterTitleAt)
+    val search: StateFlow<SearchState> = bookSearch.state
+
+    private val annotations = ReaderAnnotations(
+        bookId,
+        library,
+        settingsRepository,
+        currentBook = { book },
+        savedHighlights = { highlights.value },
+        highlightColor = { settings.value.highlightColor },
+        chapterTitleAt = ::chapterTitleAt,
+    )
 
     private val viewport = MutableStateFlow<Viewport?>(null)
     private val savedPosition = MutableStateFlow<Position?>(null)
@@ -157,7 +152,6 @@ class ReaderViewModel @Inject constructor(
     private var engine: PaginationEngine? = null
     private var position: Position = Position.Start
     private var generation = 0
-    private var searchJob: Job? = null
     private var sessionStart = 0L
     private var finishedMarked = false
 
@@ -502,39 +496,20 @@ class ReaderViewModel @Inject constructor(
 
     private fun refreshBookmarked() {
         val (start, end) = currentRange() ?: return
-        val marked = bookmarks.value.any { bm ->
-            val p = Position.decode(bm.position) ?: return@any false
-            p >= start && (end == null || p < end)
-        }
+        val marked = annotations.isBookmarked(bookmarks.value, start, end)
         if (marked != state.bookmarked) update { it.copy(bookmarked = marked) }
     }
 
     fun toggleBookmark() {
         val (start, end) = currentRange() ?: return
         val book = book ?: return
-        val existing = bookmarks.value.filter { bm ->
-            val p = Position.decode(bm.position) ?: return@filter false
-            p >= start && (end == null || p < end)
-        }
+        val existing = annotations.bookmarksInRange(bookmarks.value, start, end)
         viewModelScope.launch {
-            if (existing.isNotEmpty()) {
-                existing.forEach { library.deleteBookmark(it.id) }
-            } else {
-                library.addBookmark(
-                    BookmarkEntity(
-                        bookId = bookId,
-                        position = start.encode(),
-                        chapterTitle = chapterTitleAt(start),
-                        snippet = snippetAt(book, start),
-                        progress = book.progressAt(start),
-                        createdAt = System.currentTimeMillis(),
-                    ),
-                )
-            }
+            annotations.toggleBookmark(book, start, existing)
         }
     }
 
-    fun deleteBookmark(id: Long) = viewModelScope.launch { library.deleteBookmark(id) }
+    fun deleteBookmark(id: Long) = viewModelScope.launch { annotations.deleteBookmark(id) }
 
     // --- Selection and highlights (v0.5) ---
 
@@ -550,77 +525,24 @@ class ReaderViewModel @Inject constructor(
     }
 
     /** The saved highlight covering [position], if any. */
-    fun highlightAt(position: Position): HighlightEntity? = highlights.value.firstOrNull { h ->
-        val span = spanOf(h) ?: return@firstOrNull false
-        position in span
-    }
+    fun highlightAt(position: Position): HighlightEntity? = annotations.highlightAt(position)
 
     /** Saved highlights that share text with [span] («Убрать» removes them). */
-    fun highlightsOverlapping(span: TextSpan): List<HighlightEntity> = highlights.value.filter { h ->
-        val other = spanOf(h) ?: return@filter false
-        other.start < span.end && span.start < other.end
-    }
+    fun highlightsOverlapping(span: TextSpan): List<HighlightEntity> = annotations.highlightsOverlapping(span)
 
-    fun spanOf(h: HighlightEntity): TextSpan? {
-        val start = Position.decode(h.start) ?: return null
-        val end = Position.decode(h.end) ?: return null
-        return TextSpan(start, end)
-    }
+    fun spanOf(h: HighlightEntity): TextSpan? = annotations.spanOf(h)
 
     /** Plain text of [span]; paragraphs are joined with line breaks. */
-    fun textOf(span: TextSpan): String {
-        val book = book ?: return ""
-        val out = StringBuilder()
-        for (c in span.start.chapter..span.end.chapter) {
-            val blocks = book.chapters.getOrNull(c)?.blocks ?: continue
-            val first = if (c == span.start.chapter) span.start.block else 0
-            val last = if (c == span.end.chapter) span.end.block else blocks.lastIndex
-            for (b in first..minOf(last, blocks.lastIndex)) {
-                val text = (blocks[b] as? Block.Text)?.text ?: continue
-                val from = if (c == span.start.chapter && b == span.start.block) span.start.offset else 0
-                val to = if (c == span.end.chapter && b == span.end.block) span.end.offset else text.length
-                if (to <= from) continue
-                if (out.isNotEmpty()) out.append('\n')
-                out.append(text, from.coerceIn(0, text.length), to.coerceIn(0, text.length))
-            }
-        }
-        return out.toString().trim()
-    }
+    fun textOf(span: TextSpan): String = annotations.textOf(span)
 
     /** Text of the paragraph around [span] for the «Выделенное» list: up to ~40 characters before, the rest after. */
-    fun contextOf(span: TextSpan): Pair<String, String> {
-        val blocks = book?.chapters?.getOrNull(span.start.chapter)?.blocks ?: return "" to ""
-        val first = (blocks.getOrNull(span.start.block) as? Block.Text)?.text.orEmpty()
-        val before = first.substring(0, span.start.offset.coerceIn(0, first.length))
-        val last = (blocks.getOrNull(span.end.block) as? Block.Text)?.text.orEmpty()
-        val after = if (span.end.chapter == span.start.chapter) last.substring(span.end.offset.coerceIn(0, last.length)) else ""
-        val trimmed = if (before.length > 40) "…" + before.takeLast(40).substringAfter(' ') else before
-        return trimmed to after.take(200)
-    }
+    fun contextOf(span: TextSpan): Pair<String, String> = annotations.contextOf(span)
 
     /**
      * «Выделить»: saves [span] in the last used colour, merged with any highlight it overlaps
      * (their notes are kept); returns the new highlight's id.
      */
-    suspend fun addHighlight(span: TextSpan, note: String? = null): Long {
-        val book = book ?: return -1
-        val overlapping = highlightsOverlapping(span)
-        val merged = overlapping.mapNotNull(::spanOf).fold(span) { acc, s -> TextSpan(minOf(acc.start, s.start), maxOf(acc.end, s.end)) }
-        val notes = (overlapping.mapNotNull { it.note } + listOfNotNull(note)).distinct().joinToString("\n\n").ifBlank { null }
-        overlapping.forEach { library.deleteHighlight(it.id) }
-        return library.addHighlight(
-            HighlightEntity(
-                bookId = bookId,
-                start = merged.start.encode(),
-                end = merged.end.encode(),
-                text = textOf(merged),
-                color = overlapping.firstOrNull()?.color ?: settings.value.highlightColor,
-                note = notes,
-                progress = book.progressAt(merged.start),
-                createdAt = overlapping.minOfOrNull { it.createdAt } ?: System.currentTimeMillis(),
-            ),
-        )
-    }
+    suspend fun addHighlight(span: TextSpan, note: String? = null): Long = annotations.addHighlight(span, note)
 
     /** «Выделить» on a selection; [then] receives the new highlight's id (to show its palette). */
     fun highlight(span: TextSpan, then: (Long) -> Unit = {}) = viewModelScope.launch { then(addHighlight(span)) }
@@ -629,78 +551,22 @@ class ReaderViewModel @Inject constructor(
     fun highlightWithNote(span: TextSpan, note: String) = viewModelScope.launch { addHighlight(span, note.takeIf { it.isNotBlank() }) }
 
     /** Palette choice: recolours [id] and becomes the colour of new highlights. */
-    fun setHighlightColor(id: Long, color: String) = viewModelScope.launch {
-        library.setHighlightColor(id, color)
-        settingsRepository.setHighlightColor(color)
-    }
+    fun setHighlightColor(id: Long, color: String) = viewModelScope.launch { annotations.setHighlightColor(id, color) }
 
     /** «Убрать»: deletes every highlight sharing text with [span]. */
-    fun removeHighlights(span: TextSpan) = viewModelScope.launch { highlightsOverlapping(span).forEach { library.deleteHighlight(it.id) } }
+    fun removeHighlights(span: TextSpan) = viewModelScope.launch { annotations.removeHighlights(span) }
 
-    fun deleteHighlight(id: Long) = viewModelScope.launch { library.deleteHighlight(id) }
+    fun deleteHighlight(id: Long) = viewModelScope.launch { annotations.deleteHighlight(id) }
 
-    fun setHighlightNote(id: Long, note: String?) = viewModelScope.launch { library.setHighlightNote(id, note?.takeIf { it.isNotBlank() }) }
-
-    private fun snippetAt(book: Book, p: Position): String {
-        val sb = StringBuilder()
-        val blocks = book.chapters.getOrNull(p.chapter)?.blocks ?: return ""
-        var i = p.block
-        var offset = p.offset
-        while (i < blocks.size && sb.length < 140) {
-            val b = blocks[i]
-            if (b is Block.Text) {
-                if (sb.isNotEmpty()) sb.append(' ')
-                sb.append(b.text, offset.coerceAtMost(b.text.length), b.text.length)
-            }
-            offset = 0
-            i++
-        }
-        return sb.toString().replace('\n', ' ').take(140).trim()
-    }
+    fun setHighlightNote(id: Long, note: String?) = viewModelScope.launch { annotations.setHighlightNote(id, note) }
 
     // --- Search ---
 
-    fun search(query: String) {
-        searchJob?.cancel()
-        val book = book ?: return
-        val q = normalize(query.trim())
-        if (q.length < 2) {
-            _search.value = SearchState(query = query)
-            return
-        }
-        _search.value = SearchState(query = query, searching = true)
-        searchJob = viewModelScope.launch {
-            val hits = withContext(Dispatchers.Default) {
-                val result = ArrayList<SearchHit>()
-                outer@ for ((c, chapter) in book.chapters.withIndex()) {
-                    val title = chapter.title
-                    for ((b, block) in chapter.blocks.withIndex()) {
-                        if (block !is Block.Text) continue
-                        val text = normalize(block.text)
-                        var from = 0
-                        while (true) {
-                            val at = text.indexOf(q, from)
-                            if (at < 0) break
-                            val start = (at - 40).coerceAtLeast(0).let { s -> block.text.lastIndexOf(' ', s).takeIf { it >= 0 && at - it < 60 }?.plus(1) ?: s }
-                            val end = (at + q.length + 70).coerceAtMost(block.text.length)
-                            val snippet = block.text.substring(start, end).replace('\n', ' ')
-                            result += SearchHit(Position(c, b, at), chapterTitleAt(Position(c, b, at)) ?: title, snippet, at - start, q.length, q.length)
-                            if (result.size >= MAX_HITS) break@outer
-                            from = at + q.length
-                        }
-                    }
-                }
-                result
-            }
-            _search.value = SearchState(query = query, results = hits, searching = false)
-        }
-    }
+    fun search(query: String) = bookSearch.search(query)
 
     fun openSearchHit(hit: SearchHit) {
         goTo(hit.position, TextRange(hit.position.chapter, hit.position.block, hit.position.offset, hit.position.offset + hit.length))
     }
-
-    private fun normalize(s: String): String = s.lowercase().replace('ё', 'е')
 
     // --- Settings passthrough ---
 
@@ -736,9 +602,5 @@ class ReaderViewModel @Inject constructor(
 
     override fun onCleared() {
         engine?.cancel()
-    }
-
-    private companion object {
-        const val MAX_HITS = 500
     }
 }

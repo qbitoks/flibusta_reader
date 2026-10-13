@@ -38,7 +38,7 @@ Check-File 'Gradle wrapper JAR' (Join-Path $taskRoot 'gradle/wrapper/gradle-wrap
 $taskWrapperProperties = Join-Path $taskRoot 'gradle/wrapper/gradle-wrapper.properties'
 Check-File 'Gradle wrapper properties' $taskWrapperProperties
 if (Test-Path -LiteralPath $taskWrapperProperties -PathType Leaf) {
-    Report 'Gradle version' ((Get-Content -LiteralPath $taskWrapperProperties -Raw) -match 'gradle-8\.6-bin\.zip') 'Expected wrapper 8.6'
+    Report 'Gradle version' ((Get-Content -LiteralPath $taskWrapperProperties -Raw) -match 'gradle-9\.8\.0-bin\.zip') 'Expected wrapper 9.8.0'
 }
 
 $taskJava = $null
@@ -87,7 +87,12 @@ if (!$taskResolvedSdk) {
     if ($SdkPath -and $taskLocalSdk) {
         Report 'SDK matches local.properties' ($taskResolvedSdk.TrimEnd('/\') -eq [System.IO.Path]::GetFullPath($taskLocalSdk).TrimEnd('/\')) 'Gradle uses sdk.dir when present; align local.properties with the SDK being checked.'
     }
-    Check-File 'Android platform 37' (Join-Path $taskResolvedSdk 'platforms/android-37/android.jar')
+    $taskPlatformJar = @('platforms/android-37/android.jar', 'platforms/android-37.0/android.jar') |
+        ForEach-Object { Join-Path $taskResolvedSdk $_ } |
+        Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
+        Select-Object -First 1
+    if (!$taskPlatformJar) { $taskPlatformJar = Join-Path $taskResolvedSdk 'platforms/android-37/android.jar' }
+    Check-File 'Android platform 37' $taskPlatformJar
     $taskAdb = Join-Path $taskResolvedSdk "platform-tools/adb$taskExecutableSuffix"
     Check-File 'ADB platform-tools' $taskAdb
     if ($RequireEmulator -and !$Serial) {

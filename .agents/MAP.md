@@ -6,19 +6,20 @@ Agent infrastructure (`.agents/`, `scripts/agent-lint.sh`, tool adapters) is des
 
 ## Areas
 - `app/` — Application, Hilt, MainActivity, nav host with tabs Главная/Библиотека/Каталог — `app/AGENTS.md`
-- `core/model`, `core/layout` — JVM book model, pagination/text layout
+- `core/model/` — JVM book model and codecs — `core/model/AGENTS.md`
+- `core/layout/` — Android pagination, text geometry and Canvas rendering — `core/layout/AGENTS.md`
 - `core/format/` — JVM FB2/EPUB parsers — `core/format/AGENTS.md`
 - `core/opds/` — JVM OPDS parser, HTTPS-only requests, safe XML; JUnit tests — `core/opds/AGENTS.md`
-- `core/data/` — Room, files, settings, LibraryRepository, CatalogRepository, DownloadManager (catalog downloads)
-- `core/designsystem/` — Apple Books–style theme, fonts, glass, covers, components
-- `feature/library` — «Библиотека» and «Главная» screens and ViewModels
+- `core/data/` — Room, files, settings, library/catalog repositories and downloads — `core/data/AGENTS.md`
+- `core/designsystem/` — Apple Books theme, fonts, glass, covers, components — `core/designsystem/AGENTS.md`
+- `feature/library/` — «Библиотека» and «Главная» screens and ViewModels — `feature/library/AGENTS.md`
 - `feature/reader/` — reader: page turning, scroll mode, header/footer, selection — `feature/reader/AGENTS.md`
 - `feature/catalog/` — «Каталог»: OPDS home, search, book sheet, downloads — `feature/catalog/AGENTS.md`
 - `baselineprofile/` — baseline profile generator (not generated; it uninstalls the app)
-- `scripts/` — PowerShell doctor, build, emulator regressions, release packaging — `scripts/AGENTS.md`
+- `scripts/` — PowerShell doctor, build, emulator launch check, release packaging — `scripts/AGENTS.md`
 - `fixtures/` — sample OPDS feeds for `core/opds` parser tests
 - `.github/workflows/` — CI: `android.yml` (build, emulator, release), `agent-lint.yml`
-- `.agents/design/` — Apple Books design guideline and the prototype roadmap (open by path for UI work)
+- `.agents/design/` — design index with focused UI topics; follow the relevant module's links
 - `.agents/decisions/` — long-form decisions (former ADRs), indexed in `.agents/DECISIONS.md`
 - `.agents/archive/` — dated reports, old plans/specs, the 2026-10-12 review. History only: an old PASS
   proves nothing now; open by path when a task refers to it.

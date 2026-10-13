@@ -28,6 +28,7 @@ Precedence: the user's explicit request > nearest `AGENTS.md` > this file > `.ag
 ## 3. Working rules
 
 - Match surrounding code: style, naming, comment density, idioms. No speculative abstractions.
+- Split code by responsibility; aim for files under ~400 lines and composables under ~150, not hard limits.
 - Small, verifiable steps. Run the Check command (Project section below) before saying "done".
 - Docs disagree with the code → the code wins; fix the doc in the same task.
 - Ask the user only for decisions that are theirs; otherwise pick the conventional default and say so.
@@ -78,13 +79,12 @@ Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGE
 - Setup / env check: `./scripts/doctor.ps1`
 - JVM tests: `./gradlew.bat :core:opds:test :core:format:test :feature:reader:testDebugUnitTest --console=plain`
 - Test one: `./gradlew.bat :core:opds:test --tests 'net.flibustareader.core.opds.OpdsParserTest' --console=plain`
-- Device checks: install the release APK and verify by hand (`scripts/AGENTS.md`). The ADB regression
-  scripts target the old Readium UI and are stale until rewritten.
+- Device checks: install the release APK and verify by hand (`scripts/AGENTS.md`); CI checks launch/crashes.
   - Bug in `core`: reproduce with a regression test first.
 - A check you can't run: name the reason; never report it as passed.
 
 ## Project rules
-- `core/model`, `core/format`, `core/layout`, `core/opds` stay pure JVM: no Android or Compose.
+- `core/model`, `core/format`, `core/opds` stay pure JVM; `core/layout` uses Android text/graphics, no Compose.
 - Keep saved data compatible (Room schema, files layout, positions, book IDs): `.agents/rules/storage.md`.
 - HTTPS only, redirects included. Limits stay: book/unpacked FB2 50 MiB, OPDS feed 5 MiB, FB2 depth 128,
   no DTD or external XML entities. Don't relax them to make a sample pass.
@@ -93,4 +93,4 @@ Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGE
 - Behaviour change → update the affected `AGENTS.md`/rule and, if user-visible, `README.md` (Russian).
   Long rationale → `.agents/decisions/NNNN-title.md` + one line in `.agents/DECISIONS.md`.
 - Don't commit `local.properties`, `.tools/`, `.gradle/`, `**/build/`, `artifacts/`, personal books, keys.
-- UI follows `.agents/design/apple-books-guidelines.md`.
+- UI: use the topic linked by the area's `AGENTS.md`; `.agents/design/apple-books-guidelines.md` is the index.
