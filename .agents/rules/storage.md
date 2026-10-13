@@ -14,8 +14,12 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   after import. `cache/catalog-covers/<sha1 of url>` — OPDS cover thumbnails (safe to clear).
 - DataStore `settings`: reader/library prefs; `app_appearance` (app-wide), `book_appearance_<book id>`
   (absent = follow the app; removed on delete). Old `appearance` key is no longer read (no migration).
-- Preserve `footer_style` for scrolling backgrounds; keep visual presets in `ChromeStylePreferences` keys.
-- Remove absent book line overrides instead of copying current defaults; later default changes must propagate.
+- Shared reader settings: `ReaderPreferences` (existing keys plus `reader_appearance`, `header_layout`,
+  `footer_layout`); visual presets stay in `ChromeStylePreferences` keys; `footer_style` = scroll background.
+- A book's own settings: `book_reader_<book id>`, `name=value` lines, only fields that differ from shared
+  (`BookOverrides`); removed on reset/delete. Old `book_appearance_<id>` and `book_*_chrome_style_<id>`
+  are read as part of it and dropped on the next write of that book. Unknown fields are ignored.
+- A missing `footer_layout` starts customised when the old footer content differs from the standard one.
 - `shared_prefs/catalog.xml`: `catalog`, `downloads` HTTPS origins; `recent` — catalog searches, newline-joined.
 
 ## Changing any of this

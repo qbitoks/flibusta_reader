@@ -5,7 +5,7 @@
 - Use `core/data/src/main/kotlin/net/flibustareader/core/data/library/BookFiles.kt` for original, parsed cache and image paths.
 - Use `core/data/src/main/kotlin/net/flibustareader/core/data/db/FlibustaDatabase.kt` for Room schema registration and migrations.
 - Use `core/data/src/main/kotlin/net/flibustareader/core/data/settings/SettingsRepository.kt` for persisted reader/library preferences.
-- Use `ChromeStyles.kt` there for independent line inheritance and preference codecs; keep content settings separate.
+- Use `ReaderPreferences.kt` there for shared reader codecs and `BookOverrides.kt` for a book's own settings.
 - Use `core/data/src/main/kotlin/net/flibustareader/core/data/catalog/CatalogRepository.kt` for feeds, covers and catalog sources.
 - Use `core/data/src/main/kotlin/net/flibustareader/core/data/catalog/DownloadManager.kt` for download rows, resume and workers.
 - Use `core/data/src/main/kotlin/net/flibustareader/core/data/library/FolderScanner.kt` for SAF folder scans and scheduled imports.
@@ -21,4 +21,4 @@
 - Preserve unique worker scheduling and partial files for pause/resume; removing a download keeps the imported book.
 - Keep want-to-read/finished shelves as book flags; user collection membership belongs to Room cross-reference rows.
 - Preserve SAF source URI tracking and depth limits when extending folder scans; use the existing scanner worker.
-- Update individual chrome styles atomically inside DataStore edits; remove null book overrides to follow defaults.
+- Edit reader settings through `updateReader`/`updateBookReader` (one DataStore edit); keep only book fields that differ.

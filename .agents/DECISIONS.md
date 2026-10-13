@@ -40,3 +40,6 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-13 | code | Split by responsibility; aim for files <400 lines, composables <150 (soft targets) | targeted reads save context; avoid fragments with no independent purpose
 2026-10-13 | reader settings | Fixed dialog, pinned native-text preview, separate choice cards and descriptive styles; preserve settings keys | user-approved redesign
 2026-10-13 | reader settings | Compact: theme swatches, segments, style chips; radio list only as large-text fallback | user: tiles and lists too tall
+2026-10-13 | reader settings | Shared settings + per-book differences for every panel setting; scope menu under title | user decision; replaces shared-only theme/text
+2026-10-13 | reader settings | Panel opens on book scope iff the book has own settings; no stored scope | a remembered mode caused accidental edits
+2026-10-13 | reader settings | Footer «Нет» hides the whole line; time/battery/left move to «Свои параметры» | user: bottom line like the top one

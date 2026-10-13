@@ -16,8 +16,9 @@
 - `ChapterProgress` — shared TOC rows, titles and remaining pages; `GuideNavigation` — line state after successful turns.
 - Settings: `core/data/src/main/kotlin/net/flibustareader/core/data/settings/SettingsRepository.kt`.
 
-- Use the fixed `ThemesSheet` dialog for settings; close with X/Back, never drag. Keep other sheets unchanged.
-- Pin `PageSettingsPreview` outside per-tab scrolling; use `Paginator`/`PageView` with an isolated bounded excerpt.
+- Use the fixed `ThemesSheet` dialog (`ReadingSettingsSheet`, also `ReadingDefaultsSheet` from the library) for
+  settings; close with X/Back, never drag. Edit through `SettingsEditor`; `vm.settings` = shared + `ownSettings`.
+- Pin `PageSettingsPreview` (a `PreviewSource`) outside per-tab scrolling; use `Paginator`/`PageView` with a bounded excerpt.
 - Apply settings immediately; use `SettingsSegments` (falls back to `SettingsOptions`) for short choices, `SettingsChoice` for fonts. See `.agents/design/reader.md`.
 
 ## Rules
@@ -25,7 +26,7 @@
   change. Keep the position (`ReaderViewModel.readingPosition`), never the page index.
 - Page title and footer are part of the page in paged mode (they slide with it); in scroll mode they are fixed.
 - Fade page labels when controls appear; retain their chosen text format and fixed margins. Keep visibility out of pagination inputs.
-- Resolve header/footer styles independently: book override, reader defaults, then Quiet; reuse the preset preview typography.
+- Draw lines through `headerLook`/`footerLook` and `settings.shownFooter`; `textInsets` owns the space they take.
 - Count remaining pages from TOC ranges, not parser chapters; leave unknown counts and pre-TOC text unlabeled.
 - Hide the guide during turns; apply direction only to an actual landing. Keep footer taps ahead of guide stepping.
 - Pure logic goes into small top-level functions with tests in `src/test` (`ReaderGesturesTest` is the example).

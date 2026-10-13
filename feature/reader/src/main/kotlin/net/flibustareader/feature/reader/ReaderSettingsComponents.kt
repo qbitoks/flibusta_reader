@@ -113,7 +113,8 @@ internal fun <T> SettingsSegments(current: T, options: List<SegmentOption<T>>, s
         val segment = (maxWidth - 24.dp - 6.dp - 2.dp * (options.size - 1)) / options.size
         val fits = density.fontScale <= 1.3f && options.all { o ->
             val text = if (o.label.isEmpty()) 0.dp else with(density) { measurer.measure(o.label, style).size.width.toDp() }
-            text + (if (o.icon != null && !stacked) 22.dp else 0.dp) + 12.dp <= segment
+            // A stacked caption has only the segment's own 4 dp padding at each side.
+            text + (if (o.icon != null && !stacked) 22.dp else 0.dp) + (if (stacked) 8.dp else 12.dp) <= segment
         }
         if (fits) {
             SegmentedControl(options.map { it.label }, options.indexOfFirst { it.value == current }, { onSelect(options[it].value) },

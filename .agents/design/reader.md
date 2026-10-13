@@ -71,27 +71,33 @@
   Bound the excerpt; paginate it off-thread without changing the reader viewport or reading position.
   Prefer body text after leading headings so a large chapter title cannot consume the compact preview.
   Show header/footer with actual settings; keep the preview visible while any setting is edited.
-- Apply edits immediately through existing settings setters; use inline disclosures instead of
+- Apply edits immediately through `SettingsEditor`; use inline disclosures instead of
   opening «Настроить» or a separate «Колонтитулы» sheet. Close never discards edits.
+- Under the title, «Для всех книг ⌄ / Только для этой книги ⌄» opens a pull-down menu: the edit target,
+  a summary of what the book changes, «Сделать общими для всех книг» and «Вернуть общие настройки»
+  (both confirmed). The panel opens on the book's own settings when it has any, else on shared ones.
+  In the book scope a dot marks groups the book sets itself. Library → «…» → «Настройки чтения» opens
+  the same panel for all books over a sample page, without brightness.
 - Use semantic interface colors, shared grouped cards with 16 dp insets, adaptive rows and labelled controls.
   Keep the reading palette inside theme tiles and previews; keep selected states accessible.
 - In «Оформление», show one row of six «Aa» theme swatches (selected name in the group header) and a
-  book-only «Авто / Светлое / Тёмное» segment in the same card, then window brightness.
+  «Авто / Светлое / Тёмное» segment in the same card, then window brightness.
   Use a device-brightness switch and disable the manual slider while on; retain the last manual value.
   Resolve tile palettes from appearance, not from the current theme darkness; Quiet stays low contrast.
 - In «Текст», show size, font samples, bold, and a collapsible custom-spacing group below the pinned preview.
   Keep ranges: size 13–42, line spacing 0.80–2.50, letter spacing ±10%, word spacing ±20%, margins ±10%.
   Keep justification in the spacing group and hyphenation enabled without a toggle.
-- Reset only the selected theme typography; label that scope and leave the shared font size unchanged.
-- In «Страница», use three cards: page turning (icon segments, name in the group header), upper line
-  (content segment + style chips) and lower line (progress segment with concrete examples as labels,
-  «осталось в главе» / time / battery switches, style chips, scroll background segment in Scroll mode).
+- Reset only the selected theme typography (for a book: «Вернуть общий текст»); leave the font size unchanged.
+- In «Страница», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
+  Both lines: content segment («Нет» hides the whole line), four style chips, «Свои параметры» switch.
   Short choices are segments that fall back to the radio list for large text or labels that do not fit.
-  Hide upper style when its content is None, lower style when empty.
+- «Свои параметры» (off draws the standard line, values kept): size 80–140 %, visibility 40–100 %,
+  position (top: left/centre/right; bottom: spread/centre), edge offset 0…+24, space to text −12…+24,
+  rule; top adds capitals and «Не показывать в начале главы»; bottom adds «осталось в главе», time,
+  battery and, in Scroll mode, the background under scrolling text.
 - Style chips sit on the page colour and draw their short name in their own style (`readerChromeTextStyle`);
-  spoken names stay descriptive. The default chip shows the inherited style; selecting it removes only that override.
-- Explain scope: theme, text, page turning and line content are shared; appearance and line-style overrides
-  belong to the current book. Preserve all existing preference keys and independent line inheritance.
+  spoken names stay descriptive.
+- Everything in the panel except brightness can be set per book; guide line and highlight colour stay shared.
 - Use licensed Cyrillic fonts from `ReaderFonts`; EPUB publisher `@font-face` remains unsupported.
 
 ## Turning and scroll reference
