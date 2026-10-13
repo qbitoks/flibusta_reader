@@ -16,7 +16,7 @@ if ($release) {
     if ($release.body.Trim() -cne (Get-Content artifacts/release/README-release-ru.md -Raw).Trim()) { throw 'Existing draft belongs to a different package' }
 }
 if (!$release) {
-    gh release create $Tag --repo $env:GITHUB_REPOSITORY --verify-tag --draft --prerelease --title "$Tag — тестовая версия для Android $($metadata.minimumAndroid)+" --notes-file artifacts/release/README-release-ru.md
+    gh release create $Tag --repo $env:GITHUB_REPOSITORY --verify-tag --draft --title "$Tag для Android $($metadata.minimumAndroid)+" --notes-file artifacts/release/README-release-ru.md
     if ($LASTEXITCODE -ne 0) { throw 'Draft release creation failed' }
     # The release list lags behind creation by a few seconds.
     for ($i = 0; $i -lt 10 -and !$release; $i++) { Start-Sleep -Seconds 3; $release = Find-Release }
@@ -39,5 +39,8 @@ foreach ($asset in $assets) {
     gh release upload $Tag "$path#$($asset.label)" --repo $env:GITHUB_REPOSITORY
     if ($LASTEXITCODE -ne 0) { throw "Release upload failed: $($asset.name)" }
 }
-gh release view $Tag --repo $env:GITHUB_REPOSITORY --json url,isDraft,isPrerelease,assets
-if ($LASTEXITCODE -ne 0) { throw 'Cannot verify completed draft release' }
+# Publish only after every file is in place, so nobody sees a release without the APK.
+gh release edit $Tag --repo $env:GITHUB_REPOSITORY --draft=false
+if ($LASTEXITCODE -ne 0) { throw 'Publishing the draft release failed' }
+gh release view $Tag --repo $env:GITHUB_REPOSITORY --json url,isDraft,isPrerelease,isLatest,assets
+if ($LASTEXITCODE -ne 0) { throw 'Cannot verify published release' }

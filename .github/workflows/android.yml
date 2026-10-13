@@ -141,7 +141,7 @@ jobs:
           retention-days: 14
 
   release:
-    name: Prepare draft preview release
+    name: Publish release
     needs: [build, emulator]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04

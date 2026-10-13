@@ -29,3 +29,4 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-12 | catalog | OPDS covers via own HTTPS loader into BookCover, not Coil network | HTTPS-only redirects kept, no OkHttp
 2026-10-12 | ui | App appearance = per-app night mode (UiModeManager); book override by id, absent = follow app | re-themes windows and bars without recreation
 2026-10-12 | ui | Old reader-wide `appearance` key dropped without migration | user decision
+2026-10-13 | release | Tags publish a regular release automatically: draft during upload, `--draft=false` last | user decision; no half-uploaded public release

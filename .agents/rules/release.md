@@ -9,7 +9,8 @@ Push tags and publish releases only on explicit user request.
   APK signed with a throwaway CI key, labelled `ci-debug`; reports kept 14 days. No ADB regressions.
 - Manual run: same with the permanent preview key; by default `scripts/ci-emulator.ps1` on API 35
   (install, launch, rotation, restart, no crash). No Release.
-- Tag `vX.Y.Z`: version and signature checks, build, emulator launch check, draft pre-release.
+- Tag `vX.Y.Z`: version and signature checks, build, emulator launch check, release published
+  automatically (draft while files upload, then published as a regular, latest release).
 - Doctor and `:app:compileReleaseKotlin` are not run by CI; run them locally.
 - Actions are pinned by commit SHA; bumping them is CI maintenance, not an app dependency update.
 
@@ -24,8 +25,9 @@ Push tags and publish releases only on explicit user request.
    (a suffix like `-reader-design` is allowed).
 2. Commit, push main, wait for green CI.
 3. `git tag -a vX.Y.Z -m "Flibusta Reader X.Y.Z"` on the verified commit; `git push origin vX.Y.Z`.
-4. Wait for build, emulator check, draft. The user checks the APK on a phone, then publishes as Pre-release.
-- Release job failed after creating the draft: `gh run rerun <id> --failed` fills in the missing files.
+4. Wait for build, emulator check and publication. No manual step; the phone check happens after.
+- Release job failed after creating the draft: `gh run rerun <id> --failed` fills in the missing files
+  and publishes. A release that reached publication is final.
 - Never move tags; published releases are never overwritten. Re-running the release job only fills in
   missing files of a matching draft (same SHA-256); mismatches fail.
 
