@@ -11,7 +11,7 @@ internal fun ReaderSheets(vm: ReaderViewModel, settings: ReaderSettings, palette
         ReaderSheet.Contents -> ContentsSheet(vm, palette, onDismiss = { controls.sheet = null })
         ReaderSheet.Bookmarks -> FragmentsSheet(vm, palette, ReaderFont.of(settings.themeStyle.font).composeFamily, onDismiss = { controls.sheet = null })
         ReaderSheet.Search -> SearchSheet(vm, palette, ReaderFont.of(settings.themeStyle.font).composeFamily, onDismiss = { controls.sheet = null })
-        ReaderSheet.Themes, ReaderSheet.Customize -> ThemesSheet(
+        ReaderSheet.Themes -> ThemesSheet(
             vm, settings, palette,
             brightness = controls.brightness,
             onBrightness = { controls.brightness = it },

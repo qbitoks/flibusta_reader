@@ -13,7 +13,7 @@
 | Section title | Serif | 24 | Bold |
 | Centered reading-goal title | Serif | 26 | Bold |
 | «Коллекции» sheet title | Serif | 22 | Bold |
-| «Темы и настройки» panel title | Sans | 22 | Bold |
+| «Темы и настройки» sheet title | Sans | 17 | Semibold |
 | Sheet navbar | Sans | 17 | Semibold |
 | Settings group title | Sans | 20 | Bold |
 | Body/menu/list row | Sans | 17 | Regular |
@@ -58,14 +58,14 @@
 | Reading-theme tile | 104 × 92 | 16 |
 | Sheet card | Width minus 16 per side | 20 |
 | Sheet | Top near 61, below status bar | Top corners 23 |
-| Floating themes panel | Screen inset 10 | 17 |
+| Settings theme tile | Adaptive width, min height 102 | 16 |
 | Pull-down menu | Width 242–243 | 19 |
 | Book cover | Preserve aspect ratio | 2–3, soft shadow |
 
 - Use glass for floating tabs, search, round buttons, reader menus and pull-downs; tint/blur the content below.
 - Use `RenderEffect`/the existing glass implementation on supported Android; avoid opaque substitutes
   when a floating control should show its backdrop.
-- Dim the page about 40% under the themes panel (white becomes about `#999999`); leave reader menu undimmed.
+- Use the shared sheet scrim for settings; leave the reader menu undimmed.
 - Use filled tab icons and outlined menu/list icons; approximate size 26 dp in tabs, 24 dp in rows.
 - Structure pull-downs as a separate checkmark column, icon, 17 sp text, gray group headings and dividers.
 - Use grouped cards with 48–50 dp rows and dividers starting at the text; sheets close with round ×,

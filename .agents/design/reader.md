@@ -9,7 +9,7 @@
 - Apple reference: horizontal margins 39 dp, column about 314 dp, line pitch 23.5 dp;
   «Оригинал» dark uses black/white. Adapt measurements to current font and user settings.
 - Preserve the user decisions from 2026-10-13:
-  - Configure «Колонтитулы»: header «Ничего» by default, book title or chapter title.
+  - Configure lines in «Темы и настройки» → «Страница»: header «Ничего» by default, book title or chapter title.
   - With no header, start text below the status-bar inset; when controls are shown, put a page-color
     strip behind the top buttons. With no footer content, let text extend to the bottom.
   - Put clock at footer left, page/percent plus «ещё N стр.» at center, battery at right.
@@ -65,38 +65,26 @@
   finish with «Поиск завершен / Найдено N совпадений». Highlight the jumped-to match blue on the page.
 
 ## Themes and customization
-- Use floating «Темы и настройки» panel: screen inset 10 dp, radius 17, dimmed page; reference top y≈365.
-- At top put 22 sp Bold title and ×, then 46 dp control row: «A │ A» capsule (196 dp), about 16 size
-  dots below, and 126 dp capsule containing turn/appearance controls.
-- Use dark/light glass `#121212`/`#E0E0E0`, control capsules `#303032`/`#CECECE`, lower panel
-  `#6D6D6D`/`#F6F6F6`; add window-brightness slider with sun ends and 36 × 23 dp capsule thumb.
-- Keep turn options «Скольжение / Загиб / Быстрое выцветание / Прокрутка» in a 242 dp glass pull-down;
-  keep app/book appearance behavior from `.agents/DECISIONS.md`.
-- Show theme tiles in 3 × 2 grid: 104 × 92 dp, radius 16, gaps 11 horizontal/17 vertical;
-  render «Aa» (34 sp) and label (15 sp) in each theme's own font, with 2–3 dp text-color selected outline.
-- Use full-width 45 dp «Настроить» capsule with gear (`#8B888F` dark / `#E5E5E7` light).
-
-| Theme | Font character | Light background/text | Dark background/text |
-|---|---|---|---|
-| «Оригинал» | Sans | `#FFFFFF` / `#000000` | `#000000` / `#FFFFFF` |
-| «Тишина» | Serif | `#4A4A4C` / `#B8B8BA` | `#000000` / `#9C9C9E` |
-| «Бумага» | Serif | `#EDEDED` / `#000000` | `#1C1C1E` / `#FFFFFF` |
-| «Акцент» | Bold sans | `#FFFFFF` / `#000000` | `#000000` / `#FFFFFF` |
-| «Покой» | Serif | `#F0E2C8` / `#2F2019` | `#433D31` / `#FFFEF3` |
-| «Фокус» | Geometric sans | `#FFFCF3` / `#010100` | `#19150C` / `#FFFFF6` |
-
-- Keep «Тишина» dark/low-contrast even in light appearance.
-- Open «Настройка темы» as a full sheet; × cancels on left, 17 sp Semibold title centers, ✓ applies on right.
-- Draft changes per selected theme; show them only in preview until ✓; do not create additional themes.
-- Preview «Aa» 34 sp and three 24 sp sample lines, about 38 dp pitch, fading the last line.
-- Use grouped cards: «Текст» with font accordion (names shown in their own fonts, current ✓) and
-  «Жирный шрифт»; «Универсальный доступ и макет» with master «Настроить» switch.
-- With master off, hide sliders and justification; retain «Сбросить тему». Use uppercase gray labels,
-  left icon/right value, black filled track and white capsule thumb.
-- Keep ranges: line spacing 0.80–2.50, letter spacing ±10%, word spacing ±20%, margins ±10%;
-  include justification and disabled reset when unchanged. Keep hyphenation enabled without a toggle.
-- Use licensed Cyrillic font substitutes from `ReaderFonts`; Apple's «Исходный» means publisher fonts,
-  but EPUB `@font-face` is currently skipped, so do not describe publisher-font support as implemented.
+- Use one `FlibustaSheet` for «Темы и настройки», with a fixed header, close control and
+  «Оформление / Текст / Страница» tabs. Preserve each tab scroll position; keep the body scrollable.
+- Apply edits immediately through existing settings setters; use inline disclosures instead of
+  opening «Настроить» or a separate «Колонтитулы» sheet. Close never discards edits.
+- Use semantic interface colors, shared grouped cards with 16 dp insets, adaptive rows and labelled controls.
+  Keep the reading palette inside theme tiles and previews; keep selected states accessible.
+- In «Оформление», show six theme tiles, book appearance (follow app/light/dark), and window brightness.
+  Resolve tile palettes from appearance, not from the current theme darkness; Quiet stays low contrast.
+- In «Текст», show a text preview, size, font samples, bold, and a collapsible custom-spacing group.
+  Keep ranges: size 13–42, line spacing 0.80–2.50, letter spacing ±10%, word spacing ±20%, margins ±10%.
+  Keep justification in the spacing group and hyphenation enabled without a toggle.
+- Reset only the selected theme typography; label that scope and leave the shared font size unchanged.
+- In «Страница», show page-turn choice, a schematic preview, then upper and lower line groups.
+  Keep content and appearance together. Hide upper style when its content is None, lower style when empty,
+  and scrolling-background choices outside Scroll mode.
+- Put inherited/default style in each line's inline style selector, alongside four compact font samples;
+  selecting default removes the book override. Reuse `readerChromeTextStyle` for samples and preview.
+- Explain scope: theme, text, page turning and line content are shared; appearance and line-style overrides
+  belong to the current book. Preserve all existing preference keys and independent line inheritance.
+- Use licensed Cyrillic fonts from `ReaderFonts`; EPUB publisher `@font-face` remains unsupported.
 
 ## Turning and scroll reference
 - Step the guide by visual row with left/right-half taps; a tap on its row toggles controls.

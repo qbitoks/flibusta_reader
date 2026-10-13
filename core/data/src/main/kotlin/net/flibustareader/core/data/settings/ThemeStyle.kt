@@ -3,8 +3,8 @@ package net.flibustareader.core.data.settings
 import net.flibustareader.core.layout.ReaderStyle
 
 /**
- * «Настройка темы» for one theme (white spot 15): Apple Books stores customisation per theme,
- * and changes apply only after ✓. The spacing sliders only take effect while [customize] is on.
+ * Typography saved independently for each reading theme.
+ * Edits apply immediately; spacing overrides take effect while [customize] is on.
  *
  * Percent ranges follow Apple Books: letter spacing −10…+10 %, word spacing −20…+20 %,
  * margins −10…+10 %; line spacing is a multiplier 0.80…2.50.

@@ -120,4 +120,27 @@
     <string name="footer_style_strip">Strip</string>
     <string name="footer_note">In Scroll the text passes under the line; turned pages always keep room for it. With everything off the text reaches the bottom of the screen.</string>
     <string name="header_note">With Nothing the text starts at the top of the screen.</string>
+    <string name="settings_tab_appearance">Appearance</string>
+    <string name="settings_tab_page">Page</string>
+    <string name="settings_themes">Reading theme</string>
+    <string name="settings_theme_note">Theme and text settings apply to all books. Changes take effect immediately.</string>
+    <string name="settings_book_appearance">Appearance for this book</string>
+    <string name="settings_device_brightness">Use device brightness</string>
+    <string name="settings_font_size">Text size</string>
+    <string name="settings_spacing">Spacing and margins</string>
+    <string name="settings_custom_spacing">Custom spacing and margins</string>
+    <string name="settings_reset_text">Reset text for this theme</string>
+    <string name="settings_page_preview">Page preview</string>
+    <string name="settings_preview_note">Sample placement of the top and bottom lines.</string>
+    <string name="settings_header_content">Show at the top</string>
+    <string name="settings_progress_format">Reading progress</string>
+    <string name="settings_page_number">Page number</string>
+    <string name="settings_page_total">Page and total</string>
+    <string name="settings_common_style">Use default style</string>
+    <string name="settings_line_style">Line style</string>
+    <string name="settings_footer_hidden">The bottom line is hidden; text fills the available space.</string>
+    <string name="settings_page_scope">Line content and page turning apply to all books. A custom line style applies only to this book.</string>
+    <string name="settings_preview_book">Book title</string>
+    <string name="settings_preview_chapter">Chapter one</string>
+    <string name="settings_text_scope">Font and spacing are saved for this theme in all books. Text size is shared across themes and is not reset.</string>
 </resources>

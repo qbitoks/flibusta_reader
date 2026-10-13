@@ -13,7 +13,7 @@ import java.io.File
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.MutableState
 
-internal enum class ReaderSheet { Contents, Bookmarks, Search, Themes, Customize }
+internal enum class ReaderSheet { Contents, Bookmarks, Search, Themes }
 
 /** Screen-local overlays and controls; only the three original window preferences are saveable. */
 @Stable
