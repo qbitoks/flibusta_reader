@@ -52,7 +52,7 @@
     <string name="page_turn_scroll">Прокрутка</string>
     <string name="page_turn_none">Без анимации</string>
     <string name="settings_appearance">Оформление</string>
-    <string name="appearance_auto">Авто</string>
+    <string name="appearance_app">Как в приложении</string>
     <string name="appearance_light">Светлое</string>
     <string name="appearance_dark">Тёмное</string>
     <string name="font_smaller">Уменьшить текст</string>

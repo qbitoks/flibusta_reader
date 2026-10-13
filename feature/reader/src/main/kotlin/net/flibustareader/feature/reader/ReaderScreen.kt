@@ -95,6 +95,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import net.flibustareader.core.data.settings.Appearance
 import net.flibustareader.core.data.settings.PageTurn
 import net.flibustareader.core.designsystem.ReaderFont
 import net.flibustareader.core.designsystem.ReaderPalette
@@ -138,7 +139,9 @@ internal val BookmarkRed = Color(0xFFFF3B30)
 @Composable
 fun ReaderScreen(vm: ReaderViewModel, onClose: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
-    val dark = ReaderPalettes.isDark(settings.appearance, isSystemInDarkTheme())
+    val appearance by vm.appearance.collectAsStateWithLifecycle()
+    // isSystemInDarkTheme() already reflects the app's own appearance (per-app night mode).
+    val dark = ReaderPalettes.isDark(appearance ?: Appearance.Auto, isSystemInDarkTheme())
     val palette = ReaderPalettes.of(settings.theme, dark)
     FlibustaTheme(dark = palette.isDark) { ReaderContent(vm, onClose) }
 }
@@ -149,8 +152,9 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     val bookmarks by vm.bookmarks.collectAsStateWithLifecycle()
     val highlights by vm.highlights.collectAsStateWithLifecycle()
+    val appearance by vm.appearance.collectAsStateWithLifecycle()
     val state = vm.state
-    val dark = ReaderPalettes.isDark(settings.appearance, isSystemInDarkTheme())
+    val dark = ReaderPalettes.isDark(appearance ?: Appearance.Auto, isSystemInDarkTheme())
     val palette = ReaderPalettes.of(settings.theme, dark)
     vm.ink.apply {
         text = palette.text.toArgb()

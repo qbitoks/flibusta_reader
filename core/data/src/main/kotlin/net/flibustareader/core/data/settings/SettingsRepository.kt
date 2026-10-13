@@ -42,7 +42,6 @@ data class ReaderSettings(
     val fontSize: Float = ReaderStyle().fontSize,
     val theme: ReaderTheme = ReaderTheme.Original,
     val themeStyles: Map<ReaderTheme, ThemeStyle> = ReaderTheme.entries.associateWith { ThemeStyle.defaultFor(it) },
-    val appearance: Appearance = Appearance.Auto,
     val pageTurn: PageTurn = PageTurn.Slide,
     /** «Направляющая линия» (guide line) is on. */
     val guideLine: Boolean = false,
@@ -70,7 +69,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     private object Keys {
         val fontSize = floatPreferencesKey("font_size")
         val theme = stringPreferencesKey("theme")
-        val appearance = stringPreferencesKey("appearance")
+        // "appearance" held the reader-wide appearance before the app-wide one; left unread (no migration, user decision).
+        val appAppearance = stringPreferencesKey("app_appearance")
         val pageTurn = stringPreferencesKey("page_turn")
         val guideLine = booleanPreferencesKey("guide_line")
         val guideDim = stringPreferencesKey("guide_dim")
@@ -80,6 +80,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val watchedFolder = stringPreferencesKey("watched_folder")
         val hiddenSystem = stringSetPreferencesKey("hidden_system_collections")
         fun themeStyle(theme: ReaderTheme) = stringPreferencesKey("theme_style_${theme.name}")
+        fun bookAppearance(bookId: String) = stringPreferencesKey("book_appearance_$bookId")
     }
 
     val reader: Flow<ReaderSettings> = store.data.map { p ->
@@ -87,7 +88,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             fontSize = p[Keys.fontSize] ?: ReaderStyle().fontSize,
             theme = enumOr(p[Keys.theme], ReaderTheme.Original),
             themeStyles = ReaderTheme.entries.associateWith { ThemeStyle.decode(p[Keys.themeStyle(it)], it) },
-            appearance = enumOr(p[Keys.appearance], Appearance.Auto),
             // "None" was the old name of «Быстрое выцветание».
             pageTurn = if (p[Keys.pageTurn] == "None") PageTurn.Fade else enumOr(p[Keys.pageTurn], PageTurn.Slide),
             guideLine = p[Keys.guideLine] ?: false,
@@ -105,6 +105,14 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
                 .mapNotNull { runCatching { SystemCollection.valueOf(it) }.getOrNull() }.toSet(),
         )
     }.distinctUntilChanged()
+
+    /** Appearance of the whole app; Auto follows the system. */
+    val appAppearance: Flow<Appearance> = store.data.map { enumOr(it[Keys.appAppearance], Appearance.Auto) }.distinctUntilChanged()
+
+    /** A book's own Light/Dark; null means it follows [appAppearance]. */
+    fun bookAppearance(bookId: String): Flow<Appearance?> = store.data
+        .map { p -> p[Keys.bookAppearance(bookId)]?.let { runCatching { Appearance.valueOf(it) }.getOrNull() }?.takeIf { it != Appearance.Auto } }
+        .distinctUntilChanged()
 
     suspend fun currentReader(): ReaderSettings = reader.first()
 
@@ -124,8 +132,16 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         store.edit { it[Keys.theme] = theme.name }
     }
 
-    suspend fun setAppearance(value: Appearance) {
-        store.edit { it[Keys.appearance] = value.name }
+    suspend fun setAppAppearance(value: Appearance) {
+        store.edit { it[Keys.appAppearance] = value.name }
+    }
+
+    /** null (or Auto) makes the book follow the app again. */
+    suspend fun setBookAppearance(bookId: String, value: Appearance?) {
+        store.edit {
+            if (value == null || value == Appearance.Auto) it.remove(Keys.bookAppearance(bookId))
+            else it[Keys.bookAppearance(bookId)] = value.name
+        }
     }
 
     suspend fun setPageTurn(value: PageTurn) {

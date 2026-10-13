@@ -12,6 +12,8 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   a migration (auto-migration where possible).
 - `files/downloads/<sha1 of link>.part` — catalog download in progress; resumed with HTTP Range, deleted
   after import. `cache/catalog-covers/<sha1 of url>` — OPDS cover thumbnails (safe to clear).
+- DataStore `settings`: reader/library prefs; `app_appearance` (app-wide), `book_appearance_<book id>`
+  (absent = follow the app; removed on delete). Old `appearance` key is no longer read (no migration).
 - `shared_prefs/catalog.xml`: `catalog`, `downloads` HTTPS origins; `recent` — catalog searches, newline-joined.
 
 ## Changing any of this

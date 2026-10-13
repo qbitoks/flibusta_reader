@@ -117,6 +117,10 @@ class ReaderViewModel @Inject constructor(
     val settings: StateFlow<ReaderSettings> =
         settingsRepository.reader.stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
 
+    /** This book's own Light/Dark; null follows the app's appearance. */
+    val appearance: StateFlow<Appearance?> =
+        settingsRepository.bookAppearance(bookId).stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     val bookmarks: StateFlow<List<BookmarkEntity>> =
         library.bookmarks(bookId).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -660,7 +664,7 @@ class ReaderViewModel @Inject constructor(
     fun bookFile(context: Context): File? =
         File(context.filesDir, "books").listFiles { f -> f.name.startsWith("$bookId.") }?.firstOrNull()
     fun setTheme(theme: ReaderTheme) = viewModelScope.launch { settingsRepository.setTheme(theme) }
-    fun setAppearance(value: Appearance) = viewModelScope.launch { settingsRepository.setAppearance(value) }
+    fun setAppearance(value: Appearance?) = viewModelScope.launch { settingsRepository.setBookAppearance(bookId, value) }
     fun setPageTurn(value: PageTurn) = viewModelScope.launch { settingsRepository.setPageTurn(value) }
     fun setGuideLine(on: Boolean) = viewModelScope.launch { settingsRepository.setGuideLine(on) }
     fun setGuideDim(value: GuideDim) = viewModelScope.launch { settingsRepository.setGuideDim(value) }

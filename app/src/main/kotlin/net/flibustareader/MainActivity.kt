@@ -1,6 +1,7 @@
 package net.flibustareader
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -24,11 +25,11 @@ class MainActivity : ComponentActivity() {
     /** Books to open, produced by "Open with"/"Share" intents and consumed by the navigation. */
     private val openRequests = Channel<String>(Channel.CONFLATED)
 
+    private var nightMode = Configuration.UI_MODE_NIGHT_UNDEFINED
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
-        )
+        nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        applyEdgeToEdge()
         super.onCreate(savedInstanceState)
         // Keep three-button navigation transparent over the app's own background.
         window.isNavigationBarContrastEnforced = false
@@ -39,6 +40,21 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    /** uiMode is handled without recreation, so the bars must be re-tinted when the appearance changes. */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        val night = newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val changed = night != nightMode
+        nightMode = night
+        super.onConfigurationChanged(newConfig)
+        // Only on a day/night switch: rotation must not undo the reader's own bar tint.
+        if (changed) applyEdgeToEdge()
+    }
+
+    private fun applyEdgeToEdge() = enableEdgeToEdge(
+        statusBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+        navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+    )
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)

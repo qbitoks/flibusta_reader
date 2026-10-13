@@ -27,6 +27,10 @@
     <string name="library_watch_folder">Watch Folder…</string>
     <string name="library_stop_watching">Stop Watching Folder</string>
     <string name="library_scan_now">Check Folder Now</string>
+    <string name="library_appearance_header">Appearance</string>
+    <string name="library_appearance_auto">Match Device</string>
+    <string name="library_appearance_light">Light</string>
+    <string name="library_appearance_dark">Dark</string>
     <string name="library_about">About Flibusta</string>
     <string name="library_add_to">Add To…</string>
     <string name="library_delete_selected">Delete</string>

@@ -33,12 +33,15 @@ import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircleOutline
+import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.CreateNewFolder
+import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.FileOpen
 import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -64,6 +67,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import net.flibustareader.core.data.library.BookSharing
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import net.flibustareader.core.data.settings.Appearance
 import net.flibustareader.core.data.settings.LibraryLayout
 import net.flibustareader.core.data.settings.LibrarySort
 import net.flibustareader.core.designsystem.BookCover
@@ -222,6 +226,7 @@ fun LibraryScreen(
 @Composable
 private fun LibraryMenuButton(vm: LibraryViewModel, actions: LibraryHostActions) {
     val prefs by vm.librarySettings.collectAsStateWithLifecycle()
+    val appearance by vm.appAppearance.collectAsStateWithLifecycle()
     var open by remember { mutableStateOf(false) }
     Box {
         CircleButton(Icons.Rounded.MoreHoriz, stringResource(R.string.library_more), { open = true })
@@ -243,6 +248,11 @@ private fun LibraryMenuButton(vm: LibraryViewModel, actions: LibraryHostActions)
                 Item(stringResource(R.string.library_scan_now), vm::scanNow)
                 Item(stringResource(R.string.library_stop_watching), { vm.watchFolder(null) })
             }
+            Divider()
+            Header(stringResource(R.string.library_appearance_header))
+            Item(stringResource(R.string.library_appearance_auto), { vm.setAppAppearance(Appearance.Auto) }, icon = Icons.Rounded.BrightnessAuto, checked = appearance == Appearance.Auto)
+            Item(stringResource(R.string.library_appearance_light), { vm.setAppAppearance(Appearance.Light) }, icon = Icons.Rounded.LightMode, checked = appearance == Appearance.Light)
+            Item(stringResource(R.string.library_appearance_dark), { vm.setAppAppearance(Appearance.Dark) }, icon = Icons.Rounded.DarkMode, checked = appearance == Appearance.Dark)
             Divider()
             Item(stringResource(R.string.library_about), actions.onAbout, icon = Icons.Rounded.Info)
         }

@@ -48,7 +48,7 @@
     <string name="page_turn_scroll">Scroll</string>
     <string name="page_turn_none">None</string>
     <string name="settings_appearance">Appearance</string>
-    <string name="appearance_auto">Auto</string>
+    <string name="appearance_app">Match App</string>
     <string name="appearance_light">Light</string>
     <string name="appearance_dark">Dark</string>
     <string name="font_smaller">Smaller text</string>

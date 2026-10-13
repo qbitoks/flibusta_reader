@@ -27,3 +27,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-12 | catalog | Download read timeout 150 s, feed 60 s, one quick feed retry | Flibusta converts EPUB on request (15–90 s silence) and often 502s the first search
 2026-10-12 | catalog | Catalog home mirrors «Главная»: bands, «Новинки» cover shelf, sections list | user asked for one design
 2026-10-12 | catalog | OPDS covers via own HTTPS loader into BookCover, not Coil network | HTTPS-only redirects kept, no OkHttp
+2026-10-12 | ui | App appearance = per-app night mode (UiModeManager); book override by id, absent = follow app | re-themes windows and bars without recreation
+2026-10-12 | ui | Old reader-wide `appearance` key dropped without migration | user decision

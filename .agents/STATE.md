@@ -16,7 +16,7 @@ Branch- or task-specific progress goes to the PR or issue, not here: parallel br
 - Pick work from the user's task; the lists below are not a backlog to implement on your own.
 
 ## Next steps
-- v0.3.1 (catalog rework) published as pre-release; still unchecked on a real phone.
+- v0.3.2 (app-wide + per-book appearance) published as pre-release; checked on an emulator only.
 - Rewrite ADB scripts (`smoke-test`, `reader-regression`, `reader-background-regression`) for the new UI;
   CI uses only the launch check (`scripts/ci-emulator.ps1`) meanwhile.
 - Prototype roadmap leftovers: `.agents/design/prototype-roadmap.md`; baseline profile not generated.

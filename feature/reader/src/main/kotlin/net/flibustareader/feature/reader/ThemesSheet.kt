@@ -61,6 +61,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.flibustareader.core.data.settings.Appearance
 import net.flibustareader.core.data.settings.PageTurn
 import net.flibustareader.core.data.settings.ReaderSettings
@@ -116,6 +117,7 @@ internal fun ThemesSheet(
         CustomizeSheet(vm, settings, onDone = { customizing = false })
         return
     }
+    val appearance by vm.appearance.collectAsStateWithLifecycle()
     val dark = palette.isDark
     val top = if (dark) Color(0xFF1C1C1E) else Color(0xFFE6E6E8)
     val bottom = if (dark) Color(0xFF2C2C2E) else Color(0xFFF6F6F6)
@@ -159,7 +161,7 @@ internal fun ThemesSheet(
                     }
                     Row(Modifier.weight(1f).height(46.dp).clip(CircleShape).background(bottom), verticalAlignment = Alignment.CenterVertically) {
                         PageTurnButton(settings.pageTurn, ink, Modifier.weight(1f), vm::setPageTurn)
-                        AppearanceButton(settings.appearance, ink, Modifier.weight(1f), vm::setAppearance)
+                        AppearanceButton(appearance, ink, Modifier.weight(1f), vm::setAppearance)
                     }
                 }
                 Spacer(Modifier.height(10.dp))
@@ -228,21 +230,21 @@ private fun PageTurnButton(current: PageTurn, ink: Color, modifier: Modifier, on
     }
 }
 
-/** «Светлое / Тёмное / Как на устройстве» (white spot 13). */
+/** This book's «Светлое / Тёмное / Как в приложении» (white spot 13); null follows the app. */
 @Composable
-private fun AppearanceButton(current: Appearance, ink: Color, modifier: Modifier, onSelect: (Appearance) -> Unit) {
+private fun AppearanceButton(current: Appearance?, ink: Color, modifier: Modifier, onSelect: (Appearance?) -> Unit) {
     var open by remember { mutableStateOf(false) }
     val icon = when (current) {
         Appearance.Light -> Icons.Rounded.LightMode
         Appearance.Dark -> Icons.Rounded.DarkMode
-        Appearance.Auto -> Icons.Rounded.BrightnessAuto
+        Appearance.Auto, null -> Icons.Rounded.BrightnessAuto
     }
     Box(modifier.height(46.dp).clickable(role = Role.Button) { open = true }, contentAlignment = Alignment.Center) {
         Icon(icon, stringResource(R.string.settings_appearance), tint = ink, modifier = Modifier.size(24.dp))
         PullDownMenu(open, { open = false }, checkColumn = true) {
             Item(stringResource(R.string.appearance_light), { onSelect(Appearance.Light) }, icon = Icons.Rounded.LightMode, checked = current == Appearance.Light)
             Item(stringResource(R.string.appearance_dark), { onSelect(Appearance.Dark) }, icon = Icons.Rounded.DarkMode, checked = current == Appearance.Dark)
-            Item(stringResource(R.string.appearance_auto), { onSelect(Appearance.Auto) }, icon = Icons.Rounded.BrightnessAuto, checked = current == Appearance.Auto)
+            Item(stringResource(R.string.appearance_app), { onSelect(null) }, icon = Icons.Rounded.BrightnessAuto, checked = current == null)
         }
     }
 }

@@ -14,6 +14,7 @@ import net.flibustareader.core.data.db.CollectionEntity
 import net.flibustareader.core.data.library.FolderScanner
 import net.flibustareader.core.data.library.ImportResult
 import net.flibustareader.core.data.library.LibraryRepository
+import net.flibustareader.core.data.settings.Appearance
 import net.flibustareader.core.data.settings.LibraryLayout
 import net.flibustareader.core.data.settings.LibrarySettings
 import net.flibustareader.core.data.settings.LibrarySort
@@ -103,6 +104,11 @@ class LibraryViewModel @Inject constructor(
 
     val librarySettings: StateFlow<LibrarySettings> =
         settings.library.stateIn(viewModelScope, SharingStarted.Eagerly, LibrarySettings())
+
+    val appAppearance: StateFlow<Appearance> =
+        settings.appAppearance.stateIn(viewModelScope, SharingStarted.Eagerly, Appearance.Auto)
+
+    fun setAppAppearance(value: Appearance) = viewModelScope.launch { settings.setAppAppearance(value) }
 
     val collections: StateFlow<List<CollectionEntity>> =
         library.collections.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -258,7 +264,12 @@ class LibraryViewModel @Inject constructor(
     fun setFinished(id: String, value: Boolean) = viewModelScope.launch { library.setFinished(id, value) }
     fun rename(id: String, title: String) = viewModelScope.launch { library.rename(id, title) }
     fun removeFromContinue(id: String) = viewModelScope.launch { library.setHiddenFromContinue(id, true) }
-    fun delete(ids: Collection<String>) = viewModelScope.launch { ids.forEach { library.delete(it) } }
+    fun delete(ids: Collection<String>) = viewModelScope.launch {
+        ids.forEach {
+            library.delete(it)
+            settings.setBookAppearance(it, null)
+        }
+    }
 
     /** Adds books to a shelf. Built-in shelves are flags on the book; only user collections are real tables. */
     fun addTo(shelf: Shelf, ids: Collection<String>) = viewModelScope.launch {
