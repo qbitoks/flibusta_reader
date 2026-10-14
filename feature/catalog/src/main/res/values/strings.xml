@@ -84,7 +84,7 @@
     <!-- Sources -->
     <string name="catalog_sources">Sources</string>
     <string name="catalog_sources_menu">Sources…</string>
-    <string name="catalog_sources_text">The catalog and the download server are set separately. HTTPS site addresses only, without a path, e.g. https://flibusta.is. If the catalog is unreachable, try https://flisland.net.</string>
+    <string name="catalog_sources_text">The catalog and the download server are set separately. HTTPS site addresses only, without a path, e.g. https://example.org.</string>
     <string name="catalog_source_catalog">Catalog</string>
     <string name="catalog_source_downloads">Downloads</string>
     <string name="catalog_clear_history">Clear search history</string>

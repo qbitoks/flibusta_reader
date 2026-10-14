@@ -329,7 +329,7 @@ class DownloadManager @Inject constructor(
         const val TAG = "catalog-download"
         const val MAX_ATTEMPTS = 8
         const val MAX_QUICK_RETRIES = 5
-        /** Flibusta builds EPUB on request and stays silent for up to a minute and a half first. */
+        /** Some servers build EPUB on request and stays silent for up to a minute and a half first. */
         const val READ_TIMEOUT_MS = 150_000
     }
 }

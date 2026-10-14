@@ -86,7 +86,7 @@
     <!-- Sources -->
     <string name="catalog_sources">Источники</string>
     <string name="catalog_sources_menu">Источники…</string>
-    <string name="catalog_sources_text">Каталог и сервер скачивания настраиваются отдельно. Только HTTPS-адреса сайтов без пути, например https://flibusta.is. Если каталог недоступен, попробуйте https://flisland.net.</string>
+    <string name="catalog_sources_text">Каталог и сервер скачивания настраиваются отдельно. Только HTTPS-адреса сайтов без пути, например https://example.org.</string>
     <string name="catalog_source_catalog">Каталог</string>
     <string name="catalog_source_downloads">Скачивание</string>
     <string name="catalog_clear_history">Очистить историю поиска</string>

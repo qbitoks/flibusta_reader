@@ -11,7 +11,7 @@
 | Android lint | 0 errors, 6 warnings о доступных новых версиях закреплённых зависимостей |
 | Подпись APK | apksigner verify: v2 signature valid, один signer |
 | Установка/запуск | Debug APK установлен в эмулятор Android 15 / API 35 |
-| Живой OPDS | flibusta.is/opds и flisland.net/opds возвращают Atom; поиск книг работает |
+| Живой OPDS | живые OPDS-серверы возвращают Atom; поиск книг работает |
 | Поиск в приложении | Запрос Sherlock вернул результаты; карточка → EPUB → библиотека → Readium проверены |
 | Импорт | EPUB и FB2.ZIP выбраны через системный DocumentsUI, добавлены в библиотеку и открыты |
 | FB2 | Демонстрационный FB2 и скачанный реальный FB2 успешно преобразованы и открыты в Readium |

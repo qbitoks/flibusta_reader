@@ -58,7 +58,7 @@ class CatalogRepository @Inject constructor(
 
     fun rootAddress(): String = "$catalogBase/opds"
 
-    /** Flibusta's flat list of this week's books (`/opds/new` itself is a menu). */
+    /** The server's flat list of this week's books (`/opds/new` itself is a menu). */
     fun newBooksAddress(): String = "$catalogBase/opds/new/0/new"
 
     fun searchAddress(query: String, authors: Boolean): String =
@@ -127,7 +127,7 @@ class CatalogRepository @Inject constructor(
         prefs.edit().remove(KEY_RECENT).apply()
     }
 
-    /** Flibusta often answers 502/504 or stalls on the first try and succeeds on the next. */
+    /** Some servers answer 502/504 or stalls on the first try and succeeds on the next. */
     private suspend fun <T> withRetry(block: suspend () -> T): T = try {
         block()
     } catch (e: CancellationException) {
@@ -143,7 +143,7 @@ class CatalogRepository @Inject constructor(
         require(
             url != null && url.protocol == "https" && url.host.isNotBlank() && url.userInfo == null &&
                 url.query == null && url.ref == null && url.path in listOf("", "/"),
-        ) { "Введите HTTPS-адрес сайта без пути, например https://flibusta.is" }
+        ) { "Введите HTTPS-адрес сайта без пути, например https://example.org" }
         return "https://${url!!.authority}"
     }
 
@@ -174,13 +174,14 @@ class CatalogRepository @Inject constructor(
         const val KEY_CATALOG = "catalog"
         const val KEY_DOWNLOADS = "downloads"
         const val KEY_RECENT = "recent"
+        // TODO: remove the built-in default source; the catalog should start empty until the user adds one.
         const val DEFAULT_BASE = "https://flibusta.is"
         const val MAX_FEED_BYTES = 5L * 1024 * 1024
         const val MAX_COVER_BYTES = 3L * 1024 * 1024
         const val MAX_CACHED_FEEDS = 40
         const val MAX_RECENT = 12
         const val FEED_TTL_MS = 10 * 60 * 1000L
-        /** Flibusta's search can take over half a minute before it answers. */
+        /** Some servers' search can take over half a minute before it answers. */
         const val FEED_READ_TIMEOUT_MS = 60_000
     }
 }

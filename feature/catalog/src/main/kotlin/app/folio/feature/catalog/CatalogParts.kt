@@ -143,7 +143,7 @@ internal fun folderIcon(title: String): ImageVector {
     }
 }
 
-/** Flibusta describes an author entry by its book count: «1 книга», «23 книги», «120 книг». */
+/** Servers often describe an author entry by its book count: «1 книга», «23 книги», «120 книг». */
 private val bookCount = Regex("""^\d+ (книг|book)""", RegexOption.IGNORE_CASE)
 
 /**

@@ -9,9 +9,9 @@ functionality and design into Folio and chose the prototype as the base.
 
 ## Decision
 The prototype multi-module code (Room, Hilt, own FB2/EPUB parser and layout engine) is the app.
-Flibusta's OPDS/HTTPS/XML code lives on as JVM module `core/opds`, used by `core/data/catalog` and
+The old app's OPDS/HTTPS/XML code lives on as JVM module `core/opds`, used by `core/data/catalog` and
 the «Каталог» tab (`feature/catalog`). Kotlin packages are `app.folio`;
-applicationId `app.folio` (renamed from `net.flibustareader` 2026-10-14); minSdk stays 34.
+applicationId `app.folio`; minSdk stays 34.
 
 ## Alternatives rejected
 - Port only the design onto Readium — loses curl, highlights, notes, guide line.

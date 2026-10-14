@@ -122,7 +122,7 @@ object OpdsParser {
     }
 }
 
-/** Flibusta puts HTML into `<content>`; this turns it into paragraphs and pulls out the «Ключ: значение» tail. */
+/** Some servers put HTML into `<content>`; this turns it into paragraphs and pulls out the «Ключ: значение» tail. */
 internal object Description {
     data class Parsed(val text: String, val details: Map<String, String>)
 

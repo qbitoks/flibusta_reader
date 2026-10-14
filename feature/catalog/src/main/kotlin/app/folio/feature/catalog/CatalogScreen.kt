@@ -213,7 +213,7 @@ private fun LazyListScope.homeSections(vm: CatalogViewModel, downloads: Map<Stri
     }
 }
 
-/** Flibusta's «Моя полка» and similar need an account, which this app doesn't have. */
+/** Shelves like «Моя полка» need an account, which this app doesn't have. */
 private fun requiresLogin(entry: CatalogEntry): Boolean =
     entry.summary.contains("логин", ignoreCase = true) || entry.summary.contains("login", ignoreCase = true)
 

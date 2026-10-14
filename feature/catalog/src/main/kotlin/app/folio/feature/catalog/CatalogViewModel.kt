@@ -217,7 +217,7 @@ class CatalogViewModel @Inject constructor(
 
     /**
      * Loads [feed]'s first page (or the next one with [more]). With [fill], keeps fetching pages until
-     * that many readable books are in: most of Flibusta's weekly list is PDF.
+     * that many readable books are in: a weekly list can be mostly PDF.
      */
     private fun load(feed: Feed, more: Boolean = false, fresh: Boolean = false, fill: Int = 0) {
         val target = if (more) feed.page?.next ?: return else feed.address
@@ -284,7 +284,7 @@ internal fun List<DownloadItem>.byLink(): Map<String, DownloadItem> = associateB
 internal val DownloadItem.active: Boolean get() = state == DownloadState.Queued || state == DownloadState.Running
 
 /**
- * Flibusta lists authors alphabetically, so «Лем» comes after «(Лемешевский)». Rank the loaded
+ * Servers may list authors alphabetically, so «Лем» comes after «(Лемешевский)». Rank the loaded
  * ones: a name word equal to the query first, then words starting with it, then the rest; more
  * books first inside a rank.
  */

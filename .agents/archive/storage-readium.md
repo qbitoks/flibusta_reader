@@ -28,7 +28,7 @@ Why: users upgrade with `install -r`; their books, positions and bookmarks must 
   screen only offers it if the book exists.
 
 ## SharedPreferences `shared_prefs/reader.xml`
-- `catalog`, `downloads`: HTTPS origins, default flibusta.is. `lastBook`: book id.
+- `catalog`, `downloads`: HTTPS origins, built-in default. `lastBook`: book id.
 - `position:<id>`, `bookmark:<id>`: Readium Locator JSON (`toJSON`/`fromJSON`; keep extra fields for the
   text anchor). One bookmark per book; missing key = none. A bad Locator is read under runCatching.
 - `readerColor` WHITE/SEPIA/GRAY/BLACK (SEPIA); `readerFont` BOOK/SANS/MONO (BOOK).

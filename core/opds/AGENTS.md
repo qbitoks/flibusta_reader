@@ -5,7 +5,7 @@ downloads, files or UI (`core/data/.../catalog/CatalogRepository.kt`, `feature/c
 
 ## Entry points
 - `core/opds/src/main/kotlin/app/folio/core/opds/OpdsParser.kt` — entries, navigation, EPUB/FB2 downloads,
-  cover, related links, genres/year/size, `next`; Flibusta's HTML `<content>` → plain paragraphs (`Description`)
+  cover, related links, genres/year/size, `next`; server HTML `<content>` → plain paragraphs (`Description`)
 - `core/opds/src/main/kotlin/app/folio/core/opds/HttpsRequest.kt` — manual redirects (HTTPS only, max 6),
   timeouts (connect 20 s, read 30 s by default), request headers, `HttpStatusException` for non-2xx
 - `core/opds/src/main/kotlin/app/folio/core/opds/Resume.kt` — resume plan for `Range` downloads; HTML-instead-of-book check
@@ -18,9 +18,9 @@ downloads, files or UI (`core/data/.../catalog/CatalogRepository.kt`, `feature/c
 - A book entry has `navigation == null`; PDF-only books have empty `downloads` and non-empty `otherFormats`.
 
 ## Gotchas
-- Flibusta builds EPUB on request: 15–90 s before the first byte, so downloads use a 150 s read timeout.
-  FB2 is served as a static `.fb2.zip` from `static.flibusta.is` with `Accept-Ranges`.
-- Flibusta search often answers 502/504 or stalls on the first try; author results are alphabetical.
+- Some servers build EPUB on request: 15–90 s before the first byte, so downloads use a 150 s read timeout.
+  FB2 is served as a static `.fb2.zip` from a static host with `Accept-Ranges`.
+- Server search often answers 502/504 or stalls on the first try; author results are alphabetical.
 
 ## Commands
 - `./gradlew.bat :core:opds:test --console=plain`; fixtures: `fixtures/catalog.xml`, `fixtures/search-books.xml`

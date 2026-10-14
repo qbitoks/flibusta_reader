@@ -6,7 +6,7 @@ status: active
 ## Current focus
 - Work from the user's task; follow-ups below need an explicit task, not autonomous implementation.
 - 0.3.x uses the prototype engine; OPDS is the «Каталог» tab. No data migration from 0.2.x (user decision).
-- Catalog browse/search, EPUB/FB2 downloads and Range resume were checked against flibusta.is on an emulator.
+- Catalog browse/search, EPUB/FB2 downloads and Range resume were checked against a live OPDS server on an emulator.
 - ReaderPhone checks cover upgrade/restart, presets, menu palettes and guide landings in Slide/Curl/Fade.
 - Finish on-device default/book reset checks and physical-phone verification before distribution.
 - 0.3.7 (per-book settings, custom lines, new defaults) committed; user checks it on a phone, then tag v0.3.7.
