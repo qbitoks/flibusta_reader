@@ -118,7 +118,7 @@ MVP прототипа готов и работает на телефоне по
 - **Иконки:** Material Symbols Rounded плюс свои векторы там, где нет замены.
 
 ### v0.3 — «Главная», «Библиотека», коллекции, поиск
-**Файлы:** `app/.../FlibustaNavHost.kt`, `feature/library/*`, `core/data/db/*`, `core/data/library/LibraryRepository.kt`.
+**Файлы:** `app/.../FolioNavHost.kt`, `feature/library/*`, `core/data/db/*`, `core/data/library/LibraryRepository.kt`.
 
 - **Навигация:**
   - «Главная / Библиотека» в пилюле;

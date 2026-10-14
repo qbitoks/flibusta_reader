@@ -14,7 +14,7 @@ $source = 'versionName = "0.2.1-reader-design"; versionCode = 3; minSdk = 34'
 $metadata = Get-ReleaseMetadata $source -Tag v0.2.1 -SigningKind preview
 AssertEqual $metadata.version '0.2.1'
 AssertEqual $metadata.minimumAndroid '14'
-AssertEqual $metadata.apkName 'FlibustaReader-v0.2.1-android14plus-universal-preview-debug.apk'
+AssertEqual $metadata.apkName 'Folio-v0.2.1-android14plus-universal-preview-debug.apk'
 AssertThrows { Get-ReleaseMetadata $source -Tag v0.2.2 } 'does not match'
 AssertThrows { Get-ReleaseMetadata $source -Tag 'v0.2.1/../../other' } 'does not match'
 AssertThrows { Get-ReleaseMetadata ($source.Replace('0.2.1-reader-design','latest')) } 'Invalid'

@@ -32,7 +32,7 @@ function Get-ReleaseMetadata {
         minSdk = [int]$sdkMatch.Groups[1].Value
         minimumAndroid = $android
         signingKind = $SigningKind
-        apkName = "FlibustaReader-v$version-android${android}plus-universal-$SigningKind-debug.apk"
+        apkName = "Folio-v$version-android${android}plus-universal-$SigningKind-debug.apk"
         apkLabel = "Android $android+ · телефоны и планшеты · универсальная $SigningKind debug-сборка"
     }
 }

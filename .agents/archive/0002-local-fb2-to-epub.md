@@ -6,7 +6,7 @@ Date: 2026-10-12 (retrospective) · Status: accepted
 FB2 and EPUB must work without a server or account; the EPUB navigator is already chosen (0001).
 
 ## Decision
-Convert FB2/FB2.ZIP locally to EPUB 3 with `core/src/main/kotlin/net/flibustareader/core/Fb2Converter.kt`,
+Convert FB2/FB2.ZIP locally to EPUB 3 with `core/src/main/kotlin/app/folio/core/Fb2Converter.kt`,
 then read it with the same Readium navigator. Store the result as EPUB; keep the source format in the
 library entry. The converter emits one XHTML plus TOC.
 

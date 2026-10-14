@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.flibustareader.baselineprofile"
+    namespace = "app.folio.baselineprofile"
     compileSdk = 37
 
     defaultConfig {
@@ -22,7 +22,7 @@ android {
 }
 
 // Generated on a connected device: ./gradlew :app:generateReleaseBaselineProfile
-// WARNING: the run UNINSTALLS net.flibustareader first — the library and all reading data on that
+// WARNING: the run UNINSTALLS app.folio first — the library and all reading data on that
 // device are lost. Never run it on a phone whose data matters (it wiped the owner's on 2026-10-03).
 baselineProfile {
     useConnectedDevices = true

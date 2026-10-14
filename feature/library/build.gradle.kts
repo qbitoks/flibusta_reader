@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "net.flibustareader.feature.library"
+    namespace = "app.folio.feature.library"
     compileSdk = 37
 
     defaultConfig {

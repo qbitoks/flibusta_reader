@@ -24,7 +24,7 @@ Push tags and publish releases only on explicit user request.
 1. Bump `versionName` and `versionCode` in `app/build.gradle.kts`. Base version must equal the tag
    (a suffix like `-reader-design` is allowed).
 2. Commit, push main, wait for green CI.
-3. `git tag -a vX.Y.Z -m "Flibusta Reader X.Y.Z"` on the verified commit; `git push origin vX.Y.Z`.
+3. `git tag -a vX.Y.Z -m "Folio X.Y.Z"` on the verified commit; `git push origin vX.Y.Z`.
 4. Wait for build, emulator check and publication. No manual step; the phone check happens after.
 - Release job failed after creating the draft: `gh run rerun <id> --failed` fills in the missing files
   and publishes. A release that reached publication is final.
@@ -32,7 +32,7 @@ Push tags and publish releases only on explicit user request.
   missing files of a matching draft (same SHA-256); mismatches fail.
 
 ## Assets
-- `FlibustaReader-vX.Y.Z-android14plus-universal-preview-debug.apk`, README-release-ru.md (generated),
+- `Folio-vX.Y.Z-android14plus-universal-preview-debug.apk`, README-release-ru.md (generated),
   `SHA256SUMS.txt`, `release-metadata.json` (version, minSdk, APK name, certificate).
 
 ## Local

@@ -24,7 +24,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FlibustaReader"
+rootProject.name = "Folio"
 
 include(":app")
 include(":baselineprofile")

@@ -1,10 +1,10 @@
 # Book model
 
 ## Entry points
-- Use `core/model/src/main/kotlin/net/flibustareader/core/model/Book.kt` for chapters, metadata and TOC.
-- Use `core/model/src/main/kotlin/net/flibustareader/core/model/Block.kt` for block kinds and inline spans.
-- Use `core/model/src/main/kotlin/net/flibustareader/core/model/Position.kt` for locations, links and progress.
-- Use `core/model/src/main/kotlin/net/flibustareader/core/model/BookCodec.kt` as the canonical cache codec.
+- Use `core/model/src/main/kotlin/app/folio/core/model/Book.kt` for chapters, metadata and TOC.
+- Use `core/model/src/main/kotlin/app/folio/core/model/Block.kt` for block kinds and inline spans.
+- Use `core/model/src/main/kotlin/app/folio/core/model/Position.kt` for locations, links and progress.
+- Use `core/model/src/main/kotlin/app/folio/core/model/BookCodec.kt` as the canonical cache codec.
 
 ## Invariants
 - Keep positions independent of pagination; offsets index Kotlin text, and span ends are exclusive.

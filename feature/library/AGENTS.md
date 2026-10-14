@@ -2,12 +2,12 @@
 
 ## Entry points
 - Read `.agents/design/home-library.md` before changing Home, shelves, library or collections visuals.
-- Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/LibraryViewModel.kt` for derived shelves, sorting and mutations.
-- Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/LibraryScreen.kt` as the canonical screen/host-callback example.
-- Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/HomeScreen.kt` for continue-reading and cover shelves.
-- Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/Common.kt` for context-sensitive book menus and confirmation dialogs.
-- Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/CollectionsSheet.kt` for built-in/user collection editing.
-- Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/SearchScreen.kt` for local search and recent queries.
+- Use `feature/library/src/main/kotlin/app/folio/feature/library/LibraryViewModel.kt` for derived shelves, sorting and mutations.
+- Use `feature/library/src/main/kotlin/app/folio/feature/library/LibraryScreen.kt` as the canonical screen/host-callback example.
+- Use `feature/library/src/main/kotlin/app/folio/feature/library/HomeScreen.kt` for continue-reading and cover shelves.
+- Use `feature/library/src/main/kotlin/app/folio/feature/library/Common.kt` for context-sensitive book menus and confirmation dialogs.
+- Use `feature/library/src/main/kotlin/app/folio/feature/library/CollectionsSheet.kt` for built-in/user collection editing.
+- Use `feature/library/src/main/kotlin/app/folio/feature/library/SearchScreen.kt` for local search and recent queries.
 - «Настройки чтения» in the library menu opens `ReadingDefaultsSheet` (feature/reader) for shared reader settings.
 
 ## Invariants

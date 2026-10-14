@@ -1,4 +1,4 @@
-# Ревью Flibusta Reader и задачи на исправление
+# Ревью Folio и задачи на исправление
 
 > Историческое ревью состояния до исправлений 0.2.1. R01–R09 исправлены в текущем коде; статусы и оставшиеся пределы проверки — в [project-status.md](project-status.md), результаты — в [reader-ui-verification.md](reader-ui-verification.md). Чекбоксы ниже сохранены как часть исходного отчёта и не являются актуальным backlog.
 
@@ -28,7 +28,7 @@ P2 означает функциональную ошибку, которую с
 
 ## R01. Ограничить глубину обработки FB2
 
-**Место:** `core/src/main/kotlin/net/flibustareader/core/Fb2Converter.kt`, строки 35–44; обработчики ошибок в `app/src/main/kotlin/net/flibustareader/BookRepository.kt:151` и `MainActivity.kt:67`.
+**Место:** `core/src/main/kotlin/app/folio/core/Fb2Converter.kt`, строки 35–44; обработчики ошибок в `app/src/main/kotlin/app/folio/BookRepository.kt:151` и `MainActivity.kt:67`.
 
 `render()` рекурсивно вызывает `content()`, который снова вызывает `render()` для каждого дочернего узла. Ограничение входа в 50 МБ не ограничивает глубину дерева.
 
@@ -46,7 +46,7 @@ P2 означает функциональную ошибку, которую с
 
 ## R02. Устанавливать Readium fragment только в допустимом состоянии Activity
 
-**Место:** `app/src/main/kotlin/net/flibustareader/ReaderActivity.kt`, строки 160–205, особенно `commitNow()` на строке 195.
+**Место:** `app/src/main/kotlin/app/folio/ReaderActivity.kt`, строки 160–205, особенно `commitNow()` на строке 195.
 
 Открытие публикации и вычисление позиций выполняются в `lifecycleScope`. Эта coroutine продолжает работу, когда Activity остановлена. После асинхронной подготовки код без проверки состояния вызывает `commitNow()`.
 
@@ -64,7 +64,7 @@ P2 означает функциональную ошибку, которую с
 
 ## R03. Исключить коллизии сгенерированных якорей FB2
 
-**Место:** `core/src/main/kotlin/net/flibustareader/core/Fb2Converter.kt`, строки 33–44 и 75.
+**Место:** `core/src/main/kotlin/app/folio/core/Fb2Converter.kt`, строки 33–44 и 75.
 
 Секция без исходного `id` получает `section-${++sequence}`. Генератор не учитывает идентификаторы, уже присутствующие в FB2.
 
@@ -88,7 +88,7 @@ P2 означает функциональную ошибку, которую с
 
 ## R04. Учитывать `xml:base` при разрешении ссылок OPDS
 
-**Место:** `core/src/main/kotlin/net/flibustareader/core/OpdsParser.kt`, строки 11–14, 25–29 и 40.
+**Место:** `core/src/main/kotlin/app/folio/core/OpdsParser.kt`, строки 11–14, 25–29 и 40.
 
 Все относительные ссылки разрешаются относительно одного аргумента `base`. Значения `xml:base` на `feed`, `entry` и `link` не учитываются.
 
@@ -120,7 +120,7 @@ P2 означает функциональную ошибку, которую с
 
 ## R05. Передавать парсеру конечный URL HTTP-ответа
 
-**Место:** `app/src/main/kotlin/net/flibustareader/BookRepository.kt`, строки 74–76 и 167–185.
+**Место:** `app/src/main/kotlin/app/folio/BookRepository.kt`, строки 74–76 и 167–185.
 
 `request()` следует redirect, изменяя локальный `url`, но возвращает только содержимое. `page()` передаёт в `OpdsParser.parse` исходный `address`.
 
@@ -138,7 +138,7 @@ P2 означает функциональную ошибку, которую с
 
 ## R06. Сохранять состояние каталога при пересоздании Activity
 
-**Место:** `app/src/main/kotlin/net/flibustareader/MainActivity.kt`, строки 38–46 и 52–56; `app/src/main/AndroidManifest.xml`.
+**Место:** `app/src/main/kotlin/app/folio/MainActivity.kt`, строки 38–46 и 52–56; `app/src/main/AndroidManifest.xml`.
 
 Вкладка, запрос, режим поиска, текущая лента, адрес и история находятся в полях Activity. При `onCreate(savedInstanceState)` эти значения не восстанавливаются. Activity пересоздаётся при обычном изменении конфигурации.
 
@@ -156,7 +156,7 @@ P2 означает функциональную ошибку, которую с
 
 ## R07. Восстанавливать согласованность файлов и индекса после прерывания импорта
 
-**Место:** `app/src/main/kotlin/net/flibustareader/BookRepository.kt`, строки 125–151; чтение библиотеки на строках 40–50.
+**Место:** `app/src/main/kotlin/app/folio/BookRepository.kt`, строки 125–151; чтение библиотеки на строках 40–50.
 
 EPUB копируется или создаётся сразу в `files/books/<uuid>.epub`. Запись в `library.json` происходит после завершения подготовки. Очистка результата предусмотрена только при пойманном исключении; при уничтожении процесса она не выполняется.
 
@@ -174,7 +174,7 @@ EPUB копируется или создаётся сразу в `files/books/<
 
 ## R08. Отличать настоящую декларацию DTD от обычного текста
 
-**Место:** `core/src/main/kotlin/net/flibustareader/core/Xml.kt:11`.
+**Место:** `core/src/main/kotlin/app/folio/core/Xml.kt:11`.
 
 Перед парсингом выполняется поиск подстроки `<!DOCTYPE` во всём документе. Это также совпадает с текстом CDATA или XML-комментария.
 

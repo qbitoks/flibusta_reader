@@ -4,12 +4,12 @@ Pure Kotlin/JVM OPDS client logic: feed parsing, HTTPS-only requests, safe XML. 
 downloads, files or UI (`core/data/.../catalog/CatalogRepository.kt`, `feature/catalog/`).
 
 ## Entry points
-- `core/opds/src/main/kotlin/net/flibustareader/core/opds/OpdsParser.kt` — entries, navigation, EPUB/FB2 downloads,
+- `core/opds/src/main/kotlin/app/folio/core/opds/OpdsParser.kt` — entries, navigation, EPUB/FB2 downloads,
   cover, related links, genres/year/size, `next`; Flibusta's HTML `<content>` → plain paragraphs (`Description`)
-- `core/opds/src/main/kotlin/net/flibustareader/core/opds/HttpsRequest.kt` — manual redirects (HTTPS only, max 6),
+- `core/opds/src/main/kotlin/app/folio/core/opds/HttpsRequest.kt` — manual redirects (HTTPS only, max 6),
   timeouts (connect 20 s, read 30 s by default), request headers, `HttpStatusException` for non-2xx
-- `core/opds/src/main/kotlin/net/flibustareader/core/opds/Resume.kt` — resume plan for `Range` downloads; HTML-instead-of-book check
-- `core/opds/src/main/kotlin/net/flibustareader/core/opds/Xml.kt` — namespace-aware XML; rejects DTD and external entities
+- `core/opds/src/main/kotlin/app/folio/core/opds/Resume.kt` — resume plan for `Range` downloads; HTML-instead-of-book check
+- `core/opds/src/main/kotlin/app/folio/core/opds/Xml.kt` — namespace-aware XML; rejects DTD and external entities
 
 ## Conventions
 - No Android or Compose imports.

@@ -20,7 +20,7 @@ $taskAdb = Join-Path $env:LOCALAPPDATA 'Android/Sdk/platform-tools/adb.exe'
 & $taskAdb devices
 ./scripts/build.ps1
 & $taskAdb -s <serial> install -r app/build/outputs/apk/release/app-release.apk
-& $taskAdb -s <serial> shell am start -W -n net.flibustareader/.MainActivity
+& $taskAdb -s <serial> shell am start -W -n app.folio/.MainActivity
 ```
 - Select a currently listed serial; use a dedicated API 34+ test emulator with Russian locale for repeatable UI checks.
 - Use `install -r` for upgrade checks; keep the profile instead of uninstalling or clearing app data.

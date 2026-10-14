@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.flibustareader.core.designsystem"
+    namespace = "app.folio.core.designsystem"
     compileSdk = 37
 
     defaultConfig {

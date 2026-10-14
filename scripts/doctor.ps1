@@ -32,7 +32,7 @@ function Invoke-Probe([string]$Executable, [string[]]$Arguments) {
     [pscustomobject]@{ ExitCode = $taskExitCode; Output = ($taskOutput | ForEach-Object { "$_" }) -join "`n" }
 }
 
-Write-Host 'Flibusta Reader environment check (no install, build or app data changes)'
+Write-Host 'Folio environment check (no install, build or app data changes)'
 Check-File 'Gradle wrapper script' (Join-Path $taskRoot $(if ($taskOnWindows) { 'gradlew.bat' } else { 'gradlew' }))
 Check-File 'Gradle wrapper JAR' (Join-Path $taskRoot 'gradle/wrapper/gradle-wrapper.jar')
 $taskWrapperProperties = Join-Path $taskRoot 'gradle/wrapper/gradle-wrapper.properties'

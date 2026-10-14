@@ -1,4 +1,4 @@
-# Flibusta Reader 0.3.6
+# Folio 0.3.6
 
 Нативная читалка для Android 14+ (API 34) с OPDS-каталогом. Kotlin + Jetpack Compose, собственный
 движок вёрстки FB2/EPUB, дизайн в стиле Apple Books. Без сервера и аккаунтов: книги хранятся на устройстве.
@@ -58,5 +58,5 @@
 ./scripts/build.ps1
 ```
 
-Нужны JDK 17 и Android SDK (платформа 37). APK: `artifacts/FlibustaReader-0.3.6-release.apk`.
+Нужны JDK 17 и Android SDK (платформа 37). APK: `artifacts/Folio-0.3.6-release.apk`.
 Подробности для разработчиков и агентов — `AGENTS.md`.

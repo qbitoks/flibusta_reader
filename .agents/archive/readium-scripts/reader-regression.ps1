@@ -1,7 +1,7 @@
 param(
     [string]$Serial = 'emulator-5556',
     [string]$Adb = "$env:LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe",
-    [string]$Apk = 'artifacts/FlibustaReader-0.2.1-debug.apk',
+    [string]$Apk = 'artifacts/Folio-0.2.1-debug.apk',
     [switch]$RecoverLauncherStartupAnr
 )
 $ErrorActionPreference = 'Stop'
@@ -16,7 +16,7 @@ function AdbChecked {
     $result
 }
 function Preferences {
-    (AdbChecked shell run-as net.flibustareader cat shared_prefs/reader.xml) -join "`n"
+    (AdbChecked shell run-as app.folio cat shared_prefs/reader.xml) -join "`n"
 }
 function ReadingState {
     [xml]$prefs = Preferences
@@ -61,31 +61,31 @@ function WaitReader {
     throw 'Reader did not load'
 }
 function Position {
-    [xml]$prefs = (& $Adb -s $Serial shell run-as net.flibustareader cat shared_prefs/reader.xml) -join "`n"
+    [xml]$prefs = (& $Adb -s $Serial shell run-as app.folio cat shared_prefs/reader.xml) -join "`n"
     $id = ($prefs.map.string | Where-Object name -eq 'lastBook').'#text'
     (($prefs.map.string | Where-Object name -eq "position:$id").'#text' | ConvertFrom-Json).locations.progression
 }
 AdbChecked install -r $Apk | Out-Null
 # Seed a completed book even on a freshly installed emulator.
-AdbChecked shell am start -W -n net.flibustareader/.MainActivity | Out-Null
+AdbChecked shell am start -W -n app.folio/.MainActivity | Out-Null
 Tap (Find 'Демо-книга')
 WaitReader | Out-Null
 AdbChecked shell input keyevent 4
 Find 'Мои книги' | Out-Null
-AdbChecked shell am force-stop net.flibustareader
-$indexBefore = (AdbChecked shell run-as net.flibustareader cat files/books/library.json) -join "`n"
+AdbChecked shell am force-stop app.folio
+$indexBefore = (AdbChecked shell run-as app.folio cat files/books/library.json) -join "`n"
 $readingBefore = ReadingState
 $bookPaths = @($indexBefore | ConvertFrom-Json | ForEach-Object { $_.path })
-$hashesBefore = (AdbChecked shell run-as net.flibustareader sha256sum @bookPaths) -join "`n"
-AdbChecked shell run-as net.flibustareader touch files/books/review-orphan.epub files/books/review-incomplete.part
-AdbChecked shell am start -W -n net.flibustareader/.MainActivity | Out-Null
+$hashesBefore = (AdbChecked shell run-as app.folio sha256sum @bookPaths) -join "`n"
+AdbChecked shell run-as app.folio touch files/books/review-orphan.epub files/books/review-incomplete.part
+AdbChecked shell am start -W -n app.folio/.MainActivity | Out-Null
 Find 'Мои книги' | Out-Null
-$files = & $Adb -s $Serial shell run-as net.flibustareader ls files/books
+$files = & $Adb -s $Serial shell run-as app.folio ls files/books
 if ($files -contains 'review-orphan.epub' -or $files -contains 'review-incomplete.part') { throw 'Orphans were not recovered' }
-$indexAfter = (AdbChecked shell run-as net.flibustareader cat files/books/library.json) -join "`n"
+$indexAfter = (AdbChecked shell run-as app.folio cat files/books/library.json) -join "`n"
 if ($indexBefore -ne $indexAfter) { throw 'Recovery changed completed books' }
 if ($readingBefore -ne (ReadingState)) { throw 'Recovery changed reading positions or bookmarks' }
-if ($hashesBefore -ne ((AdbChecked shell run-as net.flibustareader sha256sum @bookPaths) -join "`n")) { throw 'Recovery changed completed book contents' }
+if ($hashesBefore -ne ((AdbChecked shell run-as app.folio sha256sum @bookPaths) -join "`n")) { throw 'Recovery changed completed book contents' }
 Tap (Find 'Поиск')
 Tap (Find 'Авторы')
 $field = Ui | Where-Object class -eq 'android.widget.EditText' | Select-Object -First 1
@@ -108,21 +108,21 @@ try {
 # Home saves the Activity Bundle; am kill preserves its task, unlike force-stop.
 AdbChecked shell input keyevent 3
 Start-Sleep -Milliseconds 1000
-$oldProcess = (AdbChecked shell pidof net.flibustareader) -join ''
+$oldProcess = (AdbChecked shell pidof app.folio) -join ''
 if (!$oldProcess.Trim()) { throw 'App process missing before process-death test' }
-AdbChecked shell am kill net.flibustareader
+AdbChecked shell am kill app.folio
 for ($attempt=0; $attempt -lt 20; $attempt++) {
-    $remaining = & $Adb -s $Serial shell pidof net.flibustareader
+    $remaining = & $Adb -s $Serial shell pidof app.folio
     if (!$remaining) { break }
     Start-Sleep -Milliseconds 250
 }
 if ($remaining) { throw 'am kill did not terminate the background process' }
 AdbChecked shell input keyevent 187
-Tap (Find 'Flibusta Reader')
+Tap (Find 'Folio')
 Find 'Найти историю' | Out-Null
 Find 'ReviewAuthor' | Out-Null
 Find 'Фамилия автора' | Out-Null
-$newProcess = (AdbChecked shell pidof net.flibustareader) -join ''
+$newProcess = (AdbChecked shell pidof app.folio) -join ''
 if ($newProcess.Trim() -eq $oldProcess.Trim()) { throw 'Process-death test reused the original process' }
 Tap (Find 'Библиотека')
 Tap (Find 'Демо-книга')

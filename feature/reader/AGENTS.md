@@ -3,7 +3,7 @@
 - Read `.agents/design/reader.md` for reader UI; use `.agents/design/design-system.md` only for shared components.
 
 ## Entry points
-- Resolve symbols below in `feature/reader/src/main/kotlin/net/flibustareader/feature/reader/`; search exact names first.
+- Resolve symbols below in `feature/reader/src/main/kotlin/app/folio/feature/reader/`; search exact names first.
 - `ReaderRoute`, `ReaderScreen` — appearance, ink, lifecycle and screen composition; `ReaderControls` — local/saveable UI state.
 - `ReaderSurface` — viewport, insets, guide geometry and layer order; `ReaderPages` — paged/scroll rendering.
 - `readerInteractions` — tap targets, tap zones, long-press selection; `ReaderSelectionOverlays` — selection, notes, palette.
@@ -14,7 +14,7 @@
 - `HorizontalPageTurner` — Slide/Curl/Fade; `tapZone` — pure gesture math; `ScrollReader` / `planScrollWindow` — scroll/window.
 - `footerCenter`, `headerText`, `rememberClock`, `rememberBattery` — page chrome; `ReaderPageSettings` — inline page settings.
 - `ChapterProgress` — shared TOC rows, titles and remaining pages; `GuideNavigation` — line state after successful turns.
-- Settings: `core/data/src/main/kotlin/net/flibustareader/core/data/settings/SettingsRepository.kt`.
+- Settings: `core/data/src/main/kotlin/app/folio/core/data/settings/SettingsRepository.kt`.
 
 - Use the fixed `ThemesSheet` dialog (`ReadingSettingsSheet`, also `ReadingDefaultsSheet` from the library) for
   settings; close with X/Back, never drag. Edit through `SettingsEditor`; `vm.settings` = shared + `ownSettings`.
@@ -30,7 +30,7 @@
 - Count remaining pages from TOC ranges, not parser chapters; leave unknown counts and pre-TOC text unlabeled.
 - Hide the guide during turns; apply direction only to an actual landing. Keep footer taps ahead of guide stepping.
 - Pure logic goes into small top-level functions with tests in `src/test` (`ReaderGesturesTest` is the example).
-- Search example: `feature/reader/src/test/kotlin/net/flibustareader/feature/reader/ReaderSearchTest.kt`.
+- Search example: `feature/reader/src/test/kotlin/app/folio/feature/reader/ReaderSearchTest.kt`.
 - Keep reader overlays and last manual brightness in `ReaderControls`; keep settings tab/scroll state in `ThemesSheet`.
 - Keep annotation flows and `viewModelScope.launch` in the ViewModel; helpers must preserve persistence order and read timing.
 - Tests: `./gradlew.bat :feature:reader:testDebugUnitTest --console=plain`.

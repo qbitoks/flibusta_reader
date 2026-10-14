@@ -7,7 +7,7 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
 ## Layout (app-private, see `core/data/.../library/BookFiles.kt`)
 - `files/books/<sha1>.<ext>` — original file; book id = SHA-1 of its bytes. `files/covers/<id>.jpg`.
 - `cache/books/<id>/book.bin` + `res/` — parsed model; rebuilt from the original if the cache is cleared.
-- Room `flibusta.db` (`FlibustaDatabase`, v2): books, collections, bookmarks, highlights, sessions, search
+- Room `folio.db` (`FolioDatabase`, v2): books, collections, bookmarks, highlights, sessions, search
   history, `downloads` (v2, auto-migration from v1). Schemas in `core/data/schemas/`; bump the version with
   a migration (auto-migration where possible).
 - `files/downloads/<sha1 of link>.part` — catalog download in progress; resumed with HTTP Range, deleted

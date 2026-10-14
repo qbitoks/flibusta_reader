@@ -1,15 +1,15 @@
 # Data and repositories
 
 ## Entry points
-- Use `core/data/src/main/kotlin/net/flibustareader/core/data/library/LibraryRepository.kt` as the canonical import/load/mutation example.
-- Use `core/data/src/main/kotlin/net/flibustareader/core/data/library/BookFiles.kt` for original, parsed cache and image paths.
-- Use `core/data/src/main/kotlin/net/flibustareader/core/data/db/FlibustaDatabase.kt` for Room schema registration and migrations.
-- Use `core/data/src/main/kotlin/net/flibustareader/core/data/settings/SettingsRepository.kt` for persisted reader/library preferences.
+- Use `core/data/src/main/kotlin/app/folio/core/data/library/LibraryRepository.kt` as the canonical import/load/mutation example.
+- Use `core/data/src/main/kotlin/app/folio/core/data/library/BookFiles.kt` for original, parsed cache and image paths.
+- Use `core/data/src/main/kotlin/app/folio/core/data/db/FolioDatabase.kt` for Room schema registration and migrations.
+- Use `core/data/src/main/kotlin/app/folio/core/data/settings/SettingsRepository.kt` for persisted reader/library preferences.
 - Use `ReaderPreferences.kt` there for shared reader codecs and `BookOverrides.kt` for a book's own settings.
-- Use `core/data/src/main/kotlin/net/flibustareader/core/data/catalog/CatalogRepository.kt` for feeds, covers and catalog sources.
-- Use `core/data/src/main/kotlin/net/flibustareader/core/data/catalog/DownloadManager.kt` for download rows, resume and workers.
-- Use `core/data/src/main/kotlin/net/flibustareader/core/data/library/FolderScanner.kt` for SAF folder scans and scheduled imports.
-- Bind repositories in `core/data/src/main/kotlin/net/flibustareader/core/data/di/DataModule.kt`; keep UI in feature modules.
+- Use `core/data/src/main/kotlin/app/folio/core/data/catalog/CatalogRepository.kt` for feeds, covers and catalog sources.
+- Use `core/data/src/main/kotlin/app/folio/core/data/catalog/DownloadManager.kt` for download rows, resume and workers.
+- Use `core/data/src/main/kotlin/app/folio/core/data/library/FolderScanner.kt` for SAF folder scans and scheduled imports.
+- Bind repositories in `core/data/src/main/kotlin/app/folio/core/data/di/DataModule.kt`; keep UI in feature modules.
 
 ## Invariants
 - Load `.agents/rules/storage.md` before changing files, Room schemas, IDs, position strings or preference keys.

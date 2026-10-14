@@ -1,11 +1,11 @@
 # Page layout
 
 ## Entry points
-- Use `core/layout/src/main/kotlin/net/flibustareader/core/layout/Paginator.kt` for `LayoutSpec`, pages and chapter pagination.
-- Use `core/layout/src/main/kotlin/net/flibustareader/core/layout/TextStyler.kt` for paragraph styles and Android text spans.
-- Use `core/layout/src/main/kotlin/net/flibustareader/core/layout/PageRenderer.kt` for drawing and selection geometry.
-- Use `core/layout/src/main/kotlin/net/flibustareader/core/layout/ReaderStyle.kt` for typography and injected font/image providers.
-- Use `core/layout/src/main/kotlin/net/flibustareader/core/layout/TextGeometry.kt` as the canonical justified-text geometry example.
+- Use `core/layout/src/main/kotlin/app/folio/core/layout/Paginator.kt` for `LayoutSpec`, pages and chapter pagination.
+- Use `core/layout/src/main/kotlin/app/folio/core/layout/TextStyler.kt` for paragraph styles and Android text spans.
+- Use `core/layout/src/main/kotlin/app/folio/core/layout/PageRenderer.kt` for drawing and selection geometry.
+- Use `core/layout/src/main/kotlin/app/folio/core/layout/ReaderStyle.kt` for typography and injected font/image providers.
+- Use `core/layout/src/main/kotlin/app/folio/core/layout/TextGeometry.kt` as the canonical justified-text geometry example.
 
 ## Invariants
 - Keep this Android `StaticLayout`/Canvas layer free of Compose; screen state belongs to `feature/reader/`.

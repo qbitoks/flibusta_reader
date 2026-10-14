@@ -26,7 +26,7 @@ JVM tests охватывают OPDS navigation/acquisition/pagination, отсу�
 
 ## Артефакты
 
-- `artifacts/FlibustaReader-0.1.0-debug.apk`: 48 644 457 bytes, debug signed.
+- `artifacts/Folio-0.1.0-debug.apk`: 48 644 457 bytes, debug signed.
 - SHA-256: `3057FD9EB1E0F4F50FF4568824EB16FA41CAFF2907DFB7DA55B3389D7DC11AC1`.
 - `artifacts/library-phone.png`, `artifacts/library-tablet.png`, `artifacts/reader-dark.png`: реальные скриншоты эмулятора.
 
@@ -34,7 +34,7 @@ JVM tests охватывают OPDS navigation/acquisition/pagination, отсу�
 
 ```powershell
 ./scripts/build.ps1
-adb -s emulator-5556 install -r artifacts/FlibustaReader-0.1.0-debug.apk
+adb -s emulator-5556 install -r artifacts/Folio-0.1.0-debug.apk
 ./scripts/smoke-test.ps1 -Serial emulator-5556
 ```
 

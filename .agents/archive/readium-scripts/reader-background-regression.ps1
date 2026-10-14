@@ -1,7 +1,7 @@
 param(
     [string]$Serial = 'emulator-5556',
     [string]$Adb = "$env:LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe",
-    [string]$Apk = 'artifacts/FlibustaReader-0.2.1-debug.apk',
+    [string]$Apk = 'artifacts/Folio-0.2.1-debug.apk',
     [switch]$RecoverLauncherStartupAnr
 )
 $ErrorActionPreference = 'Stop'
@@ -53,7 +53,7 @@ function WaitReader {
     throw 'Reader text did not load'
 }
 function MarkerExists([string]$Name) {
-    $names = @(AdbChecked shell run-as net.flibustareader ls $checkpoint)
+    $names = @(AdbChecked shell run-as app.folio ls $checkpoint)
     $names -contains $Name
 }
 function WaitMarker([string]$Name) {
@@ -66,30 +66,30 @@ function WaitMarker([string]$Name) {
 function AssertStopped {
     $state = (AdbChecked shell dumpsys activity activities) -join "`n"
     $records = [regex]::Matches($state, '(?ms)^\s+\* Hist[^\r\n]*\r?\n.*?(?=^\s+\* Hist|\z)')
-    $reader = $records | Where-Object { $_.Value -match '\A[^\r\n]*net\.flibustareader/\.ReaderActivity' } | Select-Object -First 1
+    $reader = $records | Where-Object { $_.Value -match '\A[^\r\n]*app.folio/\.ReaderActivity' } | Select-Object -First 1
     if (!$reader -or [regex]::Match($reader.Value, '(?m)^\s+state=(\w+)').Groups[1].Value -ne 'STOPPED') {
         throw 'ReaderActivity is not confirmed STOPPED'
     }
     if ($reader.Value -notmatch 'mHaveState=true') { throw 'ReaderActivity has not saved its instance state' }
 }
 AdbChecked install -r $Apk | Out-Null
-AdbChecked shell am force-stop net.flibustareader
-AdbChecked shell am start -W -n net.flibustareader/.MainActivity | Out-Null
+AdbChecked shell am force-stop app.folio
+AdbChecked shell am start -W -n app.folio/.MainActivity | Out-Null
 Tap (Find 'Демо-книга')
 WaitReader | Out-Null
 AdbChecked shell input keyevent 4
 Find 'Мои книги' | Out-Null
-AdbChecked shell run-as net.flibustareader mkdir -p $checkpoint
+AdbChecked shell run-as app.folio mkdir -p $checkpoint
 try {
-    AdbChecked shell run-as net.flibustareader rm -f "$checkpoint/hold" "$checkpoint/reached" "$checkpoint/released" "$checkpoint/attached"
-    AdbChecked shell run-as net.flibustareader touch "$checkpoint/hold"
+    AdbChecked shell run-as app.folio rm -f "$checkpoint/hold" "$checkpoint/reached" "$checkpoint/released" "$checkpoint/attached"
+    AdbChecked shell run-as app.folio touch "$checkpoint/hold"
     Tap (Find 'Демо-книга')
     WaitMarker 'reached'
     AdbChecked shell input keyevent 3
     for ($attempt=0; $attempt -lt 20; $attempt++) {
         try { AssertStopped; break } catch { if ($attempt -eq 19) { throw }; Start-Sleep -Milliseconds 250 }
     }
-    AdbChecked shell run-as net.flibustareader rm -f "$checkpoint/hold"
+    AdbChecked shell run-as app.folio rm -f "$checkpoint/hold"
     WaitMarker 'released'
     # Let the coroutine reach the lifecycle guard, still with the app in the background.
     Start-Sleep -Milliseconds 1000
@@ -98,7 +98,7 @@ try {
     $backgroundState = (AdbChecked shell dumpsys activity activities) -join "`n"
     $backgroundState | Set-Content -LiteralPath .tools/background-regression-state.txt
     AdbChecked shell input keyevent 187
-    Tap (Find 'Flibusta Reader')
+    Tap (Find 'Folio')
     WaitMarker 'attached'
     $web = WaitReader
     Tap $web
@@ -108,5 +108,5 @@ try {
     [pscustomobject]@{ Result='PASS'; PreparedWhileStopped=$true; AttachedOnlyAfterResume=$true; ReaderText=$true; ReaderControls=$true } | ConvertTo-Json
 } finally {
     # Delete only this scenario's explicitly named marker files; never app books or preferences.
-    AdbChecked shell run-as net.flibustareader rm -f "$checkpoint/hold" "$checkpoint/reached" "$checkpoint/released" "$checkpoint/attached"
+    AdbChecked shell run-as app.folio rm -f "$checkpoint/hold" "$checkpoint/reached" "$checkpoint/released" "$checkpoint/attached"
 }

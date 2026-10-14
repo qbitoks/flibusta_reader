@@ -28,7 +28,7 @@ function Tap-Text([string]$Text) {
     & $Adb -s $Serial shell input tap ([int](($taskBounds[0] + $taskBounds[2]) / 2)) ([int](($taskBounds[1] + $taskBounds[3]) / 2))
 }
 function Read-Preferences {
-    $taskRaw = & $Adb -s $Serial shell run-as net.flibustareader cat shared_prefs/reader.xml
+    $taskRaw = & $Adb -s $Serial shell run-as app.folio cat shared_prefs/reader.xml
     [xml]$taskPreferences = $taskRaw -join "`n"
     return $taskPreferences
 }
@@ -81,7 +81,7 @@ function Save-Screen([string]$Name) {
     & $Adb -s $Serial pull /sdcard/reader-smoke.png "artifacts/$Name.png" 2>$null | Out-Null
 }
 function Open-Demo {
-    & $Adb -s $Serial shell am start -W -n net.flibustareader/.MainActivity | Out-Null
+    & $Adb -s $Serial shell am start -W -n app.folio/.MainActivity | Out-Null
     Tap-Text 'Демо-книга'
     $taskNodes = Read-Ui
     if ($taskNodes | Where-Object text -eq 'Got it') { Tap-Text 'Got it' }
@@ -93,7 +93,7 @@ function Open-Demo {
 }
 function Preference-Bool([string]$Name) { return ((Read-Preferences).map.boolean | Where-Object name -eq $Name).value -eq 'true' }
 
-& $Adb -s $Serial shell am force-stop net.flibustareader
+& $Adb -s $Serial shell am force-stop app.folio
 Open-Demo
 Tap-Reading
 Tap-Description 'Меню чтения'
@@ -140,7 +140,7 @@ foreach ($taskName in $taskHudNames) { Tap-Description "Скрыть $taskName";
 Save-Screen 'reader-0.2-hidden-hud'
 Write-Output 'Проверка перезапуска со скрытыми индикаторами'
 $taskBeforeRestart = Wait-StablePosition
-& $Adb -s $Serial shell am force-stop net.flibustareader
+& $Adb -s $Serial shell am force-stop app.folio
 Open-Demo
 foreach ($taskName in $taskHudNames) { Wait-Description "Показать $taskName" | Out-Null }
 $taskAfterRestart = Wait-StablePosition

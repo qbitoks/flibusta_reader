@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "net.flibustareader"
+    namespace = "app.folio"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "net.flibustareader"
+        applicationId = "app.folio"
         minSdk = 34
         targetSdk = 37
         versionCode = 11

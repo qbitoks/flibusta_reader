@@ -6,7 +6,7 @@ Why: users upgrade with `install -r`; their books, positions and bookmarks must 
 
 ## Files (app-private)
 - `files/books/library.json` — JSON array, no schema version. Entry:
-  `{"id":"<uuid>","title":"…","author":"…","path":"/data/user/0/net.flibustareader/files/books/<uuid>.epub","format":"FB2"}`
+  `{"id":"<uuid>","title":"…","author":"…","path":"/data/user/0/app.folio/files/books/<uuid>.epub","format":"FB2"}`
 - `id`, `title`, `path`, `format` required; `author` optional. `path` is absolute: don't make it relative
   without a migration. `format` is the source format; the stored file is always EPUB.
 - `files/books/<uuid>.epub`, `<uuid>.part` (unfinished), `index-*.part` (unfinished index write).

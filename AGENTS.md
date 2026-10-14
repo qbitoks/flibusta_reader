@@ -66,7 +66,7 @@ Put knowledge in the deepest file whose scope covers it. This file holds only re
 <!-- PROJECT-OWNED BELOW: filled by bootstrap; template upgrades never touch it (.agents/playbooks/upgrade.md). -->
 ## Project
 
-- What: Flibusta Reader, a native Android e-reader with an OPDS catalog. No app server, no accounts.
+- What: Folio, a native Android e-reader with an OPDS catalog. No app server, no accounts.
 - Stack: Kotlin 2.4, Jetpack Compose, Hilt, Room; AGP 9.4, Gradle 9.8; minSdk 34, compileSdk/targetSdk 37.
   Own FB2/EPUB parser and page layout (no Readium), Apple Books–style UI. Areas: `.agents/MAP.md`.
   User-facing product description: `README.md`. Why this stack: `.agents/decisions/0004-prototype-engine.md`.
@@ -78,7 +78,7 @@ Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGE
   `& "$env:ProgramFiles\Git\bin\sh.exe" scripts/agent-lint.sh`. Docs-only change: agent-lint + link check.
 - Setup / env check: `./scripts/doctor.ps1`
 - JVM tests: `./gradlew.bat :core:opds:test :core:format:test :feature:reader:testDebugUnitTest --console=plain`
-- Test one: `./gradlew.bat :core:opds:test --tests 'net.flibustareader.core.opds.OpdsParserTest' --console=plain`
+- Test one: `./gradlew.bat :core:opds:test --tests 'app.folio.core.opds.OpdsParserTest' --console=plain`
 - Device checks: install the release APK and verify by hand (`scripts/AGENTS.md`); CI checks launch/crashes.
   - Bug in `core`: reproduce with a regression test first.
 - A check you can't run: name the reason; never report it as passed.

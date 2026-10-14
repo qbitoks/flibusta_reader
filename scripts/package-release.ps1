@@ -24,7 +24,7 @@ if (!$certificate) { throw 'APK signer certificate not found' }
 if ($ExpectedCertificateSha256 -and $certificate -ine $ExpectedCertificateSha256) { throw 'APK certificate differs from existing preview releases' }
 $badging = (& $aapt dump badging $Apk 2>&1) -join "`n"
 if ($LASTEXITCODE -ne 0) { throw 'Cannot read APK manifest' }
-if ($badging -notmatch "package: name='net.flibustareader' versionCode='$($metadata.versionCode)' versionName='$([regex]::Escape($metadata.versionName))'" -or
+if ($badging -notmatch "package: name='app.folio' versionCode='$($metadata.versionCode)' versionName='$([regex]::Escape($metadata.versionName))'" -or
     $badging -notmatch "(?m)^sdkVersion:'$($metadata.minSdk)'" -or
     ($badging -match '(?m)^native-code:' -and $badging -notmatch "(?m)^native-code: 'arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64'$")) {
     throw 'APK manifest does not match universal release metadata'
@@ -40,7 +40,7 @@ $upgrade = if ($SigningKind -eq 'preview') {
     'Промежуточная CI-сборка с временным ключом. Для отдельной тестовой установки; не используйте для обновления ранее установленного preview APK.'
 }
 $notes = @"
-# Flibusta Reader v$($metadata.version)
+# Folio v$($metadata.version)
 
 **Файл:** ``$($metadata.apkName)``.
 

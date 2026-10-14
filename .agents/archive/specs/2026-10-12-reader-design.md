@@ -1,4 +1,4 @@
-# Прототип Flibusta Reader
+# Прототип Folio
 
 > Исторический согласованный дизайн прототипа. Реализация развивалась дальше; текущие границы и потоки — в [architecture.md](../../architecture.md), ограничения — в [project-status.md](../../project-status.md).
 

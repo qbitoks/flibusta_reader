@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "net.flibustareader.core.data"
+    namespace = "app.folio.core.data"
     compileSdk = 37
 
     defaultConfig {
