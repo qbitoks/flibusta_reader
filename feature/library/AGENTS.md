@@ -8,7 +8,7 @@
 - Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/Common.kt` for context-sensitive book menus and confirmation dialogs.
 - Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/CollectionsSheet.kt` for built-in/user collection editing.
 - Use `feature/library/src/main/kotlin/net/flibustareader/feature/library/SearchScreen.kt` for local search and recent queries.
-- Use `ChromeDefaultsSheet` from the library menu for shared header/footer styles; reuse `ChromeStylePicker`.
+- «Настройки чтения» in the library menu opens `ReadingDefaultsSheet` (feature/reader) for shared reader settings.
 
 ## Invariants
 - Keep picker and navigation actions in host callbacks; import and scan through the ViewModel repositories.

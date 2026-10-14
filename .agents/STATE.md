@@ -9,7 +9,7 @@ status: active
 - Catalog browse/search, EPUB/FB2 downloads and Range resume were checked against flibusta.is on an emulator.
 - ReaderPhone checks cover upgrade/restart, presets, menu palettes and guide landings in Slide/Curl/Fade.
 - Finish on-device default/book reset checks and physical-phone verification before distribution.
-- Validate the fixed settings panel on a physical phone; keep future reader changes on main.
+- 0.3.7 (per-book settings, custom lines, new defaults) committed; user checks it on a phone, then tag v0.3.7.
 
 ## Next steps
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.

@@ -30,16 +30,14 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-12 | ui | App appearance = per-app night mode (UiModeManager); book override by id, absent = follow app | re-themes windows and bars without recreation
 2026-10-12 | ui | Old reader-wide `appearance` key dropped without migration | user decision
 2026-10-13 | release | Tags publish a regular release automatically: draft during upload, `--draft=false` last | user decision; no half-uploaded public release
-2026-10-13 | reader | Header line default «Ничего», footer has time and battery; both configurable | user decision; Apple Books always shows the book title
 2026-10-13 | reader | Tap zones are the outer thirds, not 10 % edges | edges were too narrow: most taps toggled the controls instead of turning
 2026-10-13 | reader | Scroll mode: own window of ±2 chapters, positions by item key, jumps via `ScrollJump` id | index-based reads mixed pages during prepends; stale reports undid jumps
 2026-10-13 | reader | Scroll seams keep the swallowed spacing as `Page.lead`, not a separate ribbon layout | one pagination for both modes; positions and page numbers stay shared
-2026-10-13 | reader | Independent header/footer visual presets inherit defaults per book; content controls stay | user-approved plan
 2026-10-13 | reader | Fade page labels under controls without changing number format | replaces number expansion from earlier design; user-approved plan
 2026-10-13 | reader | Use TOC ranges for chapter progress and title; guide direction follows successful landings | user-approved fixes
 2026-10-13 | code | Split by responsibility; aim for files <400 lines, composables <150 (soft targets) | targeted reads save context; avoid fragments with no independent purpose
 2026-10-13 | reader settings | Fixed dialog, pinned native-text preview, separate choice cards and descriptive styles; preserve settings keys | user-approved redesign
-2026-10-13 | reader settings | Compact: theme swatches, segments, style chips; radio list only as large-text fallback | user: tiles and lists too tall
+2026-10-13 | reader settings | Compact: theme swatches, segments, style chips; labels shrink; radio list only for >130 % text | user: tiles and lists too tall
 2026-10-13 | reader settings | Shared settings + per-book differences for every panel setting; scope menu under title | user decision; replaces shared-only theme/text
 2026-10-13 | reader settings | Panel opens on book scope iff the book has own settings; no stored scope | a remembered mode caused accidental edits
 2026-10-14 | reader settings | Footer «Нет» drops only the page number; time/battery/left stay in «Свои параметры» | user: wants a clock-only line

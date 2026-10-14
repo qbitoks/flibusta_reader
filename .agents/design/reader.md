@@ -9,13 +9,13 @@
 - Apple reference: horizontal margins 39 dp, column about 314 dp, line pitch 23.5 dp;
   «Оригинал» dark uses black/white. Adapt measurements to current font and user settings.
 - Preserve the user decisions from 2026-10-13:
-  - Configure lines in «Темы и настройки» → «Страница»: header «Ничего» by default, book title or chapter title.
+  - Configure lines in «Темы и настройки» → «Страница»: header none, book or chapter title (default);
+    footer «42» (page only), clock/battery off; Slide.
   - With no header, start text below the status-bar inset; when controls are shown, put a page-color
     strip behind the top buttons. With no footer content, let text extend to the bottom.
   - Put clock at footer left, page/percent plus «ещё N стр.» at center, battery at right.
     Fade header/footer out with controls shown; retain the chosen number format and stable title margins.
   - Offer descriptive Small muted/Large regular/Book font/Bold contrast choices for upper and lower labels.
-    Inherit each line from reader defaults unless the book overrides it; provide a reset for each line.
     Reuse `readerChromeTextStyle` in cards and pages; derive reserved space from scaled line height.
   - In scroll mode, fix the header on a solid background slightly higher, with text fading over
     about 18 dp before it; use a 12 dp lower fade or «Полоска» tinted nearly opaque page color.
@@ -90,7 +90,7 @@
 - Reset only the selected theme typography (for a book: «Вернуть общий текст»); leave the font size unchanged.
 - In «Страница», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
   Both lines: content segment (top «Нет» hides the line; bottom «Нет» drops only the number), four style chips, «Свои параметры» switch.
-  Short choices are segments that fall back to the radio list for large text or labels that do not fit.
+  Short choices are segments whose labels shrink to fit; radio list only above 130 % text (never for icon rows).
 - «Свои параметры» (off draws the standard line, values kept): size 80–140 %, visibility 40–100 %,
   position (top: left/centre/right; bottom: spread/centre), edge offset 0…+24, space to text −12…+24,
   rule; top adds capitals and «Не показывать в начале главы»; bottom adds «осталось в главе», time,
