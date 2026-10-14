@@ -73,16 +73,6 @@ internal fun ReadingSettingsSheet(
     onDismiss: () -> Unit,
 ) {
     var section by rememberSaveable { mutableIntStateOf(0) }
-    var jump by remember { mutableStateOf<PageJump?>(null) }
-    val onPreviewTap: (PreviewPart) -> Unit = { part ->
-        when (part) {
-            PreviewPart.Text -> section = 0
-            PreviewPart.Header, PreviewPart.Footer -> {
-                section = 1
-                jump = PageJump(top = part == PreviewPart.Header)
-            }
-        }
-    }
     val scrollStates = List(2) { rememberScrollState() }
     val c = Folio.colors
     val settings = editor.settings
@@ -116,19 +106,19 @@ internal fun ReadingSettingsSheet(
                         Column(Modifier.weight(1f).verticalScroll(scrollStates[section], overscrollEffect = null).padding(bottom = 24.dp)) {
                             when (section) {
                                 0 -> ReaderAppearanceSettings(editor, brightness)
-                                1 -> ReaderPageSettings(editor, preview, jump)
+                                1 -> ReaderPageSettings(editor, preview)
                             }
                         }
                     }
                 }
                 if (wide) {
                     Row(Modifier.fillMaxSize()) {
-                        PageSettingsPreview(preview, settings, palette, Modifier.weight(0.44f).fillMaxHeight().padding(bottom = 16.dp), onPreviewTap)
+                        PageSettingsPreview(preview, settings, palette, Modifier.weight(0.44f).fillMaxHeight().padding(bottom = 16.dp))
                         Editor(Modifier.weight(0.56f).fillMaxHeight())
                     }
                 } else {
                     Column(Modifier.fillMaxSize()) {
-                        PageSettingsPreview(preview, settings, palette, Modifier.fillMaxWidth().height(previewHeight), onPreviewTap)
+                        PageSettingsPreview(preview, settings, palette, Modifier.fillMaxWidth().height(previewHeight))
                         Editor(Modifier.weight(1f))
                     }
                 }

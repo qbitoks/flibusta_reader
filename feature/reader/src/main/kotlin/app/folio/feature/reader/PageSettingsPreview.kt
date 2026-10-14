@@ -2,7 +2,6 @@ package app.folio.feature.reader
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
@@ -86,9 +85,6 @@ private fun previewSampleBlocks(): List<Block> {
     }
 }
 
-/** What a tap on the preview points at; the sheet opens that part's settings. */
-internal enum class PreviewPart { Header, Text, Footer }
-
 /**
  * Fixed, readable excerpt using the book renderer; pagination here never updates the reading viewport.
  * The lines lie over the text as in the reader, so with «Прокрутка» the excerpt scrolls under them
@@ -100,7 +96,6 @@ internal fun PageSettingsPreview(
     settings: ReaderSettings,
     palette: ReaderPalette,
     modifier: Modifier = Modifier,
-    onTap: (PreviewPart) -> Unit = {},
 ) {
     val chapter = remember(source.blocks) { Chapter(null, source.blocks) }
     val headerLook = headerLook(settings, palette)
@@ -129,13 +124,13 @@ internal fun PageSettingsPreview(
         if (scroll) {
             PreviewText(chapter, source, settings, palette, true,
                 PaddingValues(start = margin, end = margin, top = scrollInsets.first, bottom = scrollInsets.second),
-                Modifier.fillMaxSize().tap { onTap(PreviewPart.Text) })
+                Modifier.fillMaxSize())
             if (header != null) ReaderLineBlock(true, headerLook, margin,
-                Modifier.align(Alignment.TopCenter).tap { onTap(PreviewPart.Header) }) {
+                Modifier.align(Alignment.TopCenter)) {
                 BlockTitle(header, headerLook, headerLook.titleMargin(24.dp, margin))
             }
             if (!footer.isEmpty) ReaderLineBlock(false, footerLook, margin,
-                Modifier.align(Alignment.BottomCenter).tap { onTap(PreviewPart.Footer) }) {
+                Modifier.align(Alignment.BottomCenter)) {
                 PageFooterBar(
                     center = footerLook.text(footerCenter(footer, source.page, source.total, source.progress, source.pagesLeft, words,
                         readerChromeSeparator(settings.chromeStyles.footer))),
@@ -147,13 +142,12 @@ internal fun PageSettingsPreview(
             return@Box
         }
         PreviewText(chapter, source, settings, palette, scroll, PaddingValues(start = margin, end = margin, top = headerHeight, bottom = footerHeight),
-            Modifier.fillMaxSize().tap { onTap(PreviewPart.Text) })
+            Modifier.fillMaxSize())
         // «Отступ сверху/снизу» move a line from the edge, «Отступ до текста» from the text; negatives shrink the default gap.
         val headerLayout = settings.shownHeaderLayout
         val footerLayout = settings.shownFooterLayout
         Column(Modifier.align(Alignment.TopCenter).fillMaxWidth()
-            .onSizeChanged { headerHeight = with(density) { it.height.toDp() } }
-            .tap(header != null) { onTap(PreviewPart.Header) }) {
+            .onSizeChanged { headerHeight = with(density) { it.height.toDp() } }) {
             Spacer(Modifier.height(10.dp))
             if (header != null) {
                 Spacer(Modifier.height(headerLayout.edge.coerceAtLeast(0).dp))
@@ -164,8 +158,7 @@ internal fun PageSettingsPreview(
             }
         }
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-            .onSizeChanged { footerHeight = with(density) { it.height.toDp() } }
-            .tap(!footer.isEmpty) { onTap(PreviewPart.Footer) }) {
+            .onSizeChanged { footerHeight = with(density) { it.height.toDp() } }) {
             if (!footer.isEmpty) {
                 Spacer(Modifier.height((12 + footerLayout.gap).coerceAtLeast(0).dp))
                 PageFooterBar(
@@ -222,7 +215,3 @@ private fun PreviewText(chapter: Chapter, source: PreviewSource, settings: Reade
         }
     }
 }
-
-/** The preview is a picture of the page: a tap shows no ripple. */
-private fun Modifier.tap(enabled: Boolean = true, onClick: () -> Unit) =
-    clickable(interactionSource = null, indication = null, enabled = enabled, onClick = onClick)

@@ -1,15 +1,6 @@
 package app.folio.feature.reader
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -30,15 +21,9 @@ import app.folio.core.designsystem.*
 import app.folio.core.designsystem.components.*
 import kotlin.math.roundToInt
 
-/** A tap on a line in the preview: scroll «На странице» to that line's group and flash it. */
-internal class PageJump(val top: Boolean) {
-    /** Shown once: coming back to «На странице» later doesn't scroll again. */
-    var done = false
-}
-
 /** Page controls are content of the shared settings sheet, never a nested modal. Both lines share one layout. */
 @Composable
-internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource, jump: PageJump? = null) {
+internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource) {
     val settings = editor.settings
     val footer = settings.shownFooter
     val turns = buildList {
@@ -50,7 +35,7 @@ internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource, j
     SettingsGroupHeader(stringResource(R.string.settings_page_turn), own = editor.isOwn(BookOverrides.PAGE_TURN))
     GroupedCard { SettingsSegments(settings.pageTurn, turns, stacked = true) { v -> editor.edit { it.copy(pageTurn = v) } } }
 
-    LineGroup(jump?.takeIf { it.top }) {
+    Column {
     SettingsGroupHeader(stringResource(R.string.header_group), own = editor.isOwn(BookOverrides.HEADER_KEYS))
     GroupedCard {
         SettingsSegments(settings.header, listOf(
@@ -68,7 +53,7 @@ internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource, j
     }
     }
 
-    LineGroup(jump?.takeUnless { it.top }) {
+    Column {
     SettingsGroupHeader(stringResource(R.string.footer_group), own = editor.isOwn(BookOverrides.FOOTER_KEYS))
     GroupedCard {
         FooterContentCapsules(editor, source)
@@ -86,27 +71,6 @@ internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource, j
     Spacer(Modifier.height(16.dp))
     ResetButton(stringResource(if (editor.bookScope) R.string.settings_reset_book_page else R.string.settings_reset_page),
         editor.canResetPage, editor::resetPage)
-}
-
-/** A line's group; [jump] scrolls it into view and flashes it, as a tap on that line in the preview asks. */
-@Composable
-private fun LineGroup(jump: PageJump?, content: @Composable ColumnScope.() -> Unit) {
-    val requester = remember { BringIntoViewRequester() }
-    val flash = remember { Animatable(0f) }
-    LaunchedEffect(jump) {
-        if (jump == null || jump.done) return@LaunchedEffect
-        jump.done = true
-        withFrameNanos { }
-        requester.bringIntoView()
-        flash.snapTo(1f)
-        flash.animateTo(0f, tween(900))
-    }
-    // Monochrome like the rest of the interface: a brief shade of the label colour over the group.
-    val tint = Folio.colors.label
-    Column(Modifier.bringIntoViewRequester(requester).drawWithContent {
-        drawContent()
-        if (flash.value > 0f) drawRoundRect(tint.copy(alpha = 0.08f * flash.value), cornerRadius = CornerRadius(16.dp.toPx()))
-    }, content = content)
 }
 
 /**
