@@ -3,7 +3,9 @@ package app.folio.feature.reader
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.isSystemInDarkTheme
+import android.content.res.Configuration
+import android.content.res.Resources
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.toArgb
@@ -52,7 +54,20 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
     ReaderSheets(vm, settings, palette, controls)
 }
 
-/** Page palette of [settings]; isSystemInDarkTheme() already reflects the app's own appearance (per-app night mode). */
+/** Page palette of [settings]; «Авто» follows Android, not the app's own appearance. */
 @Composable
-internal fun readerPalette(settings: ReaderSettings): ReaderPalette =
-    ReaderPalettes.of(settings.theme, ReaderPalettes.isDark(settings.appearance, isSystemInDarkTheme()))
+internal fun readerPalette(settings: ReaderSettings): ReaderPalette {
+    val dark = ReaderPalettes.isDark(settings.appearance, androidInDarkTheme())
+    val colors = settings.customColors
+    return if (settings.custom && colors != null) ReaderPalettes.custom(colors, dark) else ReaderPalettes.of(settings.theme, dark)
+}
+
+/**
+ * Android's own dark theme. isSystemInDarkTheme() reflects the app's appearance (per-app night mode);
+ * the system resources keep the device's. Reading the local configuration recomposes when either changes.
+ */
+@Composable
+internal fun androidInDarkTheme(): Boolean {
+    LocalConfiguration.current
+    return Resources.getSystem().configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+}

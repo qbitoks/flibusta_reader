@@ -76,14 +76,14 @@ internal fun ReadingSettingsSheet(
     var jump by remember { mutableStateOf<PageJump?>(null) }
     val onPreviewTap: (PreviewPart) -> Unit = { part ->
         when (part) {
-            PreviewPart.Text -> section = 1
+            PreviewPart.Text -> section = 0
             PreviewPart.Header, PreviewPart.Footer -> {
-                section = 2
+                section = 1
                 jump = PageJump(top = part == PreviewPart.Header)
             }
         }
     }
-    val scrollStates = List(3) { rememberScrollState() }
+    val scrollStates = List(2) { rememberScrollState() }
     val c = Folio.colors
     val settings = editor.settings
     val palette = readerPalette(settings)
@@ -116,8 +116,7 @@ internal fun ReadingSettingsSheet(
                         Column(Modifier.weight(1f).verticalScroll(scrollStates[section]).padding(bottom = 24.dp)) {
                             when (section) {
                                 0 -> ReaderAppearanceSettings(editor, brightness)
-                                1 -> ReaderTextSettings(editor)
-                                2 -> ReaderPageSettings(editor, palette, jump)
+                                1 -> ReaderPageSettings(editor, palette, jump)
                             }
                         }
                     }
@@ -142,7 +141,7 @@ internal fun ReadingSettingsSheet(
 @Composable
 private fun SettingsTabs(selected: Int, onSelect: (Int) -> Unit) {
     val c = Folio.colors
-    val labels = listOf(R.string.settings_tab_appearance, R.string.settings_text, R.string.settings_tab_page).map { stringResource(it) }
+    val labels = listOf(R.string.settings_tab_appearance, R.string.settings_tab_page).map { stringResource(it) }
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val style = FolioType.subheadline.copy(fontWeight = FontWeight.SemiBold)

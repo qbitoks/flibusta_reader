@@ -16,7 +16,7 @@ import app.folio.core.data.settings.BookOverrides
 import app.folio.core.data.settings.GuideDim
 import app.folio.core.data.settings.ReaderSettings
 import app.folio.core.data.settings.SettingsRepository
-import app.folio.core.data.settings.ThemeStyle
+import app.folio.core.data.settings.textPreset
 import app.folio.core.designsystem.ResourceTypefaceProvider
 import app.folio.core.layout.Ink
 import app.folio.core.layout.LayoutSpec
@@ -583,9 +583,10 @@ class ReaderViewModel @Inject constructor(
         if (book) settingsRepository.updateBookReader(bookId, change) else settingsRepository.updateReader(change)
     }
 
-    /** «Вернуть общий текст» for the book, or the theme's default typography for all books. */
-    fun textReset(book: Boolean): (ReaderSettings) -> ReaderSettings = {
-        it.withThemeStyle(if (book) sharedSettings.value.themeStyles.getValue(it.theme) else ThemeStyle.defaultFor(it.theme))
+    /** «Вернуть общий текст» for the book, or the theme's own card for all books. */
+    fun textReset(book: Boolean): (ReaderSettings) -> ReaderSettings = { s ->
+        sharedSettings.value.takeIf { book }?.let { s.copy(textPreset = it.textPreset, customText = it.customText, customColors = it.customColors) }
+            ?: s.copy(textPreset = s.theme.textPreset)
     }
 
     /** «Вернуть общие настройки страницы» for the book, or the default lines for all books. */

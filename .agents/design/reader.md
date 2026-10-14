@@ -24,7 +24,7 @@
   - «Свои параметры» in one list, no captions: content, look, edge; in scroll mode «Под строкой при
     прокрутке», then gap and rule only when it isn't «Ничего» — what it reveals sits below it.
   - The settings preview mirrors this: lines overlay the text, scroll mode scrolls; a tap on a line
-    opens its group in «Страница», on the text the «Текст» tab.
+    opens its group in «Страница», on the text «Оформление».
     In paged mode, reserve space below the footer.
   - Show history «↶ / ↷» with controls; briefly show «↶» after a jump for 3 s or until first turn.
   - Use left/right thirds for tap turning; an edge tap with controls visible turns and hides them.
@@ -86,14 +86,20 @@
   the same panel for all books over a sample page, without brightness.
 - Use semantic interface colors, shared grouped cards with 16 dp insets, adaptive rows and labelled controls.
   Keep the reading palette inside theme tiles and previews; keep selected states accessible.
-- In «Оформление», show one row of six «Aa» theme swatches (selected name in the group header) and a
-  «Авто / Светлое / Тёмное» segment in the same card, then window brightness.
-  Use a device-brightness switch and disable the manual slider while on; retain the last manual value.
+- «Оформление» groups: «Яркость», «Тема и размер» (selected name in the header), and for «Моя» «Цвет» and
+  «Текст». Brightness is one row: an «Авто» pill (device brightness, slider dimmed)
+  and a slider; moving it switches to manual and keeps the last manual value.
+  Then one card: the size slider, an «Авто / Светлое / Тёмное» segment, then seven «Aa» swatches
+  (six themes + «Моя», a pencil until first used).
+  «Авто» follows Android's dark theme (`androidInDarkTheme`), not the app's appearance.
   Resolve tile palettes from appearance, not from the current theme darkness; Quiet stays low contrast.
-- In «Текст», show size, font samples, bold, and a collapsible custom-spacing group below the pinned preview.
+- «Моя» (`TextPreset.Custom`) replaces the theme: below the card a colour card («Фон»: five theme palettes,
+  Bold = Original; «Тон» ±10; «Контраст» ±10) and a text card (font, bold, spacing, margins, justify).
+  First pick copies the current theme; later the remembered values return; a standard theme hides them.
   Keep ranges: size 13–42, line spacing 0.80–2.50, letter spacing ±10%, word spacing ±20%, margins ±10%.
   Keep justification in the spacing group and hyphenation enabled without a toggle.
-- Reset only the selected theme typography (for a book: «Вернуть общий текст»); leave the font size unchanged.
+- «Сбросить на «<тема>»» sets «Моя» to the last standard theme (`withCustomReset`); a book also shows
+  «Вернуть общее оформление» for its own theme fields; size stays.
 - «Страница» ends with «Сбросить настройки страницы» (for a book: «Вернуть общие настройки страницы»): both lines with «Свои параметры» back to defaults; page turn stays.
 - In «Страница», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
   Both lines: content segment (top «Нет» hides the line; bottom «Нет» drops only the number), four style chips, «Свои параметры» switch.

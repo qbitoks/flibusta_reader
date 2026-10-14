@@ -14,13 +14,15 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
 
     fun encode(): String = values.entries.joinToString("\n") { "${it.key}=${it.value}" }
 
-    /** Theme first: typography fields apply to the theme in effect after it. */
+    /** Fields apply in order: the text card before the fields that edit «Мой». */
     private class Field(val key: String, val read: (ReaderSettings) -> String, val write: (ReaderSettings, String) -> ReaderSettings?)
 
     companion object {
         const val THEME = "theme"
         const val APPEARANCE = "appearance"
         const val FONT_SIZE = "font_size"
+        const val TEXT_PRESET = "text_preset"
+        const val CUSTOM_COLORS = "custom_colors"
         const val FONT = "font"
         const val BOLD = "bold"
         const val CUSTOM_SPACING = "custom_spacing"
@@ -42,8 +44,8 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
         const val FOOTER_STYLE = "footer_style"
         const val FOOTER_LAYOUT = "footer_layout"
 
-        /** Fields of «Текст» besides the size; the theme's own typography stands under them. */
-        val TEXT = listOf(FONT, BOLD, CUSTOM_SPACING, LINE_SPACING, LETTER_SPACING, WORD_SPACING, MARGINS, JUSTIFY)
+        /** «Свои параметры» fields; the switch goes first, their values after it. */
+        val TEXT = listOf(TEXT_PRESET, CUSTOM_COLORS, FONT, BOLD, CUSTOM_SPACING, LINE_SPACING, LETTER_SPACING, WORD_SPACING, MARGINS, JUSTIFY)
         val HEADER_KEYS = listOf(HEADER, HEADER_STYLE, HEADER_LAYOUT, HEADER_UNDER)
         val FOOTER_KEYS = listOf(FOOTER_PAGE, FOOTER_LEFT, FOOTER_CLOCK, FOOTER_BATTERY, FOOTER_UNDER, FOOTER_STYLE, FOOTER_LAYOUT)
 
@@ -59,20 +61,22 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
         private fun floatField(key: String, get: (ReaderSettings) -> Float, set: (ReaderSettings, Float) -> ReaderSettings) =
             Field(key, { get(it).toString() }, { s, v -> v.toFloatOrNull()?.let { set(s, it) } })
 
-        private fun ReaderSettings.text(change: (ThemeStyle) -> ThemeStyle) = withThemeStyle(change(themeStyle))
+        private fun ReaderSettings.text(change: (TextSet) -> TextSet) = withText(change(textSet))
 
         private val FIELDS = listOf(
             enumField(THEME, { it.theme }) { s, v -> s.copy(theme = v) },
             enumField(APPEARANCE, { it.appearance }) { s, v -> s.copy(appearance = v) },
             floatField(FONT_SIZE, { it.fontSize }) { s, v -> s.copy(fontSize = v) },
-            Field(FONT, { it.themeStyle.font }) { s, v -> s.text { it.copy(font = v) } },
-            boolField(BOLD, { it.themeStyle.boldText }) { s, v -> s.text { it.copy(boldText = v) } },
-            boolField(CUSTOM_SPACING, { it.themeStyle.customize }) { s, v -> s.text { it.copy(customize = v) } },
-            floatField(LINE_SPACING, { it.themeStyle.lineSpacing }) { s, v -> s.text { it.copy(lineSpacing = v) } },
-            intField(LETTER_SPACING, { it.themeStyle.letterSpacingPct }) { s, v -> s.text { it.copy(letterSpacingPct = v) } },
-            intField(WORD_SPACING, { it.themeStyle.wordSpacingPct }) { s, v -> s.text { it.copy(wordSpacingPct = v) } },
-            intField(MARGINS, { it.themeStyle.marginsPct }) { s, v -> s.text { it.copy(marginsPct = v) } },
-            boolField(JUSTIFY, { it.themeStyle.justify }) { s, v -> s.text { it.copy(justify = v) } },
+            enumField(TEXT_PRESET, { it.textPreset }) { s, v -> s.copy(textPreset = v) },
+            Field(CUSTOM_COLORS, { it.customColors?.encode().orEmpty() }) { s, v -> s.copy(customColors = CustomColors.decode(v)) },
+            Field(FONT, { it.textSet.font }) { s, v -> s.text { it.copy(font = v) } },
+            boolField(BOLD, { it.textSet.boldText }) { s, v -> s.text { it.copy(boldText = v) } },
+            boolField(CUSTOM_SPACING, { it.textSet.customize }) { s, v -> s.text { it.copy(customize = v) } },
+            floatField(LINE_SPACING, { it.textSet.lineSpacing }) { s, v -> s.text { it.copy(lineSpacing = v) } },
+            intField(LETTER_SPACING, { it.textSet.letterSpacingPct }) { s, v -> s.text { it.copy(letterSpacingPct = v) } },
+            intField(WORD_SPACING, { it.textSet.wordSpacingPct }) { s, v -> s.text { it.copy(wordSpacingPct = v) } },
+            intField(MARGINS, { it.textSet.marginsPct }) { s, v -> s.text { it.copy(marginsPct = v) } },
+            boolField(JUSTIFY, { it.textSet.justify }) { s, v -> s.text { it.copy(justify = v) } },
             enumField(PAGE_TURN, { it.pageTurn }) { s, v -> s.copy(pageTurn = v) },
             enumField(HEADER, { it.header }) { s, v -> s.copy(header = v) },
             enumField(HEADER_STYLE, { it.chromeStyles.header }) { s, v -> s.copy(chromeStyles = s.chromeStyles.copy(header = v)) },

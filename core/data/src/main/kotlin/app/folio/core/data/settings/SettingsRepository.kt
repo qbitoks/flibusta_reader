@@ -67,7 +67,12 @@ data class ReaderSettings(
     /** Shared by all themes, changed with the A │ A buttons. */
     val fontSize: Float = ReaderStyle().fontSize,
     val theme: ReaderTheme = ReaderTheme.Original,
-    val themeStyles: Map<ReaderTheme, ThemeStyle> = ReaderTheme.entries.associateWith { ThemeStyle.defaultFor(it) },
+    /** [TextPreset.Custom] means «Свои параметры» are on; otherwise the theme's own preset. */
+    val textPreset: TextPreset = TextPreset.Classic,
+    /** Text of «Свои параметры»: kept while they are off. */
+    val customText: TextSet = TextPreset.Classic.text!!,
+    /** Colours of «Свои параметры»; null until they are first turned on. */
+    val customColors: CustomColors? = null,
     val pageTurn: PageTurn = PageTurn.Slide,
     /** «Направляющая линия» (guide line) is on. */
     val guideLine: Boolean = false,
@@ -85,10 +90,31 @@ data class ReaderSettings(
     /** «Под строкой при прокрутке» of the top line; it has no strip. */
     val headerUnder: FooterStyle = FooterStyle.None,
 ) {
-    val themeStyle: ThemeStyle get() = themeStyles.getValue(theme)
-    val style: ReaderStyle get() = themeStyle.toReaderStyle(fontSize)
+    /** «Свои параметры» replace the theme's colours and text. */
+    val custom: Boolean get() = textPreset == TextPreset.Custom
+    val textSet: TextSet get() = if (custom) customText else theme.textPreset.text!!
+    val style: ReaderStyle get() = textSet.toReaderStyle(fontSize)
 
-    fun withThemeStyle(value: ThemeStyle): ReaderSettings = copy(themeStyles = themeStyles + (theme to value))
+    /** The first time they start from the theme in effect; later the remembered values come back. */
+    fun withCustom(on: Boolean): ReaderSettings = when {
+        !on -> copy(textPreset = theme.textPreset)
+        custom -> this
+        customColors == null -> copy(textPreset = TextPreset.Custom, customText = textSet, customColors = CustomColors.of(theme))
+        else -> copy(textPreset = TextPreset.Custom)
+    }
+
+    /** Any edit of the text turns «Свои параметры» on. */
+    fun withText(value: TextSet): ReaderSettings =
+        if (value == textSet) this else withCustom(true).copy(customText = value)
+
+    fun withColors(value: CustomColors): ReaderSettings = withCustom(true).copy(customColors = value)
+
+    /** «Моя» as the last standard theme ([theme] is kept while «Моя» is chosen). */
+    fun withCustomReset(): ReaderSettings =
+        copy(textPreset = TextPreset.Custom, customText = theme.textPreset.text!!, customColors = CustomColors.of(theme))
+
+    /** Picking a theme also turns «Свои параметры» off; their values are kept. */
+    fun withTheme(value: ReaderTheme): ReaderSettings = copy(theme = value, textPreset = value.textPreset)
 
     /** Both lines as in [source], «Свои параметры» included: what «Сбросить настройки страницы» restores. */
     fun withLinesOf(source: ReaderSettings): ReaderSettings = copy(

@@ -48,7 +48,7 @@
     <string name="page_turn_scroll">Scroll</string>
     <string name="page_turn_none">None</string>
     <string name="settings_appearance">Appearance</string>
-    <string name="appearance_app">Match App</string>
+    <string name="appearance_app">Match System</string>
     <string name="appearance_light">Light</string>
     <string name="appearance_dark">Dark</string>
     <string name="font_smaller">Smaller text</string>
@@ -84,7 +84,6 @@
     <string name="page_turn_fade">Fast Fade</string>
     <string name="page_turn_curl">Curl</string>
     <string name="themes_customize_title">Customize Theme</string>
-    <string name="settings_text">Text</string>
     <string name="settings_layout">Accessibility &amp; Layout</string>
     <string name="reader_page_word">Page</string>
     <string name="reader_no_highlights">No Highlights</string>
@@ -122,19 +121,13 @@
     <string name="header_note">With Nothing the text starts at the top of the screen.</string>
     <string name="settings_tab_appearance">Appearance</string>
     <string name="settings_tab_page">Page</string>
-    <string name="settings_themes">Reading theme</string>
-    <string name="settings_device_brightness">Use device brightness</string>
-    <string name="settings_device_brightness_note">Using device brightness. Turn off the switch to adjust brightness for reading.</string>
     <string name="settings_style_small">Small and muted</string>
     <string name="settings_style_large">Large and regular</string>
     <string name="settings_style_book">Book font</string>
     <string name="settings_style_contrast">Bold and high contrast</string>
     <string name="settings_font_size">Text size</string>
-    <string name="settings_spacing">Spacing and margins</string>
-    <string name="settings_custom_spacing">Custom spacing and margins</string>
     <string name="settings_reset_page">Reset Page Settings</string>
     <string name="settings_reset_book_page">Use Shared Page Settings</string>
-    <string name="settings_reset_text">Reset text for this theme</string>
     <string name="settings_page_preview">Page preview</string>
     <string name="settings_preview_note">Sample placement of the top and bottom lines.</string>
     <string name="settings_header_content">Show at the top</string>
@@ -142,7 +135,6 @@
     <string name="settings_page_total">Page and total</string>
     <string name="settings_preview_book">Book title</string>
     <string name="settings_preview_chapter">Chapter one</string>
-    <string name="settings_text_scope">Font and spacing are kept for each theme. Text size is shared by all themes and is not reset.</string>
     <string name="appearance_app_short">Auto</string>
     <string name="header_book_short">Book</string>
     <string name="header_chapter_short">Chapter</string>
@@ -172,7 +164,7 @@
     <string name="settings_own_footer">bottom line</string>
     <string name="settings_scope_book_note">Changes apply only to this book.</string>
     <string name="settings_scope_all_note">Changes apply to all books, except what a book sets itself.</string>
-    <string name="settings_reset_book_text">Use shared text</string>
+    <string name="settings_reset_book_text">Use shared appearance</string>
     <string name="page_turn_fade_short">Fade</string>
     <string name="line_custom">Custom settings</string>
     <string name="line_size">Size</string>
@@ -195,4 +187,13 @@
     <string name="themes_preview_text2">“Do you also like reading at sunset?” a stranger asked, without looking up from her page.</string>
     <string name="themes_preview_text3">“Only when the text is easy on the eyes,” I replied. “Font, spacing and margins matter more than you would think.”</string>
     <string name="themes_preview_text4">Extraordinarily characteristic, incomprehensible and uncharacteristically long words are a good test for hyphenation and justified text. Digits 0123456789, “quotes” and punctuation should read easily too.</string>
+    <string name="settings_paper">Page</string>
+    <string name="settings_warmth">Warmth</string>
+    <string name="settings_contrast">Contrast</string>
+    <string name="theme_mine">Mine</string>
+    <string name="settings_reset_mine">Reset to «%1$s»</string>
+    <string name="settings_brightness_auto">Auto</string>
+    <string name="settings_themes">Theme and size</string>
+    <string name="settings_color">Colour</string>
+    <string name="settings_text">Text</string>
 </resources>

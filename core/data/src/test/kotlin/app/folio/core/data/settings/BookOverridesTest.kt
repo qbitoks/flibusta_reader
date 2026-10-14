@@ -31,14 +31,42 @@ class BookOverridesTest {
         assertEquals(PageTurn.Scroll, book.pageTurn)
     }
 
-    @Test fun bookTypographyAppliesToTheThemeInEffect() {
-        val edited = shared.copy(theme = ReaderTheme.Focus).let { it.withThemeStyle(it.themeStyle.copy(font = "lora", boldText = true)) }
+    @Test fun bookTextEditsGoToItsOwnCustomSet() {
+        val edited = shared.withTheme(ReaderTheme.Focus).let { it.withText(it.textSet.copy(font = "lora", boldText = true)) }
         val own = BookOverrides.between(shared, edited)
 
-        assertEquals(setOf(BookOverrides.THEME, BookOverrides.FONT, BookOverrides.BOLD), own.values.keys)
+        assertEquals(setOf(BookOverrides.THEME, BookOverrides.TEXT_PRESET, BookOverrides.CUSTOM_COLORS, BookOverrides.FONT, BookOverrides.BOLD, BookOverrides.JUSTIFY), own.values.keys)
         val book = own.applyTo(shared)
-        assertEquals("lora", book.themeStyle.font)
-        assertEquals(ThemeStyle.defaultFor(ReaderTheme.Original), book.themeStyles.getValue(ReaderTheme.Original))
+        assertEquals(TextPreset.Custom, book.textPreset)
+        assertEquals("lora", book.textSet.font)
+        assertEquals(TextPreset.Clear.text!!.copy(font = "lora", boldText = true), book.textSet)
+    }
+
+    @Test fun customStartsFromThemeAndIsRemembered() {
+        val calm = shared.withTheme(ReaderTheme.Calm)
+        val on = calm.withCustom(true)
+        assertEquals(calm.textSet, on.textSet)
+        assertEquals(CustomColors(ReaderTheme.Calm), on.customColors)
+        val edited = on.withColors(CustomColors(ReaderTheme.Quiet, warmth = 4)).withCustom(false).withTheme(ReaderTheme.Focus)
+        assertEquals(false, edited.custom)
+        assertEquals(CustomColors(ReaderTheme.Quiet, warmth = 4), edited.withCustom(true).customColors)
+        assertEquals(edited.customColors, CustomColors.decode(edited.customColors!!.encode()))
+    }
+
+    @Test fun mineResetsToTheLastStandardTheme() {
+        val mine = shared.withTheme(ReaderTheme.Calm).withCustom(true)
+            .withColors(CustomColors(ReaderTheme.Quiet, warmth = 5)).let { it.withText(it.textSet.copy(font = "inter")) }
+        val reset = mine.withCustomReset()
+        assertEquals(true, reset.custom)
+        assertEquals(CustomColors(ReaderTheme.Calm), reset.customColors)
+        assertEquals(TextPreset.Soft.text, reset.textSet)
+    }
+
+    @Test fun themeBringsItsCardButKeepsCustom() {
+        assertEquals(TextPreset.Soft, shared.withTheme(ReaderTheme.Calm).textPreset)
+        val custom = shared.withText(shared.textSet.copy(boldText = true))
+        assertEquals(TextPreset.Soft, custom.withTheme(ReaderTheme.Calm).textPreset)
+        assertEquals(shared, shared.withText(shared.textSet))
     }
 
     @Test fun encodingRoundTripsAndIgnoresUnknownFields() {
@@ -85,7 +113,7 @@ class BookOverridesTest {
         val settings = shared.copy(
             theme = ReaderTheme.Bold, appearance = Appearance.Light, header = PageHeader.Chapter,
             footerLayout = LineLayout.FOOTER.copy(customize = true, gap = -6, rule = true),
-        ).let { it.withThemeStyle(it.themeStyle.copy(customize = true, marginsPct = 5)) }
+        ).let { it.withText(it.textSet.copy(customize = true, marginsPct = 5)) }.copy(textPreset = TextPreset.Quiet)
         ReaderPreferences.write(p, settings)
         assertEquals(settings, ReaderPreferences.read(p))
     }

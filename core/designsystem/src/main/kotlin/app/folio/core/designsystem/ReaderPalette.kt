@@ -2,6 +2,8 @@ package app.folio.core.designsystem
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import app.folio.core.data.settings.CustomColors
 import app.folio.core.data.settings.Appearance
 import app.folio.core.data.settings.ReaderTheme
 
@@ -49,6 +51,24 @@ object ReaderPalettes {
     )
 
     fun of(theme: ReaderTheme, dark: Boolean): ReaderPalette = (if (dark) this.dark else light).getValue(theme)
+
+    private val warm = Color(0xFFFFB066)
+    private val cool = Color(0xFF6FA8FF)
+
+    /**
+     * «Свои параметры»: warmth tints page and text towards amber or blue; contrast moves the text
+     * towards pure black/white (crisp) or towards the page (soft, at most like «Тихая»).
+     */
+    fun custom(colors: CustomColors, dark: Boolean): ReaderPalette {
+        val base = of(colors.base, dark)
+        val tint = if (colors.warmth >= 0) warm else cool
+        val w = colors.warmth / 10f * (if (colors.warmth >= 0) 1f else -1f)
+        val bg = lerp(base.background, tint, w * if (dark) 0.10f else 0.16f)
+        val tinted = lerp(base.text, tint, w * 0.08f)
+        val text = if (colors.contrast >= 0) lerp(tinted, if (dark) Color.White else Color.Black, colors.contrast / 10f)
+            else lerp(tinted, bg, -colors.contrast / 10f * 0.5f)
+        return base.copy(background = bg, text = text, secondary = lerp(bg, text, 0.55f))
+    }
 
     fun isDark(appearance: Appearance, systemDark: Boolean) = when (appearance) {
         Appearance.Auto -> systemDark

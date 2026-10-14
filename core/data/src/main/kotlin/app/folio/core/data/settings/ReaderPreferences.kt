@@ -28,7 +28,10 @@ internal object ReaderPreferences {
     private val headerLayout = stringPreferencesKey("header_layout")
     private val footerLayout = stringPreferencesKey("footer_layout")
     private val headerUnder = stringPreferencesKey("header_under")
-    private fun themeStyle(theme: ReaderTheme) = stringPreferencesKey("theme_style_${theme.name}")
+    // "theme_style_<theme>" held per-theme typography before style cards; left unread (no migration, user decision).
+    private val textPreset = stringPreferencesKey("text_preset")
+    private val customText = stringPreferencesKey("custom_text")
+    private val customColors = stringPreferencesKey("custom_colors")
     private fun book(bookId: String) = stringPreferencesKey("book_reader_$bookId")
     // Before per-book settings a book kept only its Light/Dark; read once, then folded into book_reader_<id>.
     private fun oldBookAppearance(bookId: String) = stringPreferencesKey("book_appearance_$bookId")
@@ -47,7 +50,9 @@ internal object ReaderPreferences {
             fontSize = p[fontSize] ?: ReaderStyle().fontSize,
             theme = enumOr(p[theme], ReaderTheme.Original),
             appearance = enumOr(p[appearance], Appearance.Auto),
-            themeStyles = ReaderTheme.entries.associateWith { ThemeStyle.decode(p[themeStyle(it)], it) },
+            textPreset = enumOr(p[textPreset], TextPreset.Classic),
+            customText = TextSet.decode(p[customText], ReaderSettings().customText),
+            customColors = CustomColors.decode(p[customColors]),
             // "None" was the old name of «Быстрое выцветание».
             pageTurn = if (p[pageTurn] == "None") PageTurn.Fade else enumOr(p[pageTurn], PageTurn.Slide),
             guideLine = p[guideLine] ?: false,
@@ -67,9 +72,9 @@ internal object ReaderPreferences {
         p[fontSize] = s.fontSize
         p[theme] = s.theme.name
         p[appearance] = s.appearance.name
-        s.themeStyles.forEach { (t, style) ->
-            if (style == ThemeStyle.defaultFor(t)) p.remove(themeStyle(t)) else p[themeStyle(t)] = style.encode()
-        }
+        p[textPreset] = s.textPreset.name
+        p[customText] = s.customText.encode()
+        s.customColors?.let { p[customColors] = it.encode() } ?: p.remove(customColors)
         p[pageTurn] = s.pageTurn.name
         p[guideLine] = s.guideLine
         p[guideDim] = s.guideDim.name

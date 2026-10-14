@@ -9,8 +9,8 @@ import app.folio.core.data.settings.ReaderSettings
 internal fun ReaderSheets(vm: ReaderViewModel, settings: ReaderSettings, palette: ReaderPalette, controls: ReaderControls) {
     when (controls.sheet) {
         ReaderSheet.Contents -> ContentsSheet(vm, palette, onDismiss = { controls.sheet = null })
-        ReaderSheet.Bookmarks -> FragmentsSheet(vm, palette, ReaderFont.of(settings.themeStyle.font).composeFamily, onDismiss = { controls.sheet = null })
-        ReaderSheet.Search -> SearchSheet(vm, palette, ReaderFont.of(settings.themeStyle.font).composeFamily, onDismiss = { controls.sheet = null })
+        ReaderSheet.Bookmarks -> FragmentsSheet(vm, palette, ReaderFont.of(settings.textSet.font).composeFamily, onDismiss = { controls.sheet = null })
+        ReaderSheet.Search -> SearchSheet(vm, palette, ReaderFont.of(settings.textSet.font).composeFamily, onDismiss = { controls.sheet = null })
         ReaderSheet.Themes -> ThemesSheet(
             vm,
             SheetBrightness(controls.brightness, controls.manualBrightness) {
@@ -25,7 +25,7 @@ internal fun ReaderSheets(vm: ReaderViewModel, settings: ReaderSettings, palette
         NoteSheet(
             target = target,
             quote = vm.textOf(target.span),
-            bookFont = ReaderFont.of(settings.themeStyle.font).composeFamily,
+            bookFont = ReaderFont.of(settings.textSet.font).composeFamily,
             palette = palette,
             onDone = { text ->
                 if (target.highlightId != null) vm.setHighlightNote(target.highlightId, text)

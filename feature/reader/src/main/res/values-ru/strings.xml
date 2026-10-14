@@ -52,7 +52,7 @@
     <string name="page_turn_scroll">Прокрутка</string>
     <string name="page_turn_none">Без анимации</string>
     <string name="settings_appearance">Оформление</string>
-    <string name="appearance_app">Как в приложении</string>
+    <string name="appearance_app">Как в системе</string>
     <string name="appearance_light">Светлое</string>
     <string name="appearance_dark">Тёмное</string>
     <string name="font_smaller">Уменьшить текст</string>
@@ -88,7 +88,6 @@
     <string name="page_turn_fade">Быстрое выцветание</string>
     <string name="page_turn_curl">Загиб</string>
     <string name="themes_customize_title">Настройка темы</string>
-    <string name="settings_text">Текст</string>
     <string name="settings_layout">Универсальный доступ и макет</string>
     <string name="reader_page_word">Страница</string>
     <string name="reader_no_highlights">Нет выделений</string>
@@ -130,19 +129,13 @@
     <string name="header_note">При «Ничего» текст начинается от верха экрана.</string>
     <string name="settings_tab_appearance">Оформление</string>
     <string name="settings_tab_page">Страница</string>
-    <string name="settings_themes">Тема чтения</string>
-    <string name="settings_device_brightness">Яркость устройства</string>
-    <string name="settings_device_brightness_note">Используется яркость устройства. Выключите переключатель, чтобы настроить её для чтения.</string>
     <string name="settings_style_small">Мелкий приглушённый</string>
     <string name="settings_style_large">Крупный обычный</string>
     <string name="settings_style_book">Шрифт книги</string>
     <string name="settings_style_contrast">Контрастный полужирный</string>
     <string name="settings_font_size">Размер текста</string>
-    <string name="settings_spacing">Интервалы и поля</string>
-    <string name="settings_custom_spacing">Свои интервалы и поля</string>
     <string name="settings_reset_page">Сбросить настройки страницы</string>
     <string name="settings_reset_book_page">Вернуть общие настройки страницы</string>
-    <string name="settings_reset_text">Сбросить текст этой темы</string>
     <string name="settings_page_preview">Предпросмотр страницы</string>
     <string name="settings_preview_note">Пример расположения верхней и нижней строк.</string>
     <string name="settings_header_content">Показывать сверху</string>
@@ -150,7 +143,6 @@
     <string name="settings_page_total">Страница из общего числа</string>
     <string name="settings_preview_book">Название книги</string>
     <string name="settings_preview_chapter">Глава первая</string>
-    <string name="settings_text_scope">Шрифт и интервалы хранятся отдельно для каждой темы. Размер текста общий для всех тем и не меняется при сбросе.</string>
     <string name="appearance_app_short">Авто</string>
     <string name="header_book_short">Книга</string>
     <string name="header_chapter_short">Глава</string>
@@ -180,7 +172,7 @@
     <string name="settings_own_footer">нижняя строка</string>
     <string name="settings_scope_book_note">Изменения сохраняются только для этой книги.</string>
     <string name="settings_scope_all_note">Изменения применяются ко всем книгам, кроме того, что книга задаёт сама.</string>
-    <string name="settings_reset_book_text">Вернуть общий текст</string>
+    <string name="settings_reset_book_text">Вернуть общее оформление</string>
     <string name="page_turn_fade_short">Выцветание</string>
     <string name="line_custom">Свои параметры</string>
     <string name="line_size">Размер</string>
@@ -203,4 +195,13 @@
     <string name="themes_preview_text2">— Вы тоже любите читать на закате? — спросила незнакомка, не отрывая взгляда от страницы.</string>
     <string name="themes_preview_text3">— Только когда текст не утомляет глаза, — ответил я. — Шрифт, интервалы и поля решают больше, чем кажется.</string>
     <string name="themes_preview_text4">Достопримечательности побережья, высокохудожественные иллюстрации и труднопроизносимые названия — хороший повод проверить переносы и выравнивание по ширине. Цифры 0123456789, кавычки «ёлочки» и знаки препинания тоже должны читаться легко.</string>
+    <string name="settings_paper">Фон</string>
+    <string name="settings_warmth">Тон</string>
+    <string name="settings_contrast">Контраст</string>
+    <string name="theme_mine">Моя</string>
+    <string name="settings_reset_mine">Сбросить на «%1$s»</string>
+    <string name="settings_brightness_auto">Авто</string>
+    <string name="settings_themes">Тема и размер</string>
+    <string name="settings_color">Цвет</string>
+    <string name="settings_text">Текст</string>
 </resources>

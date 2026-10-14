@@ -9,7 +9,7 @@ status: active
 - Catalog browse/search, EPUB/FB2 downloads and Range resume were checked against a live OPDS server on an emulator.
 - ReaderPhone checks cover upgrade/restart, presets, menu palettes and guide landings in Slide/Curl/Fade.
 - Finish on-device default/book reset checks and physical-phone verification before distribution.
-- 0.3.8 (scroll «Под строкой» for both lines, fixed settings preview text, debounced saves) committed; user checks it on a phone, then tag v0.3.8.
+- 0.3.9 (theme «Моя» with colour and text cards, one brightness row) committed; user checks it on a phone, then tag v0.3.9.
 
 ## Next steps
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.
