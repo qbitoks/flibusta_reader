@@ -40,7 +40,10 @@
 - Show paragraph spacing in body line heights and first-line indent in em; copy both when entering «Моя».
 - Disable overscroll stretch in the settings panel; horizontal slider drags at either edge must not deform the panel.
 - Keep «На странице» simple: content, clock and battery first; disclose line geometry with «Подробнее».
+- Order line details: content, size/opacity, placement, separator/gap/boundary; default Scroll blocks to 36 dp.
 - Keep disclosure state separate from persisted line settings; edits activate only the visible legacy values.
+- In Scroll, keep each boundary in its line disclosure; use `ReaderLineBlock` geometry in reader and preview.
+- Keep the rule on the block edge; absolute gap 0 reaches it. Preserve legacy paged gaps; resolve None to Fade.
 
 ## Gotchas
 - Scroll list: resolve pages by item key (`Page.key`), not by index. Right after chapters are prepended,

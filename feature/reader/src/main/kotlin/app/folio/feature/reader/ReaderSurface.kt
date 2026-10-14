@@ -73,7 +73,9 @@ internal fun ReaderSurface(
     val margin = settings.style.margin.dp
     val headerStyle = headerLook(settings, palette).style
     val footerStyle = footerLook(settings, palette).style
-    val (topSpace, bottomSpace) = textInsets(settings, with(density) { headerStyle.lineHeight.toDp() }, with(density) { footerStyle.lineHeight.toDp() })
+    val (topSpace, bottomSpace) = textInsets(settings,
+        if (settings.pageTurn == PageTurn.Scroll) lineLabelHeight(headerLook(settings, palette)) else with(density) { headerStyle.lineHeight.toDp() },
+        if (settings.pageTurn == PageTurn.Scroll) lineLabelHeight(footerLook(settings, palette)) else with(density) { footerStyle.lineHeight.toDp() })
     val padding = PaddingValues(start = margin, end = margin, top = topInset + topSpace, bottom = bottomInset + bottomSpace)
 
     // «↶» shows by itself for a moment after a jump, until the first page turn; otherwise only with the controls.

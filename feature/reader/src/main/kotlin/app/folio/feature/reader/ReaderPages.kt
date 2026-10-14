@@ -96,11 +96,9 @@ internal fun BoxScope.ReaderPages(
             },
             pageOverlay = { page -> NoteMarkers(page, Offset.Zero, highlights, vm, palette) { controls.noteFor = it } },
             modifier = run {
-                val top = settings.shownHeaderUnder.takeUnless { header == PageHeader.None } ?: FooterStyle.None
-                val bottom = footer.style.takeUnless { footer.isEmpty } ?: FooterStyle.None
-                val (topRule, bottomRule) = scrollRuleInsets(settings)
-                val (topCut, bottomCut) = scrollCuts(padding.calculateTopPadding(), topRule, top, padding.calculateBottomPadding(), bottomRule, bottom)
-                Modifier.scrollEdges(top, topCut, bottom, bottomCut)
+                val top = settings.scrollHeaderBoundary.takeUnless { header == PageHeader.None } ?: FooterStyle.None
+                val bottom = settings.scrollFooterBoundary.takeUnless { footer.isEmpty } ?: FooterStyle.None
+                Modifier.scrollEdges(top, padding.calculateTopPadding(), bottom, padding.calculateBottomPadding())
             },
         )
         else -> HorizontalPageTurner(

@@ -17,7 +17,10 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
 - Shared reader settings: `ReaderPreferences` (existing keys plus `reader_appearance`, `header_layout`,
   `footer_layout`); visual presets stay in `ChromeStylePreferences` keys;
   `footer_under` (None/Clip/Fade; removed Strip reads as Clip) and `header_under` (None/Clip/Fade) = what scrolling text does
-  under the lines (default None); legacy `footer_style` and book `footer_scroll` carry over only Strip.
+  under each line independently; resolve None to Fade in Scroll without rewriting saved values.
+  Keep legacy `footer_style` and book `footer_scroll` carry-over for Strip only.
+- Keep nine-field line layouts readable; append block height, vertical alignment and absolute text gap as fields 10–12.
+  Missing fields derive height/gap from legacy edge/gap and centre labels; preserve legacy values for paged mode.
 - A book's own settings: `book_reader_<book id>`, `name=value` lines, only fields that differ from shared
   (`BookOverrides`); removed on reset/delete. Old `book_appearance_<id>` and `book_*_chrome_style_<id>`
   are read as part of it and dropped on the next write of that book. Unknown fields are ignored.

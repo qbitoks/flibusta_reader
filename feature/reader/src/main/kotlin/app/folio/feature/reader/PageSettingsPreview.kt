@@ -120,11 +120,32 @@ internal fun PageSettingsPreview(
     val description = stringResource(R.string.settings_page_preview)
     val margin = settings.style.margin.dp
     val scroll = settings.pageTurn == PageTurn.Scroll
+    val scrollInsets = textInsets(settings, lineLabelHeight(headerLook), lineLabelHeight(footerLook))
     var headerHeight by remember { mutableStateOf(0.dp) }
     var footerHeight by remember { mutableStateOf(0.dp) }
     Box(modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp))
         .background(palette.background).border(0.5.dp, Folio.colors.separator, RoundedCornerShape(16.dp))
         .semantics { contentDescription = description }) {
+        if (scroll) {
+            PreviewText(chapter, source, settings, palette, true,
+                PaddingValues(start = margin, end = margin, top = scrollInsets.first, bottom = scrollInsets.second),
+                Modifier.fillMaxSize().tap { onTap(PreviewPart.Text) })
+            if (header != null) ReaderLineBlock(true, headerLook, margin,
+                Modifier.align(Alignment.TopCenter).tap { onTap(PreviewPart.Header) }) {
+                BlockTitle(header, headerLook, headerLook.titleMargin(24.dp, margin))
+            }
+            if (!footer.isEmpty) ReaderLineBlock(false, footerLook, margin,
+                Modifier.align(Alignment.BottomCenter).tap { onTap(PreviewPart.Footer) }) {
+                PageFooterBar(
+                    center = footerLook.text(footerCenter(footer, source.page, source.total, source.progress, source.pagesLeft, words,
+                        readerChromeSeparator(settings.chromeStyles.footer))),
+                    clock = clock, battery = battery, palette = palette, textStyle = footerLook.style,
+                    spread = footerLook.layout.align == LineAlign.Spread,
+                    modifier = Modifier.padding(horizontal = margin),
+                )
+            }
+            return@Box
+        }
         PreviewText(chapter, source, settings, palette, scroll, PaddingValues(start = margin, end = margin, top = headerHeight, bottom = footerHeight),
             Modifier.fillMaxSize().tap { onTap(PreviewPart.Text) })
         // «Отступ сверху/снизу» move a line from the edge, «Отступ до текста» from the text; negatives shrink the default gap.
@@ -188,17 +209,10 @@ private fun PreviewText(chapter: Chapter, source: PreviewSource, settings: Reade
             return@BoxWithConstraints
         }
         val footer = settings.shownFooter
-        val top = settings.shownHeaderUnder.takeUnless { settings.header == PageHeader.None } ?: FooterStyle.None
-        val bottom = footer.style.takeUnless { footer.isEmpty } ?: FooterStyle.None
-        // As in the reader (scrollRuleInsets): the rules' distance at the smallest «Отступ до текста» —
-        // under the title's 2 dp padding, atop the footer's 5 dp one.
-        val topRule = (12 + LineLayout.GAP.first).coerceAtLeast(0).dp + 2.dp
-        val bottomRule = (12 + LineLayout.GAP.first).coerceAtLeast(0).dp + 5.dp
-        val (topCut, bottomCut) = scrollCuts(
-            padding.calculateTopPadding(), topRule.takeIf { settings.header != PageHeader.None && settings.shownHeaderLayout.rule }, top,
-            padding.calculateBottomPadding(), bottomRule.takeIf { !footer.isEmpty && settings.shownFooterLayout.rule }, bottom)
+        val top = settings.scrollHeaderBoundary.takeUnless { settings.header == PageHeader.None } ?: FooterStyle.None
+        val bottom = settings.scrollFooterBoundary.takeUnless { footer.isEmpty } ?: FooterStyle.None
         Column(Modifier.fillMaxSize()
-            .scrollEdges(top, topCut, bottom, bottomCut)
+            .scrollEdges(top, padding.calculateTopPadding(), bottom, padding.calculateBottomPadding())
             .verticalScroll(rememberScrollState())
             .padding(padding)) {
             pages.forEach { page ->

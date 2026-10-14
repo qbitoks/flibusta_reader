@@ -42,6 +42,7 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-13 | reader settings | Panel opens on book scope iff the book has own settings; no stored scope | a remembered mode caused accidental edits
 2026-10-14 | reader settings | Footer «Нет» drops only the page number; time/battery/left stay in «Свои параметры» | user: wants a clock-only line
 2026-10-14 | reader settings | Defaults: header Chapter, footer «42» without clock/battery, Slide; missing keys follow new defaults | user decision
+2026-10-14 | reader | Scroll: independent Clip/Fade inside each disclosure; fixed block edges, absolute gap, vertical label alignment | user decision
 2026-10-14 | app | Renamed to Folio; package/applicationId `app.folio`, DB `folio.db` | user decision; clean break: old installs do not upgrade, data not migrated
 2026-10-14 | reader settings | Text style card (`TextPreset`) apart from colour theme; theme picks its card unless «Мой» | user decision; no migration
 - 2026-10-14 «Моя» theme (7th swatch) replaces the theme: page colour, warmth, contrast, text; see design/reader.md.

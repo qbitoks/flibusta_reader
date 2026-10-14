@@ -15,21 +15,6 @@ import app.folio.core.data.settings.FooterStyle
 internal val EdgeFadeLength = 18.dp
 
 /**
- * Where «Обрезка» and «Затухание» end the scrolling text, from the top and from the bottom: at the
- * line's rule when it has one, so the text goes right under it, otherwise at the text area, a fade
- * running out [EdgeFadeLength] past it. [textTop]/[textBottom] are the text area's edges and
- * [topRule]/[bottomRule] the rules' distances from those edges, null without a rule.
- */
-internal fun scrollCuts(textTop: Dp, topRule: Dp?, top: FooterStyle, textBottom: Dp, bottomRule: Dp?, bottom: FooterStyle): Pair<Dp, Dp> {
-    fun cut(text: Dp, rule: Dp?, style: FooterStyle) = when {
-        rule != null -> text - rule
-        style == FooterStyle.Fade -> text - EdgeFadeLength
-        else -> text
-    }.coerceAtLeast(0.dp)
-    return cut(textTop, topRule, top) to cut(textBottom, bottomRule, bottom)
-}
-
-/**
  * «Обрезка» and «Затухание» of scrolling text: a mask over the text itself, so nothing is painted on
  * the page and no text shows beyond [topCut] from the top and [bottomCut] from the bottom. The fade
  * keeps a line almost whole and drops it only near the cut, as iOS does.

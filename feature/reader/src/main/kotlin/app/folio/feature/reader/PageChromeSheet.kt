@@ -41,7 +41,6 @@ internal class PageJump(val top: Boolean) {
 internal fun ReaderPageSettings(editor: SettingsEditor, jump: PageJump? = null) {
     val settings = editor.settings
     val footer = settings.shownFooter
-    val scroll = settings.pageTurn == PageTurn.Scroll
     val turns = buildList {
         add(SegmentOption(PageTurn.Slide, stringResource(R.string.page_turn_slide), icon = PageTurnIcons.Slide))
         if (PageCurl.supported) add(SegmentOption(PageTurn.Curl, stringResource(R.string.page_turn_curl), icon = PageTurnIcons.Curl))
@@ -60,9 +59,7 @@ internal fun ReaderPageSettings(editor: SettingsEditor, jump: PageJump? = null) 
             SegmentOption(PageHeader.Chapter, stringResource(R.string.header_chapter_short), stringResource(R.string.header_chapter)),
         )) { v -> editor.edit { it.copy(header = v) } }
         if (settings.header != PageHeader.None) {
-            LineSettings(settings.shownHeaderLayout, top = true, editor, gap = true, border = !scroll || settings.shownHeaderUnder != FooterStyle.None, under = {
-                if (scroll) UnderLine(settings.shownHeaderUnder) { v -> editor.edit { it.editHeaderLine { layout -> layout }.copy(headerUnder = v) } }
-            }) { change -> editor.edit { it.editHeaderLine(change) } }
+            LineSettings(settings.shownHeaderLayout, top = true, editor, gap = true) { change -> editor.edit { it.editHeaderLine(change) } }
         }
     }
     }
@@ -81,9 +78,7 @@ internal fun ReaderPageSettings(editor: SettingsEditor, jump: PageJump? = null) 
         SettingsToggle(stringResource(R.string.footer_clock), footer.clock) { on -> editor.edit { it.editFooterContent { f -> f.copy(clock = on) } } }
         SettingsDivider()
         SettingsToggle(stringResource(R.string.footer_battery), footer.battery) { on -> editor.edit { it.editFooterContent { f -> f.copy(battery = on) } } }
-        LineSettings(settings.shownFooterLayout, top = false, editor, gap = !footer.isEmpty, border = !scroll || footer.style != FooterStyle.None, under = {
-            if (scroll) UnderLine(footer.style) { v -> editor.edit { it.editFooterContent { f -> f.copy(style = v) } } }
-        }) { change ->
+        LineSettings(settings.shownFooterLayout, top = false, editor, gap = !footer.isEmpty) { change ->
             editor.edit { it.editFooterLine(change) }
         }
     }
@@ -117,10 +112,9 @@ private fun LineGroup(jump: PageJump?, content: @Composable ColumnScope.() -> Un
 /**
  * Disclosure state only controls the fields, never the applied settings. «Отступ до текста»
  * shows only when [gap]: an empty line has nothing to keep apart.
- * [border] is false while scrolling text runs on under the line: then neither gap nor rule means anything.
  */
 @Composable
-private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEditor, gap: Boolean, border: Boolean, under: @Composable () -> Unit, change: ((LineLayout) -> LineLayout) -> Unit) {
+private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEditor, gap: Boolean, change: ((LineLayout) -> LineLayout) -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val state = stringResource(if (expanded) R.string.line_details_expanded else R.string.line_details_collapsed)
     SettingsDivider()
@@ -132,7 +126,12 @@ private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEdito
             null, tint = Folio.colors.secondaryLabel, modifier = Modifier.size(22.dp))
     }
     if (!expanded) return
-    if (!top) {
+    if (top) {
+        SettingsDivider()
+        SettingsToggle(stringResource(R.string.line_uppercase), layout.uppercase) { on -> change { it.copy(uppercase = on) } }
+        SettingsDivider()
+        SettingsToggle(stringResource(R.string.line_hide_chapter_start), layout.hideOnChapterStart) { on -> change { it.copy(hideOnChapterStart = on) } }
+    } else {
         SettingsDivider()
         SettingsToggle(stringResource(R.string.footer_pages_left), editor.settings.shownFooter.pagesLeft) { on ->
             editor.edit { it.editFooterContent { f -> f.copy(pagesLeft = on) } }
@@ -148,7 +147,8 @@ private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEdito
         change { it.copy(opacityPct = v.roundToInt()) }
     }
     SettingsDivider()
-    SegmentsTitle(stringResource(R.string.line_position))
+    val scroll = editor.settings.pageTurn == PageTurn.Scroll
+    SegmentsTitle(stringResource(if (scroll) R.string.line_horizontal else R.string.line_position))
     val aligns = if (top) listOf(
         SegmentOption(LineAlign.Start, stringResource(R.string.line_align_start)),
         SegmentOption(LineAlign.Center, stringResource(R.string.line_align_center)),
@@ -158,39 +158,48 @@ private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEdito
         SegmentOption(LineAlign.Center, stringResource(R.string.line_align_center)),
     )
     SettingsSegments(layout.align, aligns) { v -> change { it.copy(align = v) } }
-    if (top) {
+    if (scroll && gap) {
         SettingsDivider()
-        SettingsToggle(stringResource(R.string.line_uppercase), layout.uppercase) { on -> change { it.copy(uppercase = on) } }
+        SegmentsTitle(stringResource(R.string.line_vertical))
+        SettingsSegments(layout.vertical, listOf(
+            SegmentOption(LineVertical.Edge, stringResource(R.string.line_vertical_edge)),
+            SegmentOption(LineVertical.Center, stringResource(R.string.line_vertical_center)),
+            SegmentOption(LineVertical.Text, stringResource(R.string.line_vertical_text)),
+        )) { v -> change { it.copy(vertical = v) } }
         SettingsDivider()
-        SettingsToggle(stringResource(R.string.line_hide_chapter_start), layout.hideOnChapterStart) { on -> change { it.copy(hideOnChapterStart = on) } }
-    }
-    SettingsDivider()
-    SettingsSlider(stringResource(if (top) R.string.line_edge_top else R.string.line_edge_bottom), layout.edge.toFloat(), LineLayout.EDGE.toRange(), 2f,
-        signed(layout.edge)) { v -> change { it.copy(edge = v.roundToInt()) } }
-    // In scroll mode «Под строкой при прокрутке» decides whether the line has a border with the text at all;
-    // the gap and the rule follow it, below, so switching it never moves the rows above.
-    under()
-    if (!border) return
-    if (gap) {
+        SettingsSlider(stringResource(R.string.line_block_height), layout.requestedBlockHeight.toFloat(),
+            LineLayout.BLOCK_HEIGHT.toRange(), 2f, "${layout.requestedBlockHeight} dp") { v ->
+            change { it.copy(blockHeight = v.roundToInt()) }
+        }
+        Text(stringResource(R.string.line_block_minimum), style = FolioType.footnote,
+            color = Folio.colors.secondaryLabel, modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 12.dp))
         SettingsDivider()
-        SettingsSlider(stringResource(R.string.line_gap), layout.gap.toFloat(), LineLayout.GAP.toRange(), 2f, signed(layout.gap)) { v ->
-            change { it.copy(gap = v.roundToInt()) }
+        SettingsToggle(stringResource(R.string.line_rule), layout.rule) { on -> change { it.copy(rule = on) } }
+        SettingsDivider()
+        SettingsSlider(stringResource(R.string.line_text_gap), layout.distanceToText.toFloat(),
+            LineLayout.TEXT_GAP.toRange(), 2f, "${layout.distanceToText} dp") { v ->
+            change { it.copy(textGap = v.roundToInt()) }
+        }
+        SettingsDivider()
+        SegmentsTitle(stringResource(R.string.scroll_boundary))
+        val boundary = if (top) editor.settings.scrollHeaderBoundary else editor.settings.scrollFooterBoundary
+        SettingsSegments(boundary, listOf(
+            SegmentOption(FooterStyle.Clip, stringResource(R.string.scroll_boundary_clear)),
+            SegmentOption(FooterStyle.Fade, stringResource(R.string.scroll_boundary_smooth)),
+        )) { v -> editor.edit { it.editLineBoundary(top, v) } }
+    } else if (!scroll) {
+        SettingsDivider()
+        SettingsSlider(stringResource(if (top) R.string.line_edge_top else R.string.line_edge_bottom), layout.edge.toFloat(), LineLayout.EDGE.toRange(), 2f,
+            signed(layout.edge)) { v -> change { it.copy(edge = v.roundToInt()) } }
+        SettingsDivider()
+        SettingsToggle(stringResource(R.string.line_rule), layout.rule) { on -> change { it.copy(rule = on) } }
+        if (gap) {
+            SettingsDivider()
+            SettingsSlider(stringResource(R.string.line_gap), layout.gap.toFloat(), LineLayout.GAP.toRange(), 2f, signed(layout.gap)) { v ->
+                change { it.copy(gap = v.roundToInt()) }
+            }
         }
     }
-    SettingsDivider()
-    SettingsToggle(stringResource(if (top) R.string.line_rule_below else R.string.line_rule_above), layout.rule) { on -> change { it.copy(rule = on) } }
-}
-
-/** «Под строкой при прокрутке», before the gap and the rule it turns on. */
-@Composable
-private fun UnderLine(selected: FooterStyle, onSelect: (FooterStyle) -> Unit) {
-    SettingsDivider()
-    SegmentsTitle(stringResource(R.string.footer_style))
-    SettingsSegments(selected, listOf(
-        SegmentOption(FooterStyle.None, stringResource(R.string.footer_style_none)),
-        SegmentOption(FooterStyle.Clip, stringResource(R.string.footer_style_clip)),
-        SegmentOption(FooterStyle.Fade, stringResource(R.string.footer_style_fade)),
-    ), onSelect = onSelect)
 }
 
 @Composable

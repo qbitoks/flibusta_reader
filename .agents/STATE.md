@@ -11,6 +11,7 @@ status: active
 - Finish on-device default/book reset checks and physical-phone verification before distribution.
 - 0.3.10 includes preset paragraph spacing/indent and restored seam leading; verify on a phone before distribution.
 - Verify simplified «На странице» on a phone: clock-only footer and settings retained after closing «Подробнее».
+- Verify compact 36 dp Scroll defaults, reordered details, vertical alignment and zero gap at rules on a phone.
 
 ## Next steps
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.

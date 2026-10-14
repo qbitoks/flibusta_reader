@@ -15,3 +15,9 @@ internal fun ReaderSettings.editFooterLine(change: (LineLayout) -> LineLayout): 
 
 internal fun ReaderSettings.editFooterContent(change: (PageFooter) -> PageFooter): ReaderSettings =
     editFooterLine { it }.let { it.copy(footer = change(it.footer)) }
+
+internal fun ReaderSettings.editLineBoundary(top: Boolean, value: FooterStyle): ReaderSettings {
+    require(value != FooterStyle.None)
+    return if (top) editHeaderLine { it }.copy(headerUnder = value)
+        else editFooterContent { it.copy(style = value) }
+}

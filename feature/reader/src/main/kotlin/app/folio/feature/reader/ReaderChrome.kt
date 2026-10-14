@@ -99,6 +99,7 @@ internal fun BoxScope.ReaderChrome(
     val footerEnd = if (state.bookmarked) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
     val footerLineHeight = with(LocalDensity.current) { footerStyle.lineHeight.toDp() }
     val footerAlpha by animateFloatAsState(if (controls.chromeVisible) 0f else 1f, tween(150), label = "scrollFooter")
+    val headerAlpha by animateFloatAsState(if (marks) 0f else 1f, tween(150), label = "scrollTitle")
     // With nothing above the text, the controls get a band of page colour to stand on.
     AnimatedVisibility(
         visible = controls.chromeVisible,
@@ -110,8 +111,14 @@ internal fun BoxScope.ReaderChrome(
     }
 
     // Header: the chosen title; ↶ / ↷ appear with the controls, and ↶ for a moment after a jump (white spot 7).
+    if (scroll) headerText(header, state.title, state.chapterTitle)?.let { title ->
+        ReaderLineBlock(true, headerLook, margin,
+            Modifier.align(Alignment.TopCenter).padding(top = topInset).alpha(headerAlpha)) {
+            BlockTitle(title, headerLook, headerLook.titleMargin(24.dp, margin))
+        }
+    }
     ReaderHeader(
-        title = if (scroll) headerText(header, state.title, state.chapterTitle)?.let(headerLook::text) else null,
+        title = null,
         history = vm.history,
         pageNumberOf = vm::pageNumberOf,
         palette = palette,
@@ -122,28 +129,28 @@ internal fun BoxScope.ReaderChrome(
         onBack = vm::historyBack,
         onForward = vm::historyForward,
         onClose = onClose,
-        // Over scrolling text the title sits a little higher, clear of the fade above the text.
-        modifier = Modifier.align(Alignment.TopCenter).padding(top = if (scroll) headerY - 10.dp else headerY),
+        modifier = Modifier.align(Alignment.TopCenter).padding(top = headerY),
     )
 
     // Footer: «6 из 1269» with the controls, just «6» without them (white spot 5), plus time and battery.
     if (scroll && !footer.isEmpty) {
+        ReaderLineBlock(false, footerLook, margin,
+            Modifier.align(Alignment.BottomCenter).padding(bottom = bottomInset).alpha(footerAlpha)) {
         PageFooterBar(
             center = footerLook.text(footerCenter(footer, state.globalPage, state.totalPages, state.progress, state.pagesLeftInChapter.takeIf { state.page != null }, footerWords, readerChromeSeparator(settings.chromeStyles.footer))),
             clock = clock,
             battery = battery,
             palette = palette,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(
+            modifier = Modifier.padding(
                 start = margin,
                 end = margin,
-                bottom = footerY + 12.dp,
-            ).alpha(footerAlpha),
+            ),
             textStyle = footerStyle,
             spread = footerLook.layout.align == LineAlign.Spread,
-            rule = footerLook.ruleColor.takeIf { footerLook.layout.rule },
             endInset = footerEnd,
             onCenterTap = onFooterTap,
         )
+        }
     }
 
     if (guideOn) {

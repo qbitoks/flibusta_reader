@@ -18,12 +18,10 @@
   - Put clock at footer left, page/percent plus «ещё N стр.» at center, battery at right.
     Fade header/footer out with controls shown; retain the chosen number format and stable title margins.
   - Keep saved label styles compatible but omit preset buttons; derive reserved space from scaled line height.
-  - In scroll mode the text runs under the lines unless «Под строкой при прокрутке» says otherwise:
-    «Обрезка»/«Затухание» mask the text itself (`scrollEdges`, eased 18 dp fade), nothing painted on
-    the page; the cut follows «Отступ до текста» and, with a rule, reaches it at the smallest gap
-    (`scrollRuleInsets`).
-  - Put advanced parameters under «Подробнее»: content, look, edge; in scroll mode «Под строкой при
-    прокрутке», then gap and rule only when it isn't «Ничего» — what it reveals sits below it.
+  - Protect scroll label blocks with `scrollEdges`; fade inward from the boundary, never under labels.
+    Use `ReaderLineBlock` for shared book/preview geometry and rules fixed to the text-facing block edge.
+  - Put independent «Граница текста: Чёткая / Плавная», block height and vertical label position
+    inside each line's «Подробнее» in Scroll. Absolute text gap 0 reaches the rule or invisible block edge.
   - The settings preview mirrors this: lines overlay the text, scroll mode scrolls; a tap on a line
     opens its group in «На странице», on the text «Оформление».
     In paged mode, reserve space below the footer.
@@ -110,8 +108,11 @@
   Short choices are segments whose labels shrink to fit; radio list only above 130 % text (never for icon rows).
 - «Подробнее»: size 80–140 %, visibility 40–100 %,
   position (top: left/centre/right; bottom: spread/centre), edge offset 0…+24, space to text −12…+24,
-  rule; top adds capitals and «Не показывать в начале главы»; bottom adds «осталось в главе», time,
-  battery and, in Scroll mode, the background under scrolling text.
+  rule; top adds capitals and «Не показывать в начале главы»; bottom adds «осталось в главе».
+- In Scroll, keep each boundary in its line disclosure; use nonnegative absolute gaps and protected blocks.
+  Align labels at the screen edge, block centre or text edge; enlarge blocks to fit measured labels with 8 dp padding.
+- Default blocks to 36 dp without overriding explicit heights; order details by content, look, placement, text boundary.
+  Name the rule «Разделительная линия» and the absolute Scroll gap «Зазор до текста».
 - Everything in the panel except brightness can be set per book; guide line and highlight colour stay shared.
 - Use licensed Cyrillic fonts from `ReaderFonts`; EPUB publisher `@font-face` remains unsupported.
 
