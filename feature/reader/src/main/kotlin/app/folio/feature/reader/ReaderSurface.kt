@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import app.folio.core.data.db.HighlightEntity
-import app.folio.core.data.settings.FooterStyle
 import app.folio.core.data.settings.PageTurn
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.first
@@ -153,17 +152,6 @@ internal fun ReaderSurface(
             }
         }
         ReaderPages(vm, settings, palette, controls, layout, savedMarks, highlights, marks, interaction, locator, footerWords, clock, battery, onClose)
-        // Scrolling text dissolves under the lines above and below it, or passes under the strip.
-        if (scroll) {
-            // Solid behind the title and the bottom line, fading only over the last few dp before the text.
-            EdgeFade(palette, padding.calculateTopPadding(), top = true, modifier = Modifier.align(Alignment.TopCenter), fade = 18.dp)
-            if (!footer.isEmpty && footer.style == FooterStyle.Strip) {
-                val stripHeight = (with(density) { footerStyle.lineHeight.toDp() } + 10.dp).coerceAtLeast(FooterStripHeight)
-                FooterStrip(palette, bottomInset + stripHeight + layout.footerEdge, Modifier.align(Alignment.BottomCenter))
-            } else {
-                EdgeFade(palette, padding.calculateBottomPadding(), top = false, modifier = Modifier.align(Alignment.BottomCenter), fade = 12.dp)
-            }
-        }
         guidePlate?.takeUnless { controls.guideMoving }?.let {
             val textArea = Rect(0f, contentTop, widthPx.toFloat(), heightPx - with(density) { padding.calculateBottomPadding().toPx() })
             GuideLineOverlay(it, textArea, settings.guideDim.fade, palette)

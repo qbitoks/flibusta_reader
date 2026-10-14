@@ -34,8 +34,11 @@ enum class PageHeader { None, Book, Chapter }
 /** Page part of the bottom line: «42», «42 из 586» or the book's percent. */
 enum class FooterPage { None, Number, NumberOfTotal, Percent }
 
-/** How the bottom line sits over text scrolling under it: a fade, or a faint strip at the very bottom. */
-enum class FooterStyle { Fade, Strip }
+/**
+ * «Под строкой при прокрутке»: scrolling text runs on under the line, is cut off, or fades out, at
+ * the line's rule when it has one.
+ */
+enum class FooterStyle { None, Clip, Fade }
 
 /** The line under the text: time on the left, the page in the middle, battery on the right. */
 data class PageFooter(
@@ -44,12 +47,12 @@ data class PageFooter(
     val pagesLeft: Boolean = false,
     val clock: Boolean = false,
     val battery: Boolean = false,
-    val style: FooterStyle = FooterStyle.Fade,
+    val style: FooterStyle = FooterStyle.None,
 ) {
     /** Nothing to show: the text runs to the bottom of the screen. */
     val isEmpty: Boolean get() = page == FooterPage.None && !pagesLeft && !clock && !battery
 
-    /** Time and battery without «ещё N стр.», fading under scrolling text: what the line shows without «Свои параметры». */
+    /** Time and battery without «ещё N стр.», nothing under scrolling text: what the line shows without «Свои параметры». */
     val hasDefaultContent: Boolean get() = PageFooter(page = page) == this
 }
 
@@ -79,15 +82,28 @@ data class ReaderSettings(
     val appearance: Appearance = Appearance.Auto,
     val headerLayout: LineLayout = LineLayout.HEADER,
     val footerLayout: LineLayout = LineLayout.FOOTER,
+    /** «Под строкой при прокрутке» of the top line; it has no strip. */
+    val headerUnder: FooterStyle = FooterStyle.None,
 ) {
     val themeStyle: ThemeStyle get() = themeStyles.getValue(theme)
     val style: ReaderStyle get() = themeStyle.toReaderStyle(fontSize)
 
     fun withThemeStyle(value: ThemeStyle): ReaderSettings = copy(themeStyles = themeStyles + (theme to value))
 
+    /** Both lines as in [source], «Свои параметры» included: what «Сбросить настройки страницы» restores. */
+    fun withLinesOf(source: ReaderSettings): ReaderSettings = copy(
+        header = source.header, footer = source.footer, chromeStyles = source.chromeStyles,
+        headerLayout = source.headerLayout, footerLayout = source.footerLayout, headerUnder = source.headerUnder,
+    )
+
     /** Line parameters as drawn: the stored ones only while «Свои параметры» is on. */
-    val shownHeaderLayout: LineLayout get() = if (headerLayout.customize) headerLayout else LineLayout.HEADER
-    val shownFooterLayout: LineLayout get() = if (footerLayout.customize) footerLayout else LineLayout.FOOTER
+    val shownHeaderLayout: LineLayout get() = if (headerLayout.customize) headerLayout.bordered(headerUnder) else LineLayout.HEADER
+    val shownFooterLayout: LineLayout get() = if (footerLayout.customize) footerLayout.bordered(footer.style) else LineLayout.FOOTER
+
+    /** Scrolling text running on under the line («Ничего») leaves «Отступ до текста» and the rule nothing to do; they are kept for later. */
+    private fun LineLayout.bordered(under: FooterStyle): LineLayout =
+        if (pageTurn == PageTurn.Scroll && under == FooterStyle.None) copy(gap = 0, rule = false) else this
+    val shownHeaderUnder: FooterStyle get() = if (headerLayout.customize) headerUnder else FooterStyle.None
 
     /**
      * «Нет» drops only the page number. Time, battery and pages left are «Свои параметры»; with it off

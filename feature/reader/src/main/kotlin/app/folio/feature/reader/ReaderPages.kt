@@ -21,7 +21,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.folio.core.data.db.HighlightEntity
+import app.folio.core.data.settings.FooterStyle
 import app.folio.core.data.settings.LineAlign
+import app.folio.core.data.settings.PageHeader
 import app.folio.core.data.settings.PageTurn
 import app.folio.core.designsystem.ReaderPalette
 import app.folio.core.designsystem.readerChromeSeparator
@@ -93,6 +95,13 @@ internal fun BoxScope.ReaderPages(
                 controls.activeHighlight = null
             },
             pageOverlay = { page -> NoteMarkers(page, Offset.Zero, highlights, vm, palette) { controls.noteFor = it } },
+            modifier = run {
+                val top = settings.shownHeaderUnder.takeUnless { header == PageHeader.None } ?: FooterStyle.None
+                val bottom = footer.style.takeUnless { footer.isEmpty } ?: FooterStyle.None
+                val (topRule, bottomRule) = scrollRuleInsets(settings)
+                val (topCut, bottomCut) = scrollCuts(padding.calculateTopPadding(), topRule, top, padding.calculateBottomPadding(), bottomRule, bottom)
+                Modifier.scrollEdges(top, topCut, bottom, bottomCut)
+            },
         )
         else -> HorizontalPageTurner(
             current = state.page,

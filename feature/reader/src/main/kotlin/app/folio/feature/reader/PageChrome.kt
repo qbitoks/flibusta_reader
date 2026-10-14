@@ -203,21 +203,6 @@ private fun FooterText(text: String, textStyle: TextStyle, modifier: Modifier = 
     Text(text, style = textStyle, modifier = modifier, textAlign = align, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
-/** Height of the faint «Полоска» under scrolling text, above the navigation inset. */
-internal val FooterStripHeight = 30.dp
-
-/**
- * Strip at the very bottom that the scrolling text passes under: a shade off the page colour, so it
- * is barely visible yet keeps the lines under it from showing through the time and page number.
- */
-@Composable
-internal fun FooterStrip(palette: ReaderPalette, height: Dp, modifier: Modifier = Modifier) {
-    val tint = lerp(palette.background, palette.text, 0.05f).copy(alpha = 0.97f)
-    Box(modifier.fillMaxWidth().height(height).background(tint)) {
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(palette.text.copy(alpha = 0.1f)))
-    }
-}
-
 /**
  * Page colour over [height] at an edge of the scrolling text, solid at the screen edge and fading
  * over the last [fade] towards the text, so lines dissolve under the header and footer.

@@ -46,7 +46,8 @@ internal fun ThemesSheet(vm: ReaderViewModel, brightness: SheetBrightness, onDis
     // A book with its own settings opens on them; otherwise edits go to all books.
     var bookScope by rememberSaveable { mutableStateOf(!vm.ownSettings.value.isEmpty) }
     val editor = rememberSettingsEditor(if (bookScope) effective else shared, own, bookScope,
-        save = { change -> vm.saveSettings(bookScope, change).join() }, textReset = vm.textReset(bookScope))
+        save = { change -> vm.saveSettings(bookScope, change).join() }, textReset = vm.textReset(bookScope),
+        pageReset = vm.pageReset(bookScope))
     ReadingSettingsSheet(
         editor = editor,
         title = stringResource(R.string.themes_title),
@@ -72,6 +73,16 @@ internal fun ReadingSettingsSheet(
     onDismiss: () -> Unit,
 ) {
     var section by rememberSaveable { mutableIntStateOf(0) }
+    var jump by remember { mutableStateOf<PageJump?>(null) }
+    val onPreviewTap: (PreviewPart) -> Unit = { part ->
+        when (part) {
+            PreviewPart.Text -> section = 1
+            PreviewPart.Header, PreviewPart.Footer -> {
+                section = 2
+                jump = PageJump(top = part == PreviewPart.Header)
+            }
+        }
+    }
     val scrollStates = List(3) { rememberScrollState() }
     val c = Folio.colors
     val settings = editor.settings
@@ -106,19 +117,19 @@ internal fun ReadingSettingsSheet(
                             when (section) {
                                 0 -> ReaderAppearanceSettings(editor, brightness)
                                 1 -> ReaderTextSettings(editor)
-                                2 -> ReaderPageSettings(editor, palette)
+                                2 -> ReaderPageSettings(editor, palette, jump)
                             }
                         }
                     }
                 }
                 if (wide) {
                     Row(Modifier.fillMaxSize()) {
-                        PageSettingsPreview(preview, settings, palette, Modifier.weight(0.44f).fillMaxHeight().padding(bottom = 16.dp))
+                        PageSettingsPreview(preview, settings, palette, Modifier.weight(0.44f).fillMaxHeight().padding(bottom = 16.dp), onPreviewTap)
                         Editor(Modifier.weight(0.56f).fillMaxHeight())
                     }
                 } else {
                     Column(Modifier.fillMaxSize()) {
-                        PageSettingsPreview(preview, settings, palette, Modifier.fillMaxWidth().height(previewHeight))
+                        PageSettingsPreview(preview, settings, palette, Modifier.fillMaxWidth().height(previewHeight), onPreviewTap)
                         Editor(Modifier.weight(1f))
                     }
                 }

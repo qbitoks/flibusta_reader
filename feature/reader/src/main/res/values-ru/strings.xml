@@ -90,7 +90,6 @@
     <string name="themes_customize_title">Настройка темы</string>
     <string name="settings_text">Текст</string>
     <string name="settings_layout">Универсальный доступ и макет</string>
-    <string name="themes_preview_text">завершив ужин, я отправился вдоль пляжа в поисках идеального места, где можно было бы дочитать книгу и начать новую. Я нашел место, где никого не было видно</string>
     <string name="reader_page_word">Страница</string>
     <string name="reader_no_highlights">Нет выделений</string>
     <string name="reader_today">Сегодня</string>
@@ -123,9 +122,10 @@
     <string name="footer_pages_left">Осталось в главе</string>
     <string name="footer_clock">Время</string>
     <string name="footer_battery">Заряд батареи</string>
-    <string name="footer_style">Над прокруткой</string>
+    <string name="footer_style">Под строкой при прокрутке</string>
+    <string name="footer_style_clip">Обрезка</string>
+    <string name="footer_style_none">Ничего</string>
     <string name="footer_style_fade">Затухание</string>
-    <string name="footer_style_strip">Полоска</string>
     <string name="footer_note">В прокрутке текст уходит под строку; при перелистывании под ней всегда остаётся место. Если всё выключить, текст идёт до низа экрана.</string>
     <string name="header_note">При «Ничего» текст начинается от верха экрана.</string>
     <string name="settings_tab_appearance">Оформление</string>
@@ -140,6 +140,8 @@
     <string name="settings_font_size">Размер текста</string>
     <string name="settings_spacing">Интервалы и поля</string>
     <string name="settings_custom_spacing">Свои интервалы и поля</string>
+    <string name="settings_reset_page">Сбросить настройки страницы</string>
+    <string name="settings_reset_book_page">Вернуть общие настройки страницы</string>
     <string name="settings_reset_text">Сбросить текст этой темы</string>
     <string name="settings_page_preview">Предпросмотр страницы</string>
     <string name="settings_preview_note">Пример расположения верхней и нижней строк.</string>
@@ -196,4 +198,9 @@
     <string name="line_rule_above">Линия над строкой</string>
     <string name="line_hide_chapter_start">Не показывать в начале главы</string>
     <string name="reading_defaults_title">Настройки чтения</string>
+    <string name="themes_preview_heading">Глава первая. У моря</string>
+    <string name="themes_preview_text">Завершив ужин, я отправился вдоль пляжа в поисках идеального места, где можно было бы дочитать книгу и начать новую. Солнце опускалось к горизонту, и длинные тени деревьев ложились на песок.</string>
+    <string name="themes_preview_text2">— Вы тоже любите читать на закате? — спросила незнакомка, не отрывая взгляда от страницы.</string>
+    <string name="themes_preview_text3">— Только когда текст не утомляет глаза, — ответил я. — Шрифт, интервалы и поля решают больше, чем кажется.</string>
+    <string name="themes_preview_text4">Достопримечательности побережья, высокохудожественные иллюстрации и труднопроизносимые названия — хороший повод проверить переносы и выравнивание по ширине. Цифры 0123456789, кавычки «ёлочки» и знаки препинания тоже должны читаться легко.</string>
 </resources>

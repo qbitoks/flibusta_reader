@@ -48,7 +48,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.folio.core.data.library.BookSharing
-import app.folio.core.data.settings.FooterStyle
 import app.folio.core.data.settings.LineAlign
 import app.folio.core.data.settings.PageTurn
 import app.folio.core.designsystem.ReaderPalette
@@ -99,7 +98,6 @@ internal fun BoxScope.ReaderChrome(
     val footerStyle = footerLook.style
     val footerEnd = if (state.bookmarked) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
     val footerLineHeight = with(LocalDensity.current) { footerStyle.lineHeight.toDp() }
-    val stripHeight = (footerLineHeight + 10.dp).coerceAtLeast(FooterStripHeight)
     val footerAlpha by animateFloatAsState(if (controls.chromeVisible) 0f else 1f, tween(150), label = "scrollFooter")
     // With nothing above the text, the controls get a band of page colour to stand on.
     AnimatedVisibility(
@@ -130,7 +128,6 @@ internal fun BoxScope.ReaderChrome(
 
     // Footer: «6 из 1269» with the controls, just «6» without them (white spot 5), plus time and battery.
     if (scroll && !footer.isEmpty) {
-        val strip = footer.style == FooterStyle.Strip
         PageFooterBar(
             center = footerLook.text(footerCenter(footer, state.globalPage, state.totalPages, state.progress, state.pagesLeftInChapter.takeIf { state.page != null }, footerWords, readerChromeSeparator(settings.chromeStyles.footer))),
             clock = clock,
@@ -139,11 +136,11 @@ internal fun BoxScope.ReaderChrome(
             modifier = Modifier.align(Alignment.BottomCenter).padding(
                 start = margin,
                 end = margin,
-                bottom = if (strip) bottomInset + layout.footerEdge + (stripHeight - footerLineHeight) / 2 else footerY + 12.dp,
+                bottom = footerY + 12.dp,
             ).alpha(footerAlpha),
             textStyle = footerStyle,
             spread = footerLook.layout.align == LineAlign.Spread,
-            rule = footerLook.ruleColor.takeIf { footerLook.layout.rule && !strip },
+            rule = footerLook.ruleColor.takeIf { footerLook.layout.rule },
             endInset = footerEnd,
             onCenterTap = onFooterTap,
         )

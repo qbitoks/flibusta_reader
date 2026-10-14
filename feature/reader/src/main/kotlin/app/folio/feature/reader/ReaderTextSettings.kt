@@ -58,14 +58,19 @@ internal fun ReaderTextSettings(editor: SettingsEditor) {
     Spacer(Modifier.height(16.dp))
     // In a book this drops its own text; for all books it restores the theme's typography.
     val canReset = if (editor.bookScope) editor.isOwn(BookOverrides.TEXT) else style != ThemeStyle.defaultFor(theme)
+    ResetButton(stringResource(if (editor.bookScope) R.string.settings_reset_book_text else R.string.settings_reset_text), canReset, editor::resetText)
+    SettingsNote(stringResource(R.string.settings_text_scope))
+}
+
+/** Centred reset row in its own card, greyed out while there is nothing to reset. */
+@Composable
+internal fun ResetButton(text: String, enabled: Boolean, onClick: () -> Unit) {
     GroupedCard {
-        Box(Modifier.fillMaxWidth().clickable(enabled = canReset) { editor.resetText() }
+        Box(Modifier.fillMaxWidth().clickable(enabled = enabled, onClick = onClick)
             .heightIn(min = 52.dp).padding(18.dp), contentAlignment = Alignment.Center) {
-            Text(stringResource(if (editor.bookScope) R.string.settings_reset_book_text else R.string.settings_reset_text), style = FolioType.body,
-                color = if (canReset) Folio.colors.label else Folio.colors.tertiaryLabel)
+            Text(text, style = FolioType.body, color = if (enabled) Folio.colors.label else Folio.colors.tertiaryLabel)
         }
     }
-    SettingsNote(stringResource(R.string.settings_text_scope))
 }
 
 @Composable

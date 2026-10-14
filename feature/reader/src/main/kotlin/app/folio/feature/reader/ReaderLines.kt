@@ -85,3 +85,17 @@ internal fun textInsets(settings: ReaderSettings, headerLineHeight: Dp, footerLi
         else footerLineHeight + 48.dp + footer.edge.dp + footer.gap.dp + (if (footer.rule) FooterRuleSpace else 0.dp)
     return top to bottom
 }
+
+/**
+ * Where «Обрезка»/«Затухание» cut scrolling text next to a line with a rule, past the text area's
+ * edge (null without a rule): the rule's distance at the smallest «Отступ до текста», so the cut
+ * still follows that setting and reaches the rule at its minimum. In scroll mode the title sits
+ * 10 dp higher, its rule under it; the footer's rule tops its row. Mirrors [textInsets].
+ */
+internal fun scrollRuleInsets(settings: ReaderSettings): Pair<Dp?, Dp?> {
+    val header = settings.shownHeaderLayout
+    val footer = settings.shownFooterLayout
+    val top = if (settings.header != PageHeader.None && header.rule) 18.dp + LineLayout.GAP.first.dp else null
+    val bottom = if (!settings.shownFooter.isEmpty && footer.rule) 20.dp + LineLayout.GAP.first.dp else null
+    return top to bottom
+}

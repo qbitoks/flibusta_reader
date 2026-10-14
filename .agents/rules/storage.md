@@ -15,7 +15,9 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
 - DataStore `settings`: reader/library prefs; `app_appearance` (app-wide), `book_appearance_<book id>`
   (absent = follow the app; removed on delete). Old `appearance` key is no longer read (no migration).
 - Shared reader settings: `ReaderPreferences` (existing keys plus `reader_appearance`, `header_layout`,
-  `footer_layout`); visual presets stay in `ChromeStylePreferences` keys; `footer_style` = scroll background.
+  `footer_layout`); visual presets stay in `ChromeStylePreferences` keys;
+  `footer_under` (None/Clip/Fade; removed Strip reads as Clip) and `header_under` (None/Clip/Fade) = what scrolling text does
+  under the lines (default None); legacy `footer_style` and book `footer_scroll` carry over only Strip.
 - A book's own settings: `book_reader_<book id>`, `name=value` lines, only fields that differ from shared
   (`BookOverrides`); removed on reset/delete. Old `book_appearance_<id>` and `book_*_chrome_style_<id>`
   are read as part of it and dropped on the next write of that book. Unknown fields are ignored.

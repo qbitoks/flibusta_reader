@@ -17,8 +17,14 @@
     Fade header/footer out with controls shown; retain the chosen number format and stable title margins.
   - Offer descriptive Small muted/Large regular/Book font/Bold contrast choices for upper and lower labels.
     Reuse `readerChromeTextStyle` in cards and pages; derive reserved space from scaled line height.
-  - In scroll mode, fix the header on a solid background slightly higher, with text fading over
-    about 18 dp before it; use a 12 dp lower fade or «Полоска» tinted nearly opaque page color.
+  - In scroll mode the text runs under the lines unless «Под строкой при прокрутке» says otherwise:
+    «Обрезка»/«Затухание» mask the text itself (`scrollEdges`, eased 18 dp fade), nothing painted on
+    the page; the cut follows «Отступ до текста» and, with a rule, reaches it at the smallest gap
+    (`scrollRuleInsets`).
+  - «Свои параметры» in one list, no captions: content, look, edge; in scroll mode «Под строкой при
+    прокрутке», then gap and rule only when it isn't «Ничего» — what it reveals sits below it.
+  - The settings preview mirrors this: lines overlay the text, scroll mode scrolls; a tap on a line
+    opens its group in «Страница», on the text the «Текст» tab.
     In paged mode, reserve space below the footer.
   - Show history «↶ / ↷» with controls; briefly show «↶» after a jump for 3 s or until first turn.
   - Use left/right thirds for tap turning; an edge tap with controls visible turns and hides them.
@@ -67,9 +73,9 @@
 ## Themes and customization
 - Use a fixed dialog for «Темы и настройки», with X/Back dismissal and no drag or outside dismissal.
   Keep the header and «Оформление / Текст / Страница» tabs fixed; scroll each tab independently.
-- Pin a readable book excerpt above controls (beside them in landscape); reuse `Paginator` and `PageView`.
-  Bound the excerpt; paginate it off-thread without changing the reader viewport or reading position.
-  Prefer body text after leading headings so a large chapter title cannot consume the compact preview.
+- Pin a fixed sample text above controls (beside them in landscape), the same in every book; reuse `Paginator`
+  and `PageView`. Keep it short (heading, dialogue, long words, digits) so it re-paginates at once off-thread.
+  Edits show instantly; saves are debounced (`SettingsEditor`) so the book behind doesn't re-paginate per tick.
   Show header/footer with actual settings; keep the preview visible while any setting is edited.
 - Apply edits immediately through `SettingsEditor`; use inline disclosures instead of
   opening «Настроить» or a separate «Колонтитулы» sheet. Close never discards edits.
@@ -88,6 +94,7 @@
   Keep ranges: size 13–42, line spacing 0.80–2.50, letter spacing ±10%, word spacing ±20%, margins ±10%.
   Keep justification in the spacing group and hyphenation enabled without a toggle.
 - Reset only the selected theme typography (for a book: «Вернуть общий текст»); leave the font size unchanged.
+- «Страница» ends with «Сбросить настройки страницы» (for a book: «Вернуть общие настройки страницы»): both lines with «Свои параметры» back to defaults; page turn stays.
 - In «Страница», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
   Both lines: content segment (top «Нет» hides the line; bottom «Нет» drops only the number), four style chips, «Свои параметры» switch.
   Short choices are segments whose labels shrink to fit; radio list only above 130 % text (never for icon rows).

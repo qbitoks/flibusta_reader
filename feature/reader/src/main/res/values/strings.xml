@@ -86,7 +86,6 @@
     <string name="themes_customize_title">Customize Theme</string>
     <string name="settings_text">Text</string>
     <string name="settings_layout">Accessibility &amp; Layout</string>
-    <string name="themes_preview_text">After dinner I set off along the beach in search of the perfect place to finish my book and start a new one. I found a spot where nobody could see me</string>
     <string name="reader_page_word">Page</string>
     <string name="reader_no_highlights">No Highlights</string>
     <string name="reader_today">Today</string>
@@ -115,9 +114,10 @@
     <string name="footer_pages_left">Pages Left in Chapter</string>
     <string name="footer_clock">Time</string>
     <string name="footer_battery">Battery</string>
-    <string name="footer_style">Over Scrolling Text</string>
+    <string name="footer_style">Under the Line When Scrolling</string>
+    <string name="footer_style_clip">Clip</string>
+    <string name="footer_style_none">Nothing</string>
     <string name="footer_style_fade">Fade</string>
-    <string name="footer_style_strip">Strip</string>
     <string name="footer_note">In Scroll the text passes under the line; turned pages always keep room for it. With everything off the text reaches the bottom of the screen.</string>
     <string name="header_note">With Nothing the text starts at the top of the screen.</string>
     <string name="settings_tab_appearance">Appearance</string>
@@ -132,6 +132,8 @@
     <string name="settings_font_size">Text size</string>
     <string name="settings_spacing">Spacing and margins</string>
     <string name="settings_custom_spacing">Custom spacing and margins</string>
+    <string name="settings_reset_page">Reset Page Settings</string>
+    <string name="settings_reset_book_page">Use Shared Page Settings</string>
     <string name="settings_reset_text">Reset text for this theme</string>
     <string name="settings_page_preview">Page preview</string>
     <string name="settings_preview_note">Sample placement of the top and bottom lines.</string>
@@ -188,4 +190,9 @@
     <string name="line_rule_above">Rule above</string>
     <string name="line_hide_chapter_start">Hide on chapter openings</string>
     <string name="reading_defaults_title">Reading Settings</string>
+    <string name="themes_preview_heading">Chapter One. By the Sea</string>
+    <string name="themes_preview_text">After dinner I set off along the beach in search of the perfect place to finish my book and start a new one. The sun was sinking toward the horizon, and the long shadows of the trees lay across the sand.</string>
+    <string name="themes_preview_text2">“Do you also like reading at sunset?” a stranger asked, without looking up from her page.</string>
+    <string name="themes_preview_text3">“Only when the text is easy on the eyes,” I replied. “Font, spacing and margins matter more than you would think.”</string>
+    <string name="themes_preview_text4">Extraordinarily characteristic, incomprehensible and uncharacteristically long words are a good test for hyphenation and justified text. Digits 0123456789, “quotes” and punctuation should read easily too.</string>
 </resources>

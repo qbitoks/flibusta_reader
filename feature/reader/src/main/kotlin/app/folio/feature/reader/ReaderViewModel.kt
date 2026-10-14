@@ -588,6 +588,11 @@ class ReaderViewModel @Inject constructor(
         it.withThemeStyle(if (book) sharedSettings.value.themeStyles.getValue(it.theme) else ThemeStyle.defaultFor(it.theme))
     }
 
+    /** «Вернуть общие настройки страницы» for the book, or the default lines for all books. */
+    fun pageReset(book: Boolean): (ReaderSettings) -> ReaderSettings = {
+        it.withLinesOf(if (book) sharedSettings.value else ReaderSettings())
+    }
+
     fun shareOwnSettings() = viewModelScope.launch { settingsRepository.shareBookReader(bookId) }
     fun resetOwnSettings() = viewModelScope.launch { settingsRepository.resetBookReader(bookId) }
 

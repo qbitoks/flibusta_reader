@@ -129,6 +129,7 @@ internal fun ScrollReader(
     onLongPressDrag: (Page, Offset) -> Unit,
     onScrollStart: () -> Unit,
     pageOverlay: @Composable (Page) -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     key(generation) {
         val listState = rememberLazyListState()
@@ -240,7 +241,7 @@ internal fun ScrollReader(
         LazyColumn(
             state = listState,
             contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding()),
-            modifier = Modifier.fillMaxSize(),
+            modifier = modifier.fillMaxSize(),
         ) {
             items(pages, key = { it.key }) { page ->
                 val isChapterEnd = chapters.firstOrNull { it.chapter == page.chapter }?.pages?.lastIndex == page.index

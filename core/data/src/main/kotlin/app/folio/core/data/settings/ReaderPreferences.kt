@@ -21,9 +21,13 @@ internal object ReaderPreferences {
     private val footerPagesLeft = booleanPreferencesKey("footer_pages_left")
     private val footerClock = booleanPreferencesKey("footer_clock")
     private val footerBattery = booleanPreferencesKey("footer_battery")
-    private val footerStyle = stringPreferencesKey("footer_style")
+    // "footer_style" held Fade/Strip when fading was the default; only its Strip carries over to "footer_under",
+    // where the removed «Полоска» (Strip) reads as «Обрезка».
+    private val oldFooterStyle = stringPreferencesKey("footer_style")
+    private val footerUnder = stringPreferencesKey("footer_under")
     private val headerLayout = stringPreferencesKey("header_layout")
     private val footerLayout = stringPreferencesKey("footer_layout")
+    private val headerUnder = stringPreferencesKey("header_under")
     private fun themeStyle(theme: ReaderTheme) = stringPreferencesKey("theme_style_${theme.name}")
     private fun book(bookId: String) = stringPreferencesKey("book_reader_$bookId")
     // Before per-book settings a book kept only its Light/Dark; read once, then folded into book_reader_<id>.
@@ -36,7 +40,7 @@ internal object ReaderPreferences {
                 pagesLeft = p[footerPagesLeft] ?: d.pagesLeft,
                 clock = p[footerClock] ?: d.clock,
                 battery = p[footerBattery] ?: d.battery,
-                style = enumOr(p[footerStyle], d.style),
+                style = enumOr(withoutStrip(p[footerUnder] ?: p[oldFooterStyle]?.takeIf { it == OLD_STRIP }), d.style),
             )
         }
         return ReaderSettings(
@@ -55,6 +59,7 @@ internal object ReaderPreferences {
             headerLayout = LineLayout.decode(p[headerLayout], LineLayout.HEADER),
             // Footer content used to be plain settings: keep a changed footer as it was by starting customised.
             footerLayout = LineLayout.decode(p[footerLayout], LineLayout.FOOTER.copy(customize = !footer.hasDefaultContent)),
+            headerUnder = enumOr(p[headerUnder], FooterStyle.None),
         )
     }
 
@@ -74,10 +79,12 @@ internal object ReaderPreferences {
         p[footerPagesLeft] = s.footer.pagesLeft
         p[footerClock] = s.footer.clock
         p[footerBattery] = s.footer.battery
-        p[footerStyle] = s.footer.style.name
+        p[footerUnder] = s.footer.style.name
+        p.remove(oldFooterStyle)
         ChromeStylePreferences.writeDefaults(p, s.chromeStyles)
         p[headerLayout] = s.headerLayout.encode()
         p[footerLayout] = s.footerLayout.encode()
+        p[headerUnder] = s.headerUnder.name
     }
 
     fun readBook(p: Preferences, bookId: String): BookOverrides {
@@ -87,6 +94,9 @@ internal object ReaderPreferences {
             ?.let { own.putIfAbsent(BookOverrides.APPEARANCE, it) }
         oldStyles.header?.let { own.putIfAbsent(BookOverrides.HEADER_STYLE, it.name) }
         oldStyles.footer?.let { own.putIfAbsent(BookOverrides.FOOTER_STYLE, it.name) }
+        // "footer_scroll" held Fade/Strip when fading was the default; only Strip stays the book's own.
+        own.remove(OLD_FOOTER_SCROLL)?.takeIf { it == OLD_STRIP }?.let { own.putIfAbsent(BookOverrides.FOOTER_UNDER, it) }
+        if (own[BookOverrides.FOOTER_UNDER] == OLD_STRIP) own[BookOverrides.FOOTER_UNDER] = FooterStyle.Clip.name
         return BookOverrides(own)
     }
 
@@ -96,6 +106,12 @@ internal object ReaderPreferences {
         p.remove(oldBookAppearance(bookId))
         ChromeStylePreferences.writeBook(p, bookId, BookChromeStyles())
     }
+
+    private const val OLD_FOOTER_SCROLL = "footer_scroll"
+    private const val OLD_STRIP = "Strip"
+
+    /** «Полоска» was removed; it was closest to «Обрезка» at the line's rule. */
+    private fun withoutStrip(name: String?): String? = if (name == OLD_STRIP) FooterStyle.Clip.name else name
 
     private inline fun <reified E : Enum<E>> enumOr(name: String?, default: E): E =
         name?.let { runCatching { enumValueOf<E>(it) }.getOrNull() } ?: default
