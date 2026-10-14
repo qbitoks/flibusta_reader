@@ -116,7 +116,7 @@ internal fun ReadingSettingsSheet(
                         Column(Modifier.weight(1f).verticalScroll(scrollStates[section], overscrollEffect = null).padding(bottom = 24.dp)) {
                             when (section) {
                                 0 -> ReaderAppearanceSettings(editor, brightness)
-                                1 -> ReaderPageSettings(editor, palette, jump)
+                                1 -> ReaderPageSettings(editor, jump)
                             }
                         }
                     }

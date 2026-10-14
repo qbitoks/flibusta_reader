@@ -48,3 +48,4 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
   Its reset goes to the last standard theme, not to defaults: that is what the user started from.
 - 2026-10-14 | reader | Presets supply paragraph gap and indent; «Моя» edits both, with no per-theme saved overrides | user decision.
   Free colour picker rejected: too easy to get unreadable text.
+2026-10-14 | reader settings | «На странице»: omit line preset buttons; clock/battery first, advanced disclosure never disables settings | user-approved simplification

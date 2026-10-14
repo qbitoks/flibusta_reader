@@ -2,7 +2,7 @@ package app.folio.feature.reader
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.LaunchedEffect
@@ -10,42 +10,37 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import app.folio.core.data.settings.*
 import app.folio.core.designsystem.*
 import app.folio.core.designsystem.components.*
 import kotlin.math.roundToInt
 
-/** A tap on a line in the preview: scroll «Страница» to that line's group and flash it. */
+/** A tap on a line in the preview: scroll «На странице» to that line's group and flash it. */
 internal class PageJump(val top: Boolean) {
-    /** Shown once: coming back to «Страница» later doesn't scroll again. */
+    /** Shown once: coming back to «На странице» later doesn't scroll again. */
     var done = false
 }
 
 /** Page controls are content of the shared settings sheet, never a nested modal. Both lines share one layout. */
 @Composable
-internal fun ReaderPageSettings(editor: SettingsEditor, palette: ReaderPalette, jump: PageJump? = null) {
+internal fun ReaderPageSettings(editor: SettingsEditor, jump: PageJump? = null) {
     val settings = editor.settings
-    val footer = settings.footer
+    val footer = settings.shownFooter
     val scroll = settings.pageTurn == PageTurn.Scroll
     val turns = buildList {
         add(SegmentOption(PageTurn.Slide, stringResource(R.string.page_turn_slide), icon = PageTurnIcons.Slide))
@@ -65,10 +60,9 @@ internal fun ReaderPageSettings(editor: SettingsEditor, palette: ReaderPalette, 
             SegmentOption(PageHeader.Chapter, stringResource(R.string.header_chapter_short), stringResource(R.string.header_chapter)),
         )) { v -> editor.edit { it.copy(header = v) } }
         if (settings.header != PageHeader.None) {
-            LineStyle(settings.chromeStyles.header, palette, settings.style.font) { v -> editor.edit { it.copy(chromeStyles = it.chromeStyles.copy(header = v)) } }
-            LineSettings(settings.headerLayout, top = true, editor, gap = true, border = !scroll || settings.headerUnder != FooterStyle.None, under = {
-                if (scroll) UnderLine(settings.headerUnder) { v -> editor.edit { it.copy(headerUnder = v) } }
-            }) { change -> editor.edit { it.copy(headerLayout = change(it.headerLayout)) } }
+            LineSettings(settings.shownHeaderLayout, top = true, editor, gap = true, border = !scroll || settings.shownHeaderUnder != FooterStyle.None, under = {
+                if (scroll) UnderLine(settings.shownHeaderUnder) { v -> editor.edit { it.editHeaderLine { layout -> layout }.copy(headerUnder = v) } }
+            }) { change -> editor.edit { it.editHeaderLine(change) } }
         }
     }
     }
@@ -83,11 +77,14 @@ internal fun ReaderPageSettings(editor: SettingsEditor, palette: ReaderPalette, 
             SegmentOption(FooterPage.Percent, stringResource(R.string.reader_percent, 7), stringResource(R.string.footer_page_percent)),
         )) { v -> editor.edit { it.copy(footer = it.footer.copy(page = v)) } }
         // «Нет» drops only the page number: time or pages left alone stay configurable.
-        LineStyle(settings.chromeStyles.footer, palette, settings.style.font) { v -> editor.edit { it.copy(chromeStyles = it.chromeStyles.copy(footer = v)) } }
-        LineSettings(settings.footerLayout, top = false, editor, gap = !footer.isEmpty, border = !scroll || footer.style != FooterStyle.None, under = {
-            if (scroll) UnderLine(footer.style) { v -> editor.edit { it.copy(footer = it.footer.copy(style = v)) } }
+        SettingsDivider()
+        SettingsToggle(stringResource(R.string.footer_clock), footer.clock) { on -> editor.edit { it.editFooterContent { f -> f.copy(clock = on) } } }
+        SettingsDivider()
+        SettingsToggle(stringResource(R.string.footer_battery), footer.battery) { on -> editor.edit { it.editFooterContent { f -> f.copy(battery = on) } } }
+        LineSettings(settings.shownFooterLayout, top = false, editor, gap = !footer.isEmpty, border = !scroll || footer.style != FooterStyle.None, under = {
+            if (scroll) UnderLine(footer.style) { v -> editor.edit { it.editFooterContent { f -> f.copy(style = v) } } }
         }) { change ->
-            editor.edit { it.copy(footerLayout = change(it.footerLayout)) }
+            editor.edit { it.editFooterLine(change) }
         }
     }
     }
@@ -118,59 +115,28 @@ private fun LineGroup(jump: PageJump?, content: @Composable ColumnScope.() -> Un
 }
 
 /**
- * Line styles as a segmented control: each segment names its style in that style, the selected one
- * raised on the page colour, so the row is its own sample without a strip of capsules.
- */
-@Composable
-private fun LineStyle(selected: ChromeStyle, palette: ReaderPalette, font: String, onSelect: (ChromeStyle) -> Unit) {
-    val c = Folio.colors
-    Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 10.dp).height(36.dp)
-        .clip(CircleShape).background(c.fill).padding(3.dp).selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        ChromeStyle.entries.forEach { style ->
-            val isSelected = style == selected
-            val (short, long) = when (style) {
-                ChromeStyle.Quiet -> R.string.settings_style_small_short to R.string.settings_style_small
-                ChromeStyle.Classic -> R.string.settings_style_large_short to R.string.settings_style_large
-                ChromeStyle.Book -> R.string.settings_style_book_short to R.string.settings_style_book
-                ChromeStyle.Clear -> R.string.settings_style_contrast_short to R.string.settings_style_contrast
-            }
-            val description = stringResource(long)
-            val text = readerChromeTextStyle(style, palette, font)
-            Box(Modifier.weight(1f).fillMaxHeight()
-                .then(if (isSelected) Modifier.shadow(2.dp, CircleShape) else Modifier)
-                .clip(CircleShape).background(if (isSelected) palette.background else Color.Transparent)
-                .selectable(isSelected, role = Role.RadioButton) { onSelect(style) }
-                .semantics { contentDescription = description }
-                .padding(horizontal = 6.dp), contentAlignment = Alignment.Center) {
-                // Unselected samples sit on the grey track, so they take the label colour, keeping only the face and size.
-                BasicText(stringResource(short), Modifier.clearAndSetSemantics { },
-                    style = if (isSelected) text else text.copy(color = c.secondaryLabel), maxLines = 1, softWrap = false,
-                    autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = text.fontSize, stepSize = 0.5.sp))
-            }
-        }
-    }
-}
-
-/**
- * «Свои параметры» of a line: off draws it as standard and keeps the values for later. «Отступ до текста»
+ * Disclosure state only controls the fields, never the applied settings. «Отступ до текста»
  * shows only when [gap]: an empty line has nothing to keep apart.
  * [border] is false while scrolling text runs on under the line: then neither gap nor rule means anything.
  */
 @Composable
 private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEditor, gap: Boolean, border: Boolean, under: @Composable () -> Unit, change: ((LineLayout) -> LineLayout) -> Unit) {
-    val footer = editor.settings.footer
-    fun footerPart(part: (PageFooter) -> PageFooter) = editor.edit { it.copy(footer = part(it.footer)) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val state = stringResource(if (expanded) R.string.line_details_expanded else R.string.line_details_collapsed)
     SettingsDivider()
-    SettingsToggle(stringResource(R.string.line_custom), layout.customize) { on -> change { it.copy(customize = on) } }
-    if (!layout.customize) return
+    Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { expanded = !expanded }
+        .semantics { stateDescription = state }
+        .heightIn(min = 54.dp).padding(horizontal = 18.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.line_details), style = FolioType.body, color = Folio.colors.label, modifier = Modifier.weight(1f))
+        Icon(if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+            null, tint = Folio.colors.secondaryLabel, modifier = Modifier.size(22.dp))
+    }
+    if (!expanded) return
     if (!top) {
         SettingsDivider()
-        SettingsToggle(stringResource(R.string.footer_clock), footer.clock) { on -> footerPart { it.copy(clock = on) } }
-        SettingsDivider()
-        SettingsToggle(stringResource(R.string.footer_battery), footer.battery) { on -> footerPart { it.copy(battery = on) } }
-        SettingsDivider()
-        SettingsToggle(stringResource(R.string.footer_pages_left), footer.pagesLeft) { on -> footerPart { it.copy(pagesLeft = on) } }
+        SettingsToggle(stringResource(R.string.footer_pages_left), editor.settings.shownFooter.pagesLeft) { on ->
+            editor.edit { it.editFooterContent { f -> f.copy(pagesLeft = on) } }
+        }
     }
 
     SettingsDivider()
@@ -215,7 +181,7 @@ private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEdito
     SettingsToggle(stringResource(if (top) R.string.line_rule_below else R.string.line_rule_above), layout.rule) { on -> change { it.copy(rule = on) } }
 }
 
-/** «Под строкой при прокрутке», before the gap and the rule it turns on; without «Свои параметры» the text runs on under the line. */
+/** «Под строкой при прокрутке», before the gap and the rule it turns on. */
 @Composable
 private fun UnderLine(selected: FooterStyle, onSelect: (FooterStyle) -> Unit) {
     SettingsDivider()

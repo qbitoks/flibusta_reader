@@ -10,6 +10,7 @@ status: active
 - ReaderPhone checks cover upgrade/restart, presets, menu palettes and guide landings in Slide/Curl/Fade.
 - Finish on-device default/book reset checks and physical-phone verification before distribution.
 - 0.3.10 includes preset paragraph spacing/indent and restored seam leading; verify on a phone before distribution.
+- Verify simplified «На странице» on a phone: clock-only footer and settings retained after closing «Подробнее».
 
 ## Next steps
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.

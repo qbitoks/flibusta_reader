@@ -130,7 +130,10 @@
     <string name="footer_note">В прокрутке текст уходит под строку; при перелистывании под ней всегда остаётся место. Если всё выключить, текст идёт до низа экрана.</string>
     <string name="header_note">При «Ничего» текст начинается от верха экрана.</string>
     <string name="settings_tab_appearance">Оформление</string>
-    <string name="settings_tab_page">Страница</string>
+    <string name="settings_tab_page">На странице</string>
+    <string name="line_details">Подробнее</string>
+    <string name="line_details_expanded">Развёрнуто</string>
+    <string name="line_details_collapsed">Свёрнуто</string>
     <string name="settings_style_small">Мелкий приглушённый</string>
     <string name="settings_style_large">Крупный обычный</string>
     <string name="settings_style_book">Шрифт книги</string>

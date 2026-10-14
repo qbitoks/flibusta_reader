@@ -11,22 +11,21 @@
 - Apple reference: horizontal margins 39 dp, column about 314 dp, line pitch 23.5 dp;
   «Оригинал» dark uses black/white. Adapt measurements to current font and user settings.
 - Preserve the user decisions from 2026-10-13:
-  - Configure lines in «Темы и настройки» → «Страница»: header none, book or chapter title (default);
+  - Configure lines in «Темы и настройки» → «На странице»: header none, book or chapter title (default);
     footer «42» (page only), clock/battery off; Slide.
   - With no header, start text below the status-bar inset; when controls are shown, put a page-color
     strip behind the top buttons. With no footer content, let text extend to the bottom.
   - Put clock at footer left, page/percent plus «ещё N стр.» at center, battery at right.
     Fade header/footer out with controls shown; retain the chosen number format and stable title margins.
-  - Offer descriptive Small muted/Large regular/Book font/Bold contrast choices for upper and lower labels.
-    Reuse `readerChromeTextStyle` in cards and pages; derive reserved space from scaled line height.
+  - Keep saved label styles compatible but omit preset buttons; derive reserved space from scaled line height.
   - In scroll mode the text runs under the lines unless «Под строкой при прокрутке» says otherwise:
     «Обрезка»/«Затухание» mask the text itself (`scrollEdges`, eased 18 dp fade), nothing painted on
     the page; the cut follows «Отступ до текста» and, with a rule, reaches it at the smallest gap
     (`scrollRuleInsets`).
-  - «Свои параметры» in one list, no captions: content, look, edge; in scroll mode «Под строкой при
+  - Put advanced parameters under «Подробнее»: content, look, edge; in scroll mode «Под строкой при
     прокрутке», then gap and rule only when it isn't «Ничего» — what it reveals sits below it.
   - The settings preview mirrors this: lines overlay the text, scroll mode scrolls; a tap on a line
-    opens its group in «Страница», on the text «Оформление».
+    opens its group in «На странице», on the text «Оформление».
     In paged mode, reserve space below the footer.
   - Show history «↶ / ↷» with controls; briefly show «↶» after a jump for 3 s or until first turn.
   - Use left/right thirds for tap turning; an edge tap with controls visible turns and hides them.
@@ -74,7 +73,7 @@
 
 ## Themes and customization
 - Use a fixed dialog for «Темы и настройки», with X/Back dismissal and no drag or outside dismissal.
-  Keep the header and «Оформление / Текст / Страница» tabs fixed; scroll each tab independently.
+  Keep the header and «Оформление / На странице» tabs fixed; scroll each tab independently.
 - Pin a fixed sample text above controls (beside them in landscape), the same in every book; reuse `Paginator`
   and `PageView`. Keep it short (heading, dialogue, long words, digits) so it re-paginates at once off-thread.
   Edits show instantly; saves are debounced (`SettingsEditor`) so the book behind doesn't re-paginate per tick.
@@ -103,16 +102,16 @@
   Keep justification in the spacing group and hyphenation enabled without a toggle.
 - «Сбросить на «<тема>»» sets «Моя» to the last standard theme (`withCustomReset`); a book also shows
   «Вернуть общее оформление» for its own theme fields; size stays.
-- «Страница» ends with «Сбросить настройки страницы» (for a book: «Вернуть общие настройки страницы»): both lines with «Свои параметры» back to defaults; page turn stays.
-- In «Страница», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
-  Both lines: content segment (top «Нет» hides the line; bottom «Нет» drops only the number), four style chips, «Свои параметры» switch.
+- «На странице» ends with «Сбросить настройки страницы» (for a book: «Вернуть общие настройки страницы»): restore both lines; page turn stays.
+- In «На странице», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
+  Both lines: content segment (top «Нет» hides the line; bottom «Нет» drops only the number), then «Подробнее».
+  Put clock and battery switches before the footer disclosure; keep pages left inside it.
+  Disclosures only reveal fields; collapsing them never disables saved settings. First edits start from visible values.
   Short choices are segments whose labels shrink to fit; radio list only above 130 % text (never for icon rows).
-- «Свои параметры» (off draws the standard line, values kept): size 80–140 %, visibility 40–100 %,
+- «Подробнее»: size 80–140 %, visibility 40–100 %,
   position (top: left/centre/right; bottom: spread/centre), edge offset 0…+24, space to text −12…+24,
   rule; top adds capitals and «Не показывать в начале главы»; bottom adds «осталось в главе», time,
   battery and, in Scroll mode, the background under scrolling text.
-- Style chips sit on the page colour and draw their short name in their own style (`readerChromeTextStyle`);
-  spoken names stay descriptive.
 - Everything in the panel except brightness can be set per book; guide line and highlight colour stay shared.
 - Use licensed Cyrillic fonts from `ReaderFonts`; EPUB publisher `@font-face` remains unsupported.
 

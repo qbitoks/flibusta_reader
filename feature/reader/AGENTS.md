@@ -39,6 +39,8 @@
 - Ignore unchanged settings edits, including repeated slider endpoint events.
 - Show paragraph spacing in body line heights and first-line indent in em; copy both when entering «Моя».
 - Disable overscroll stretch in the settings panel; horizontal slider drags at either edge must not deform the panel.
+- Keep «На странице» simple: content, clock and battery first; disclose line geometry with «Подробнее».
+- Keep disclosure state separate from persisted line settings; edits activate only the visible legacy values.
 
 ## Gotchas
 - Scroll list: resolve pages by item key (`Page.key`), not by index. Right after chapters are prepended,

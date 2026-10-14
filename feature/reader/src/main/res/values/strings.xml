@@ -122,7 +122,10 @@
     <string name="footer_note">In Scroll the text passes under the line; turned pages always keep room for it. With everything off the text reaches the bottom of the screen.</string>
     <string name="header_note">With Nothing the text starts at the top of the screen.</string>
     <string name="settings_tab_appearance">Appearance</string>
-    <string name="settings_tab_page">Page</string>
+    <string name="settings_tab_page">On the page</string>
+    <string name="line_details">More options</string>
+    <string name="line_details_expanded">Expanded</string>
+    <string name="line_details_collapsed">Collapsed</string>
     <string name="settings_style_small">Small and muted</string>
     <string name="settings_style_large">Large and regular</string>
     <string name="settings_style_book">Book font</string>
