@@ -46,9 +46,11 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-14 | app | Renamed to Folio; package/applicationId `app.folio`, DB `folio.db` | user decision; clean break: old installs do not upgrade, data not migrated
 2026-10-14 | reader settings | Text style card (`TextPreset`) apart from colour theme; theme picks its card unless «Мой» | user decision; no migration
 - 2026-10-14 «Моя» theme (7th swatch) replaces the theme: page colour, warmth, contrast, text; see design/reader.md.
-  Its reset goes to the last standard theme, not to defaults: that is what the user started from.
+  Superseded reset by deletion on 2026-10-15: restore the last standard theme; see design/reader.md.
 - 2026-10-14 | reader | Presets supply paragraph gap and indent; «Моя» edits both, with no per-theme saved overrides | user decision.
   Free colour picker rejected: too easy to get unreadable text.
 2026-10-14 | reader settings | «На странице»: omit line preset buttons; clock/battery first, advanced disclosure never disables settings | user-approved simplification
 2026-10-14 | reader settings | Footer content: four live capsules, format menu, chapter/time/battery toggles; adapt to two columns | user-approved design
 2026-10-15 | reader settings | Supersede footer format menu with tap cycle; use segment styling and stable width-based wrapping | user correction
+2026-10-15 | reader settings | Add slot copies current theme; saved custom swatch has pencil; delete returns to last standard | user-approved design
+2026-10-15 | reader settings | Remove deletion Undo and bottom scope explanation from Appearance | user correction

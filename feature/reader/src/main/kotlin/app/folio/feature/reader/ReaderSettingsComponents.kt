@@ -148,10 +148,6 @@ internal fun SettingsGroupHeader(title: String, value: String? = null, own: Bool
 internal fun SettingsCheck() = Icon(Icons.Rounded.Check, null, tint = Folio.colors.label, modifier = Modifier.size(20.dp))
 
 @Composable
-internal fun SettingsNote(text: String) = Text(text, style = FolioType.footnote,
-    color = Folio.colors.secondaryLabel, modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp))
-
-@Composable
 internal fun SettingsDivider() = HorizontalDivider(color = Folio.colors.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 18.dp))
 
 /** Shared labelled slider with native adjustable accessibility semantics. */

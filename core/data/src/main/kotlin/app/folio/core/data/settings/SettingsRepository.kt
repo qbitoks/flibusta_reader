@@ -108,9 +108,9 @@ data class ReaderSettings(
 
     fun withColors(value: CustomColors): ReaderSettings = withCustom(true).copy(customColors = value)
 
-    /** «Моя» as the last standard theme ([theme] is kept while «Моя» is chosen). */
-    fun withCustomReset(): ReaderSettings =
-        copy(textPreset = TextPreset.Custom, customText = theme.textPreset.text!!, customColors = CustomColors.of(theme))
+    /** Delete «Моя» and return to the last standard theme, keeping size and page settings. */
+    fun withoutCustomTheme(): ReaderSettings =
+        copy(textPreset = theme.textPreset, customText = TextPreset.Classic.text!!, customColors = null)
 
     /** Picking a theme also turns «Свои параметры» off; their values are kept. */
     fun withTheme(value: ReaderTheme): ReaderSettings = copy(theme = value, textPreset = value.textPreset)

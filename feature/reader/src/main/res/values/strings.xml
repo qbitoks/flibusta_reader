@@ -179,8 +179,6 @@
     <string name="settings_own_turn">page turn</string>
     <string name="settings_own_header">top line</string>
     <string name="settings_own_footer">bottom line</string>
-    <string name="settings_scope_book_note">Changes apply only to this book.</string>
-    <string name="settings_scope_all_note">Changes apply to all books, except what a book sets itself.</string>
     <string name="settings_reset_book_text">Use shared appearance</string>
     <string name="page_turn_fade_short">Fade</string>
     <string name="line_custom">Custom settings</string>
@@ -208,7 +206,8 @@
     <string name="settings_warmth">Warmth</string>
     <string name="settings_contrast">Contrast</string>
     <string name="theme_mine">Mine</string>
-    <string name="settings_reset_mine">Reset to «%1$s»</string>
+    <string name="settings_delete_mine">Delete custom theme</string>
+    <string name="theme_add">Create custom theme</string>
     <string name="settings_brightness_auto">Auto</string>
     <string name="settings_themes">Theme and size</string>
     <string name="settings_color">Colour</string>

@@ -26,6 +26,7 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   are read as part of it and dropped on the next write of that book. Unknown fields are ignored.
 - Keep legacy 8-field `custom_text` readable; append paragraph spacing and first-line indent as fields 9–10.
   Missing fields retain 0 gap and 1.6 em indent; book overrides use `paragraph_spacing` and `first_line_indent`.
+- Preserve inactive book custom text in optional `custom_text`; apply it after legacy individual text fields.
 - A missing `footer_layout` starts customised when the old footer content differs from the standard one.
 - `shared_prefs/catalog.xml`: `catalog`, `downloads` HTTPS origins; `recent` — catalog searches, newline-joined.
 

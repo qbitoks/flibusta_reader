@@ -187,8 +187,6 @@
     <string name="settings_own_turn">перелистывание</string>
     <string name="settings_own_header">верхняя строка</string>
     <string name="settings_own_footer">нижняя строка</string>
-    <string name="settings_scope_book_note">Изменения сохраняются только для этой книги.</string>
-    <string name="settings_scope_all_note">Изменения применяются ко всем книгам, кроме того, что книга задаёт сама.</string>
     <string name="settings_reset_book_text">Вернуть общее оформление</string>
     <string name="page_turn_fade_short">Выцветание</string>
     <string name="line_custom">Свои параметры</string>
@@ -216,7 +214,8 @@
     <string name="settings_warmth">Тон</string>
     <string name="settings_contrast">Контраст</string>
     <string name="theme_mine">Моя</string>
-    <string name="settings_reset_mine">Сбросить на «%1$s»</string>
+    <string name="settings_delete_mine">Удалить свою тему</string>
+    <string name="theme_add">Создать свою тему</string>
     <string name="settings_brightness_auto">Авто</string>
     <string name="settings_themes">Тема и размер</string>
     <string name="settings_color">Цвет</string>

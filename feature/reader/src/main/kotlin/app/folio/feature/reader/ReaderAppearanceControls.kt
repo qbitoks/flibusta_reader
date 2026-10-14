@@ -7,6 +7,7 @@ import androidx.compose.material.icons.rounded.BrightnessHigh
 import androidx.compose.material.icons.rounded.BrightnessLow
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -20,6 +21,7 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -44,7 +46,7 @@ import app.folio.core.designsystem.components.IosSlider
 import kotlin.math.roundToInt
 
 /**
- * «Оформление»: brightness with «Авто», then one card of size, Light/Dark and themes («Моя» last);
+ * «Оформление»: brightness with «Авто», then one card of size, Light/Dark and themes (add/«Моя» last);
  * «Моя» opens its colour and text cards below.
  */
 @Composable
@@ -75,24 +77,26 @@ internal fun ReaderAppearanceSettings(editor: SettingsEditor, brightness: SheetB
                     ReaderPalettes.of(theme, dark), Modifier.weight(1f)) { editor.edit { it.withTheme(theme) } }
             }
             val colors = settings.customColors
-            ThemeSwatch(stringResource(R.string.theme_mine), settings.custom, settings.customText,
-                ReaderPalettes.custom(colors ?: CustomColors.of(settings.theme), dark), Modifier.weight(1f),
-                unset = colors == null) { editor.edit { it.withCustom(true) } }
+            if (colors == null) {
+                AddThemeButton(Modifier.weight(1f)) { editor.edit { it.withCustom(true) } }
+            } else {
+                ThemeSwatch(stringResource(R.string.theme_mine), settings.custom, settings.customText,
+                    ReaderPalettes.custom(colors, dark), Modifier.weight(1f), editable = true) {
+                    editor.edit { it.withCustom(true) }
+                }
+            }
         }
         Spacer(Modifier.height(12.dp))
     }
     if (settings.custom) {
         CustomThemeSettings(editor, dark)
         Spacer(Modifier.height(16.dp))
-        // Back to the last standard theme, named so the effect is clear.
-        val reset = settings.withCustomReset()
-        ResetButton(stringResource(R.string.settings_reset_mine, themeName(settings.theme)), reset != settings) { editor.edit { reset } }
+        ResetButton(stringResource(R.string.settings_delete_mine), true) { editor.edit { it.withoutCustomTheme() } }
     }
     if (editor.bookScope) {
         Spacer(Modifier.height(16.dp))
         ResetButton(stringResource(R.string.settings_reset_book_text), editor.isOwn(BookOverrides.TEXT), editor::resetText)
     }
-    SettingsNote(stringResource(if (editor.bookScope) R.string.settings_scope_book_note else R.string.settings_scope_all_note))
 }
 
 @Composable
@@ -108,17 +112,30 @@ internal fun themeName(theme: ReaderTheme) = stringResource(when (theme) {
 /** A compact «Aa» sample in the theme's palette and font; the name is spoken and shown in the header. */
 @Composable
 private fun ThemeSwatch(name: String, selected: Boolean, style: TextSet, palette: ReaderPalette, modifier: Modifier,
-                        unset: Boolean = false, onClick: () -> Unit) {
+                        editable: Boolean = false, onClick: () -> Unit) {
     val shape = RoundedCornerShape(12.dp)
     Box(modifier.clip(shape).background(palette.background)
         .border(if (selected) 2.dp else 0.5.dp, if (selected) Folio.colors.label else Folio.colors.separator, shape)
         .selectable(selected, role = Role.RadioButton, onClick = onClick)
         .semantics { contentDescription = name }
         .heightIn(min = 52.dp), contentAlignment = Alignment.Center) {
-        // «Моя» before its first use shows a pencil: there is nothing of its own to sample yet.
-        if (unset) Icon(Icons.Rounded.Edit, null, tint = palette.text, modifier = Modifier.size(20.dp))
-        else Text("Aa", fontFamily = ReaderFont.of(style.font).composeFamily, fontSize = 18.sp, color = palette.text, maxLines = 1,
+        Text("Aa", fontFamily = ReaderFont.of(style.font).composeFamily, fontSize = 18.sp, color = palette.text, maxLines = 1,
             fontWeight = if (style.boldText) FontWeight.Bold else FontWeight.Normal, modifier = Modifier.clearAndSetSemantics { })
+        if (editable) Icon(Icons.Rounded.Edit, null, tint = palette.text,
+            modifier = Modifier.align(Alignment.BottomEnd).padding(3.dp)
+                .background(palette.background, CircleShape).padding(2.dp).size(12.dp))
+    }
+}
+
+@Composable
+private fun AddThemeButton(modifier: Modifier, onClick: () -> Unit) {
+    val c = Folio.colors
+    val name = stringResource(R.string.theme_add)
+    val shape = RoundedCornerShape(12.dp)
+    Box(modifier.clip(shape).background(c.fill).border(0.5.dp, c.separator, shape)
+        .clickable(role = Role.Button, onClickLabel = name, onClick = onClick)
+        .semantics { contentDescription = name }.heightIn(min = 52.dp), contentAlignment = Alignment.Center) {
+        Icon(Icons.Rounded.Add, null, tint = c.label, modifier = Modifier.size(24.dp))
     }
 }
 

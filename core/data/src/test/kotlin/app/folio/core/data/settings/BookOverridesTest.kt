@@ -55,13 +55,57 @@ class BookOverridesTest {
         assertEquals(edited.customColors, CustomColors.decode(edited.customColors!!.encode()))
     }
 
-    @Test fun mineResetsToTheLastStandardTheme() {
+    @Test fun deletingMineReturnsToTheLastStandardTheme() {
         val mine = shared.withTheme(ReaderTheme.Calm).withCustom(true)
             .withColors(CustomColors(ReaderTheme.Quiet, warmth = 5)).let { it.withText(it.textSet.copy(font = "inter")) }
-        val reset = mine.withCustomReset()
-        assertEquals(true, reset.custom)
-        assertEquals(CustomColors(ReaderTheme.Calm), reset.customColors)
+        val reset = mine.withoutCustomTheme()
+        assertEquals(false, reset.custom)
+        assertNull(reset.customColors)
         assertEquals(TextPreset.Soft.text, reset.textSet)
+    }
+
+    @Test fun bookRemembersInactiveCustomTextAfterReopening() {
+        val mine = shared.withTheme(ReaderTheme.Paper).withCustom(true)
+            .let { it.withText(it.textSet.copy(font = "inter", paragraphSpacing = 1.3f)) }
+        val standard = mine.withTheme(ReaderTheme.Calm)
+        val reopened = BookOverrides.decode(BookOverrides.between(shared, standard).encode()).applyTo(shared)
+
+        assertFalse(reopened.custom)
+        assertEquals(standard.theme, reopened.theme)
+        assertEquals(mine.textSet, reopened.withCustom(true).textSet)
+        assertEquals(mine.customColors, reopened.customColors)
+    }
+
+    @Test fun deletingSharedMineForOneBookSurvivesReopening() {
+        val all = shared.withTheme(ReaderTheme.Paper).withCustom(true)
+            .let { it.withText(it.textSet.copy(font = "inter")) }
+        val deleted = all.withTheme(ReaderTheme.Calm).withCustom(true).withoutCustomTheme()
+        val reopened = BookOverrides.decode(BookOverrides.between(all, deleted).encode()).applyTo(all)
+
+        assertFalse(reopened.custom)
+        assertNull(reopened.customColors)
+        assertEquals(ReaderTheme.Calm, reopened.theme)
+        assertEquals(TextPreset.Soft.text, reopened.withCustom(true).textSet)
+        assertEquals(CustomColors.of(ReaderTheme.Calm), reopened.withCustom(true).customColors)
+        assertTrue(all.custom)
+    }
+
+    @Test fun creatingAgainCopiesCurrentThemeAndKeepsUnrelatedSettings() {
+        val mine = shared.copy(fontSize = 31f, appearance = Appearance.Dark, pageTurn = PageTurn.Scroll)
+            .withTheme(ReaderTheme.Paper).withCustom(true)
+            .let { it.withText(it.textSet.copy(font = "inter")) }
+        val deleted = mine.withTheme(ReaderTheme.Focus).withCustom(true).withoutCustomTheme()
+        val recreated = deleted.withTheme(ReaderTheme.Calm).withCustom(true)
+
+        assertEquals(TextPreset.Soft.text, recreated.textSet)
+        assertEquals(CustomColors.of(ReaderTheme.Calm), recreated.customColors)
+        assertEquals(31f, recreated.fontSize)
+        assertEquals(Appearance.Dark, recreated.appearance)
+        assertEquals(PageTurn.Scroll, recreated.pageTurn)
+        val preferences = mutablePreferencesOf()
+        ReaderPreferences.write(preferences, deleted)
+        assertNull(ReaderPreferences.read(preferences).customColors)
+        assertFalse(ReaderPreferences.read(preferences).custom)
     }
 
     @Test fun themeBringsItsCardButKeepsCustom() {

@@ -23,6 +23,7 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
         const val FONT_SIZE = "font_size"
         const val TEXT_PRESET = "text_preset"
         const val CUSTOM_COLORS = "custom_colors"
+        const val CUSTOM_TEXT = "custom_text"
         const val FONT = "font"
         const val BOLD = "bold"
         const val CUSTOM_SPACING = "custom_spacing"
@@ -47,7 +48,7 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
         const val FOOTER_LAYOUT = "footer_layout"
 
         /** «Свои параметры» fields; the switch goes first, their values after it. */
-        val TEXT = listOf(TEXT_PRESET, CUSTOM_COLORS, FONT, BOLD, CUSTOM_SPACING, LINE_SPACING, LETTER_SPACING, WORD_SPACING, PARAGRAPH_SPACING, FIRST_LINE_INDENT, MARGINS, JUSTIFY)
+        val TEXT = listOf(TEXT_PRESET, CUSTOM_COLORS, CUSTOM_TEXT, FONT, BOLD, CUSTOM_SPACING, LINE_SPACING, LETTER_SPACING, WORD_SPACING, PARAGRAPH_SPACING, FIRST_LINE_INDENT, MARGINS, JUSTIFY)
         val HEADER_KEYS = listOf(HEADER, HEADER_STYLE, HEADER_LAYOUT, HEADER_UNDER)
         val FOOTER_KEYS = listOf(FOOTER_PAGE, FOOTER_LEFT, FOOTER_CLOCK, FOOTER_BATTERY, FOOTER_UNDER, FOOTER_STYLE, FOOTER_LAYOUT)
 
@@ -85,6 +86,8 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
             },
             intField(MARGINS, { it.textSet.marginsPct }) { s, v -> s.text { it.copy(marginsPct = v) } },
             boolField(JUSTIFY, { it.textSet.justify }) { s, v -> s.text { it.copy(justify = v) } },
+            // Legacy text fields restore active edits first; also keep the saved text while «Моя» is off.
+            Field(CUSTOM_TEXT, { it.customText.encode() }) { s, v -> s.copy(customText = TextSet.decode(v, s.customText)) },
             enumField(PAGE_TURN, { it.pageTurn }) { s, v -> s.copy(pageTurn = v) },
             enumField(HEADER, { it.header }) { s, v -> s.copy(header = v) },
             enumField(HEADER_STYLE, { it.chromeStyles.header }) { s, v -> s.copy(chromeStyles = s.chromeStyles.copy(header = v)) },

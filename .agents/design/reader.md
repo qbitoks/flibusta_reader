@@ -88,18 +88,19 @@
 - «Оформление» groups: «Яркость», «Тема и размер» (selected name in the header), and for «Моя» «Цвет» and
   «Текст». Brightness is one row: an «Авто» pill (device brightness, slider dimmed)
   and a disabled slider following the device setting; switching Auto off starts at that value.
-  Then one card: the size slider, an «Авто / Светлое / Тёмное» segment, then seven «Aa» swatches
-  (six themes + «Моя», a pencil until first used).
+  Then one card: the size slider, an «Авто / Светлое / Тёмное» segment, then six «Aa» swatches and a seventh add/custom slot
+  (neutral + until created; saved «Моя» shows «Aa» with a pencil, including while unselected).
   «Авто» follows Android's dark theme (`androidInDarkTheme`), not the app's appearance.
   Resolve tile palettes from appearance, not from the current theme darkness; Quiet stays low contrast.
 - «Моя» (`TextPreset.Custom`) replaces the theme: below the card a colour card («Фон»: five theme palettes,
   Bold = Original; «Тон» ±10; «Контраст» ±10) and a text card (font, bold, spacing, margins, justify).
-  First pick copies the current theme; later the remembered values return; a standard theme hides them.
+  Create from the current theme without changing the preview; retain custom text and colours across standard picks and restarts.
   Keep ranges: size 13–42, line spacing 0.80–2.50, letter spacing ±10%, word spacing ±20%, margins ±10%.
   Add paragraph spacing 0–2 body line heights and first-line indent 0–3 em; both inherit the selected preset.
   Keep justification in the spacing group and hyphenation enabled without a toggle.
-- «Сбросить на «<тема>»» sets «Моя» to the last standard theme (`withCustomReset`); a book also shows
-  «Вернуть общее оформление» for its own theme fields; size stays.
+- «Удалить свою тему» clears «Моя», restores the last standard theme and returns the + button immediately, without an Undo message.
+  A book also shows «Вернуть общее оформление» for its own theme fields; size stays.
+- Omit the scope explanation at the bottom of «Оформление»; show the scope only under the sheet title.
 - «На странице» ends with «Сбросить настройки страницы» (for a book: «Вернуть общие настройки страницы»): restore both lines; page turn stays.
 - In «На странице», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
   Top: content segment («Нет» hides the line), then «Подробнее». Bottom: four labelled content capsules, then «Подробнее».
