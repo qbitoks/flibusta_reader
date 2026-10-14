@@ -38,7 +38,7 @@ internal class PageJump(val top: Boolean) {
 
 /** Page controls are content of the shared settings sheet, never a nested modal. Both lines share one layout. */
 @Composable
-internal fun ReaderPageSettings(editor: SettingsEditor, jump: PageJump? = null) {
+internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource, jump: PageJump? = null) {
     val settings = editor.settings
     val footer = settings.shownFooter
     val turns = buildList {
@@ -60,6 +60,10 @@ internal fun ReaderPageSettings(editor: SettingsEditor, jump: PageJump? = null) 
         )) { v -> editor.edit { it.copy(header = v) } }
         if (settings.header != PageHeader.None) {
             LineSettings(settings.shownHeaderLayout, top = true, editor, gap = true) { change -> editor.edit { it.editHeaderLine(change) } }
+        } else {
+            Text(stringResource(R.string.header_hidden), style = FolioType.footnote,
+                color = Folio.colors.secondaryLabel,
+                modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 12.dp))
         }
     }
     }
@@ -67,19 +71,15 @@ internal fun ReaderPageSettings(editor: SettingsEditor, jump: PageJump? = null) 
     LineGroup(jump?.takeUnless { it.top }) {
     SettingsGroupHeader(stringResource(R.string.footer_group), own = editor.isOwn(BookOverrides.FOOTER_KEYS))
     GroupedCard {
-        SettingsSegments(footer.page, listOf(
-            SegmentOption(FooterPage.None, stringResource(R.string.header_none), stringResource(R.string.footer_page_none)),
-            SegmentOption(FooterPage.Number, "42", stringResource(R.string.settings_page_number)),
-            SegmentOption(FooterPage.NumberOfTotal, stringResource(R.string.reader_page_of, 42, 586), stringResource(R.string.settings_page_total)),
-            SegmentOption(FooterPage.Percent, stringResource(R.string.reader_percent, 7), stringResource(R.string.footer_page_percent)),
-        )) { v -> editor.edit { it.copy(footer = it.footer.copy(page = v)) } }
-        // «Нет» drops only the page number: time or pages left alone stay configurable.
-        SettingsDivider()
-        SettingsToggle(stringResource(R.string.footer_clock), footer.clock) { on -> editor.edit { it.editFooterContent { f -> f.copy(clock = on) } } }
-        SettingsDivider()
-        SettingsToggle(stringResource(R.string.footer_battery), footer.battery) { on -> editor.edit { it.editFooterContent { f -> f.copy(battery = on) } } }
-        LineSettings(settings.shownFooterLayout, top = false, editor, gap = !footer.isEmpty) { change ->
-            editor.edit { it.editFooterLine(change) }
+        FooterContentCapsules(editor, source)
+        if (footer.isEmpty) {
+            Text(stringResource(R.string.footer_hidden), style = FolioType.footnote,
+                color = Folio.colors.secondaryLabel,
+                modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 12.dp))
+        } else {
+            LineSettings(settings.shownFooterLayout, top = false, editor, gap = true) { change ->
+                editor.edit { it.editFooterLine(change) }
+            }
         }
     }
     }
@@ -131,11 +131,6 @@ private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEdito
         SettingsToggle(stringResource(R.string.line_uppercase), layout.uppercase) { on -> change { it.copy(uppercase = on) } }
         SettingsDivider()
         SettingsToggle(stringResource(R.string.line_hide_chapter_start), layout.hideOnChapterStart) { on -> change { it.copy(hideOnChapterStart = on) } }
-    } else {
-        SettingsDivider()
-        SettingsToggle(stringResource(R.string.footer_pages_left), editor.settings.shownFooter.pagesLeft) { on ->
-            editor.edit { it.editFooterContent { f -> f.copy(pagesLeft = on) } }
-        }
     }
 
     SettingsDivider()

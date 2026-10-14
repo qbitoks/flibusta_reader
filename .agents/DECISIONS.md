@@ -50,3 +50,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 - 2026-10-14 | reader | Presets supply paragraph gap and indent; «Моя» edits both, with no per-theme saved overrides | user decision.
   Free colour picker rejected: too easy to get unreadable text.
 2026-10-14 | reader settings | «На странице»: omit line preset buttons; clock/battery first, advanced disclosure never disables settings | user-approved simplification
+2026-10-14 | reader settings | Footer content: four live capsules, format menu, chapter/time/battery toggles; adapt to two columns | user-approved design
+2026-10-15 | reader settings | Supersede footer format menu with tap cycle; use segment styling and stable width-based wrapping | user correction

@@ -109,6 +109,8 @@
     <string name="header_book">Book Title</string>
     <string name="header_chapter">Chapter Title</string>
     <string name="footer_group">Bottom Line</string>
+    <string name="footer_hidden">Bottom line is hidden</string>
+    <string name="header_hidden">Top line is hidden</string>
     <string name="footer_page">Page</string>
     <string name="footer_page_none">No page number</string>
     <string name="footer_page_percent">Percent</string>
@@ -211,4 +213,9 @@
     <string name="settings_themes">Theme and size</string>
     <string name="settings_color">Colour</string>
     <string name="settings_text">Text</string>
+    <string name="footer_progress_short">Progress</string>
+    <string name="footer_chapter_short">Chapter</string>
+    <string name="footer_battery_short">Battery</string>
+    <string name="footer_chapter_value">%1$d pp.</string>
+    <string name="footer_next_format">Next progress format</string>
 </resources>

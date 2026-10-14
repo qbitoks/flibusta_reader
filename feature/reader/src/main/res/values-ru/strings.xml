@@ -117,6 +117,8 @@
     <string name="header_book">Название книги</string>
     <string name="header_chapter">Название главы</string>
     <string name="footer_group">Нижняя строка</string>
+    <string name="footer_hidden">Нижняя строка скрыта</string>
+    <string name="header_hidden">Верхняя строка скрыта</string>
     <string name="footer_page">Страница</string>
     <string name="footer_page_none">Без номера страницы</string>
     <string name="footer_page_percent">Процент</string>
@@ -219,4 +221,9 @@
     <string name="settings_themes">Тема и размер</string>
     <string name="settings_color">Цвет</string>
     <string name="settings_text">Текст</string>
+    <string name="footer_progress_short">Прогресс</string>
+    <string name="footer_chapter_short">В главе</string>
+    <string name="footer_battery_short">Заряд</string>
+    <string name="footer_chapter_value">%1$d стр.</string>
+    <string name="footer_next_format">Следующий формат прогресса</string>
 </resources>

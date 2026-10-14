@@ -39,8 +39,8 @@
 - Ignore unchanged settings edits, including repeated slider endpoint events.
 - Show paragraph spacing in body line heights and first-line indent in em; copy both when entering «Моя».
 - Disable overscroll stretch in the settings panel; horizontal slider drags at either edge must not deform the panel.
-- Keep «На странице» simple: content, clock and battery first; disclose line geometry with «Подробнее».
-- Order line details: content, size/opacity, placement, separator/gap/boundary; default Scroll blocks to 36 dp.
+- Use `FooterContentCapsules`; cycle progress on tap. Show only geometry in «Подробнее», or a hidden-line hint when empty; retain saved settings.
+- Order line details: size/opacity, placement, separator/gap/boundary; default Scroll blocks to 36 dp.
 - Keep disclosure state separate from persisted line settings; edits activate only the visible legacy values.
 - In Scroll, keep each boundary in its line disclosure; use `ReaderLineBlock` geometry in reader and preview.
 - Keep the rule on the block edge; absolute gap 0 reaches it. Preserve legacy paged gaps; resolve None to Fade.

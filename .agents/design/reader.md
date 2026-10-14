@@ -102,13 +102,16 @@
   «Вернуть общее оформление» for its own theme fields; size stays.
 - «На странице» ends with «Сбросить настройки страницы» (for a book: «Вернуть общие настройки страницы»): restore both lines; page turn stays.
 - In «На странице», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
-  Both lines: content segment (top «Нет» hides the line; bottom «Нет» drops only the number), then «Подробнее».
-  Put clock and battery switches before the footer disclosure; keep pages left inside it.
+  Top: content segment («Нет» hides the line), then «Подробнее». Bottom: four labelled content capsules, then «Подробнее».
+  Cycle progress on tap; keep chapter/time/battery independent. Use the settings segment track and raised selections.
+  Show fixed progress button examples (42/300, 7%, 42, None); keep book values in the page preview.
+  Replace footer details with a hidden-line hint when all content is off; preserve saved formatting for re-enabling.
+  Show the same hidden-line hint for the header when its content is None.
   Disclosures only reveal fields; collapsing them never disables saved settings. First edits start from visible values.
   Short choices are segments whose labels shrink to fit; radio list only above 130 % text (never for icon rows).
 - «Подробнее»: size 80–140 %, visibility 40–100 %,
   position (top: left/centre/right; bottom: spread/centre), edge offset 0…+24, space to text −12…+24,
-  rule; top adds capitals and «Не показывать в начале главы»; bottom adds «осталось в главе».
+  rule; top adds capitals and «Не показывать в начале главы».
 - In Scroll, keep each boundary in its line disclosure; use nonnegative absolute gaps and protected blocks.
   Align labels at the screen edge, block centre or text edge; enlarge blocks to fit measured labels with 8 dp padding.
 - Default blocks to 36 dp without overriding explicit heights; order details by content, look, placement, text boundary.
