@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Open book with a reed growing from the spine. Drawn inside the 66dp adaptive-icon safe zone. -->
+<!-- Folio: an open book with a page mid-turn (the reader's page-curl). Drawn inside the 66dp
+     adaptive-icon safe zone; single colour so it doubles as the monochrome icon. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -8,24 +9,14 @@
     <!-- Left page -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M31,63.5 C39.5,59.2 47,59 53,62.6 L53,79.6 C47,76.4 39.5,76.6 31,80.6 Z" />
+        android:pathData="M28,40 C37,36 46,36.5 52.5,41 L52.5,74 C46,70 37,69.5 28,73 Z" />
     <!-- Right page -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M77,63.5 C68.5,59.2 61,59 55,62.6 L55,79.6 C61,76.4 68.5,76.6 77,80.6 Z" />
-    <!-- Reed stalk -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.2"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000"
-        android:pathData="M54,60.5 C54.6,50 56.4,41 60.4,29" />
-    <!-- Cattail head -->
+        android:pathData="M80,40 C71,36 62,36.5 55.5,41 L55.5,74 C62,70 71,69.5 80,73 Z" />
+    <!-- Turning page, lifted off the right side -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M57.3,44.6 C56.2,39.4 57.4,33.6 60.6,29.8 C63.4,33.4 63.3,39.6 61.2,45.2 C60,46.6 58.3,46.3 57.3,44.6 Z" />
-    <!-- Leaf -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M53.6,55.8 C49.2,50.6 45.7,44.8 44.6,37.4 C48.9,42.4 52,47.6 54.5,52.6 Z" />
+        android:fillAlpha="0.55"
+        android:pathData="M55.5,41 C60,33 66,29 73,28.5 L70.5,61 C64,61.5 58.5,65.5 55.5,74 Z" />
 </vector>
