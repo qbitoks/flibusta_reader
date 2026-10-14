@@ -1,5 +1,9 @@
 package net.flibustareader.core.designsystem.components
 
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -210,15 +214,19 @@ fun SegmentedControl(
             if (stacked) {
                 Column(segment, verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                     icon?.let { Icon(it, null, tint = c.label, modifier = Modifier.size(22.dp)) }
-                    Text(label, style = if (isSelected) FlibustaType.caption.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.caption,
-                        color = c.label, maxLines = 1, softWrap = false)
+                    val caption = if (isSelected) FlibustaType.caption.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.caption
+                    // Captions shrink rather than push the icons out: a long name must not drop the row.
+                    BasicText(label, Modifier.padding(horizontal = 2.dp), style = caption.copy(color = c.label, textAlign = TextAlign.Center),
+                        maxLines = 1, softWrap = false,
+                        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = caption.fontSize, stepSize = 0.5.sp))
                 }
             } else {
                 Row(segment, horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically) {
                     icon?.let { Icon(it, null, tint = c.label, modifier = Modifier.size(18.dp)) }
-                    if (label.isNotEmpty()) Text(label, style = if (isSelected) FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.subheadline,
-                        color = c.label, maxLines = 1, softWrap = false)
+                    val text = if (isSelected) FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight) else FlibustaType.subheadline
+                    if (label.isNotEmpty()) BasicText(label, style = text.copy(color = c.label), maxLines = 1, softWrap = false,
+                        autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = text.fontSize, stepSize = 0.5.sp))
                 }
             }
         }

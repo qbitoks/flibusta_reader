@@ -42,4 +42,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-13 | reader settings | Compact: theme swatches, segments, style chips; radio list only as large-text fallback | user: tiles and lists too tall
 2026-10-13 | reader settings | Shared settings + per-book differences for every panel setting; scope menu under title | user decision; replaces shared-only theme/text
 2026-10-13 | reader settings | Panel opens on book scope iff the book has own settings; no stored scope | a remembered mode caused accidental edits
-2026-10-13 | reader settings | Footer «Нет» hides the whole line; time/battery/left move to «Свои параметры» | user: bottom line like the top one
+2026-10-14 | reader settings | Footer «Нет» drops only the page number; time/battery/left stay in «Свои параметры» | user: wants a clock-only line
+2026-10-14 | reader settings | Defaults: header Chapter, footer «42» without clock/battery, Slide; missing keys follow new defaults | user decision

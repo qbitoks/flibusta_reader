@@ -118,7 +118,7 @@
     <string name="header_chapter">Название главы</string>
     <string name="footer_group">Нижняя строка</string>
     <string name="footer_page">Страница</string>
-    <string name="footer_page_none">Не показывать</string>
+    <string name="footer_page_none">Без номера страницы</string>
     <string name="footer_page_percent">Процент</string>
     <string name="footer_pages_left">Осталось в главе</string>
     <string name="footer_clock">Время</string>

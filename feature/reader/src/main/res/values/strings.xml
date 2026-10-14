@@ -110,7 +110,7 @@
     <string name="header_chapter">Chapter Title</string>
     <string name="footer_group">Bottom Line</string>
     <string name="footer_page">Page</string>
-    <string name="footer_page_none">Off</string>
+    <string name="footer_page_none">No page number</string>
     <string name="footer_page_percent">Percent</string>
     <string name="footer_pages_left">Pages Left in Chapter</string>
     <string name="footer_clock">Time</string>

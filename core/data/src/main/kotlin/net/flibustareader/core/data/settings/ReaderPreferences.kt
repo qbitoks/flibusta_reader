@@ -49,7 +49,7 @@ internal object ReaderPreferences {
             guideLine = p[guideLine] ?: false,
             guideDim = enumOr(p[guideDim], GuideDim.Low),
             highlightColor = p[highlightColor] ?: "yellow",
-            header = enumOr(p[pageHeader], PageHeader.None),
+            header = enumOr(p[pageHeader], PageHeader.Chapter),
             footer = footer,
             chromeStyles = ChromeStylePreferences.readDefaults(p),
             headerLayout = LineLayout.decode(p[headerLayout], LineLayout.HEADER),

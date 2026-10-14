@@ -108,13 +108,13 @@ internal class SegmentOption<T>(val value: T, val label: String, val description
 internal fun <T> SettingsSegments(current: T, options: List<SegmentOption<T>>, stacked: Boolean = false, onSelect: (T) -> Unit) {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    val style = (if (stacked) FlibustaType.caption else FlibustaType.subheadline).copy(fontWeight = FlibustaType.headline.fontWeight)
+    val style = FlibustaType.subheadline.copy(fontWeight = FlibustaType.headline.fontWeight)
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val segment = (maxWidth - 24.dp - 6.dp - 2.dp * (options.size - 1)) / options.size
-        val fits = density.fontScale <= 1.3f && options.all { o ->
+        // Labels shrink to fit their segment; only text too large even at the minimum falls back.
+        val fits = stacked || density.fontScale <= 1.3f && options.all { o ->
             val text = if (o.label.isEmpty()) 0.dp else with(density) { measurer.measure(o.label, style).size.width.toDp() }
-            // A stacked caption has only the segment's own 4 dp padding at each side.
-            text + (if (o.icon != null && !stacked) 22.dp else 0.dp) + (if (stacked) 8.dp else 12.dp) <= segment
+            (text + (if (o.icon != null) 22.dp else 0.dp) + 12.dp) * 0.7f <= segment
         }
         if (fits) {
             SegmentedControl(options.map { it.label }, options.indexOfFirst { it.value == current }, { onSelect(options[it].value) },

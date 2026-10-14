@@ -72,10 +72,10 @@ class BookOverridesTest {
     }
 
     @Test fun changedFooterContentStartsCustomisedSoNothingMoves() {
-        val p = mutablePreferencesOf(booleanPreferencesKey("footer_battery") to false)
+        val p = mutablePreferencesOf(booleanPreferencesKey("footer_battery") to true)
         val settings = ReaderPreferences.read(p)
         assertTrue(settings.footerLayout.customize)
-        assertFalse(settings.shownFooter.battery)
+        assertTrue(settings.shownFooter.battery)
 
         assertFalse(ReaderPreferences.read(mutablePreferencesOf()).footerLayout.customize)
     }
@@ -90,9 +90,14 @@ class BookOverridesTest {
         assertEquals(settings, ReaderPreferences.read(p))
     }
 
-    @Test fun noneHidesTheWholeBottomLine() {
-        val hidden = shared.copy(footer = PageFooter(page = FooterPage.None))
-        assertTrue(hidden.shownFooter.isEmpty)
-        assertTrue(shared.shownFooter.clock && shared.shownFooter.battery)
+    @Test fun defaultsAndNoneDropsOnlyThePageNumber() {
+        assertEquals(PageHeader.Chapter, shared.header)
+        assertEquals(PageFooter(page = FooterPage.Number), shared.shownFooter)
+        assertFalse(shared.shownFooter.clock || shared.shownFooter.battery)
+        val noNumber = shared.copy(footer = PageFooter(page = FooterPage.None))
+        assertTrue(noNumber.shownFooter.isEmpty)
+        val clockOnly = noNumber.copy(footer = PageFooter(page = FooterPage.None, clock = true),
+            footerLayout = noNumber.footerLayout.copy(customize = true))
+        assertTrue(clockOnly.shownFooter.clock && !clockOnly.shownFooter.isEmpty)
     }
 }

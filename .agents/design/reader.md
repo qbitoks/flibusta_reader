@@ -89,7 +89,7 @@
   Keep justification in the spacing group and hyphenation enabled without a toggle.
 - Reset only the selected theme typography (for a book: «Вернуть общий текст»); leave the font size unchanged.
 - In «Страница», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
-  Both lines: content segment («Нет» hides the whole line), four style chips, «Свои параметры» switch.
+  Both lines: content segment (top «Нет» hides the line; bottom «Нет» drops only the number), four style chips, «Свои параметры» switch.
   Short choices are segments that fall back to the radio list for large text or labels that do not fit.
 - «Свои параметры» (off draws the standard line, values kept): size 80–140 %, visibility 40–100 %,
   position (top: left/centre/right; bottom: spread/centre), edge offset 0…+24, space to text −12…+24,

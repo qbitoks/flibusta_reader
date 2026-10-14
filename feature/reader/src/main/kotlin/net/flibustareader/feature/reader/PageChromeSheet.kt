@@ -59,11 +59,10 @@ internal fun ReaderPageSettings(editor: SettingsEditor, palette: ReaderPalette) 
             SegmentOption(FooterPage.NumberOfTotal, stringResource(R.string.reader_page_of, 42, 586), stringResource(R.string.settings_page_total)),
             SegmentOption(FooterPage.Percent, stringResource(R.string.reader_percent, 7), stringResource(R.string.footer_page_percent)),
         )) { v -> editor.edit { it.copy(footer = it.footer.copy(page = v)) } }
-        if (footer.page != FooterPage.None) {
-            LineStyle(settings.chromeStyles.footer, palette, settings.style.font) { v -> editor.edit { it.copy(chromeStyles = it.chromeStyles.copy(footer = v)) } }
-            LineSettings(settings.footerLayout, top = false, scroll = settings.pageTurn == PageTurn.Scroll, editor) { change ->
-                editor.edit { it.copy(footerLayout = change(it.footerLayout)) }
-            }
+        // «Нет» drops only the page number: time or pages left alone stay configurable.
+        LineStyle(settings.chromeStyles.footer, palette, settings.style.font) { v -> editor.edit { it.copy(chromeStyles = it.chromeStyles.copy(footer = v)) } }
+        LineSettings(settings.footerLayout, top = false, scroll = settings.pageTurn == PageTurn.Scroll, editor) { change ->
+            editor.edit { it.copy(footerLayout = change(it.footerLayout)) }
         }
     }
 }

@@ -42,8 +42,8 @@ data class PageFooter(
     val page: FooterPage = FooterPage.Number,
     /** «ещё 3 стр.» after the page. */
     val pagesLeft: Boolean = false,
-    val clock: Boolean = true,
-    val battery: Boolean = true,
+    val clock: Boolean = false,
+    val battery: Boolean = false,
     val style: FooterStyle = FooterStyle.Fade,
 ) {
     /** Nothing to show: the text runs to the bottom of the screen. */
@@ -71,7 +71,7 @@ data class ReaderSettings(
     val guideDim: GuideDim = GuideDim.Low,
     /** Colour of the last highlight; new highlights use it, as in Apple Books. */
     val highlightColor: String = "yellow",
-    val header: PageHeader = PageHeader.None,
+    val header: PageHeader = PageHeader.Chapter,
     val footer: PageFooter = PageFooter(),
     /** Visual presets of the lines. */
     val chromeStyles: ChromeStyles = ChromeStyles(),
@@ -89,12 +89,11 @@ data class ReaderSettings(
     val shownHeaderLayout: LineLayout get() = if (headerLayout.customize) headerLayout else LineLayout.HEADER
     val shownFooterLayout: LineLayout get() = if (footerLayout.customize) footerLayout else LineLayout.FOOTER
 
-    /** «Нет» hides the whole bottom line; its parts beyond the page number are «Свои параметры». */
-    val shownFooter: PageFooter get() = when {
-        footer.page == FooterPage.None -> PageFooter(page = FooterPage.None, clock = false, battery = false)
-        footerLayout.customize -> footer
-        else -> PageFooter(page = footer.page)
-    }
+    /**
+     * «Нет» drops only the page number. Time, battery and pages left are «Свои параметры»; with it off
+     * the standard parts stay, so the line hides only when everything in it is switched off.
+     */
+    val shownFooter: PageFooter get() = if (footerLayout.customize) footer else PageFooter(page = footer.page)
 }
 
 data class LibrarySettings(
