@@ -35,7 +35,9 @@ class BookOverridesTest {
         val edited = shared.withTheme(ReaderTheme.Focus).let { it.withText(it.textSet.copy(font = "lora", boldText = true)) }
         val own = BookOverrides.between(shared, edited)
 
-        assertEquals(setOf(BookOverrides.THEME, BookOverrides.TEXT_PRESET, BookOverrides.CUSTOM_COLORS, BookOverrides.FONT, BookOverrides.BOLD, BookOverrides.JUSTIFY), own.values.keys)
+        assertEquals(setOf(BookOverrides.THEME, BookOverrides.TEXT_PRESET, BookOverrides.CUSTOM_COLORS,
+            BookOverrides.FONT, BookOverrides.BOLD, BookOverrides.PARAGRAPH_SPACING,
+            BookOverrides.FIRST_LINE_INDENT, BookOverrides.JUSTIFY), own.values.keys)
         val book = own.applyTo(shared)
         assertEquals(TextPreset.Custom, book.textPreset)
         assertEquals("lora", book.textSet.font)

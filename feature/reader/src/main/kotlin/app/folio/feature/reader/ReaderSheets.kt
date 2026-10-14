@@ -13,8 +13,7 @@ internal fun ReaderSheets(vm: ReaderViewModel, settings: ReaderSettings, palette
         ReaderSheet.Search -> SearchSheet(vm, palette, ReaderFont.of(settings.textSet.font).composeFamily, onDismiss = { controls.sheet = null })
         ReaderSheet.Themes -> ThemesSheet(
             vm,
-            SheetBrightness(controls.brightness, controls.manualBrightness) {
-                if (it >= 0f) controls.manualBrightness = it
+            SheetBrightness(controls.brightness) {
                 controls.brightness = it
             },
             onDismiss = { controls.sheet = null },

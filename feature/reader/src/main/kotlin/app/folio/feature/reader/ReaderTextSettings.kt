@@ -63,6 +63,12 @@ internal fun CustomThemeSettings(editor: SettingsEditor, dark: Boolean) {
     SettingsSlider(stringResource(R.string.settings_line_spacing), shown.lineSpacing, 0.8f..2.5f, 0.05f,
         String.format(Locale.getDefault(), "%.2f", shown.lineSpacing)) { spacing { copy(lineSpacing = it) } }
     SettingsDivider()
+    SettingsSlider(stringResource(R.string.settings_paragraph_spacing), style.paragraphSpacing, 0f..2f, 0.05f,
+        String.format(Locale.getDefault(), "%.2f", style.paragraphSpacing)) { update(style.copy(paragraphSpacing = it)) }
+    SettingsDivider()
+    SettingsSlider(stringResource(R.string.settings_first_line_indent), style.firstLineIndent, 0f..3f, 0.1f,
+        String.format(Locale.getDefault(), "%.1f", style.firstLineIndent)) { update(style.copy(firstLineIndent = it)) }
+    SettingsDivider()
     SettingsSlider(stringResource(R.string.settings_character_spacing), shown.letterSpacingPct.toFloat(), -10f..10f, 1f,
         "${shown.letterSpacingPct} %") { spacing { copy(letterSpacingPct = it.roundToInt()) } }
     SettingsDivider()

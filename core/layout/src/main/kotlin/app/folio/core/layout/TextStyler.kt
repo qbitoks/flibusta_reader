@@ -49,7 +49,7 @@ internal data class BlockStyle(
             TextKind.Preformatted to BlockStyle(0.85f, mono = true, align = Align.Start, spaceAfter = 0.5f, indent = 0f),
         )
 
-        fun of(block: Block.Text, justify: Boolean): BlockStyle {
+        fun of(block: Block.Text, justify: Boolean, firstLineIndent: Float = 1.6f): BlockStyle {
             val base = styles.getValue(block.kind)
             val align = when (block.align) {
                 Align.Default -> base.align
@@ -59,7 +59,11 @@ internal data class BlockStyle(
             val effective = if (align == Align.Justify && !justify) Align.Start else align
             return base.copy(
                 align = effective,
-                indent = if (align == Align.Center || align == Align.End) 0f else base.indent,
+                indent = when {
+                    align == Align.Center || align == Align.End -> 0f
+                    block.kind == TextKind.Body -> firstLineIndent
+                    else -> base.indent
+                },
             )
         }
     }
@@ -180,3 +184,11 @@ internal class InkLinkSpan(private val ink: Ink) : CharacterStyle() {
 private const val SHIFT_NONE: Byte = 0
 private const val SHIFT_UP: Byte = 1
 private const val SHIFT_DOWN: Byte = 2
+
+/** Gap after StaticLayout's final line, including the theme's extra paragraph space. */
+internal fun paragraphGap(lastLineHeight: Int, lineSpacing: Float, extraGap: Float): Float {
+    // Match StaticLayout's signed rounding of the leading it omits from the final line.
+    val leading = lastLineHeight * (lineSpacing - 1f)
+    val rounded = if (leading >= 0f) (leading + 0.5f).toInt() else -(0.5f - leading).toInt()
+    return rounded + extraGap
+}

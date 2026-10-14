@@ -74,6 +74,8 @@ Put knowledge in the deepest file whose scope covers it. This file holds only re
   `gradle/libs.versions.toml`. First build needs Google Maven, Maven Central, Gradle Plugin Portal.
 
 Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGENTS.md`):
+- After implementation and test writing, build and share a local release APK before running checks;
+  follow `scripts/AGENTS.md` → Phone APK first. This is standing authorization for local APK builds.
 - Check before "done": `./scripts/build.ps1` (JVM tests, release APK, Android lint) + agent-lint:
   `& "$env:ProgramFiles\Git\bin\sh.exe" scripts/agent-lint.sh`. Docs-only change: agent-lint + link check.
 - Setup / env check: `./scripts/doctor.ps1`

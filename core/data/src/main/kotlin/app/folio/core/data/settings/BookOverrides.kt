@@ -29,6 +29,8 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
         const val LINE_SPACING = "line_spacing"
         const val LETTER_SPACING = "letter_spacing"
         const val WORD_SPACING = "word_spacing"
+        const val PARAGRAPH_SPACING = "paragraph_spacing"
+        const val FIRST_LINE_INDENT = "first_line_indent"
         const val MARGINS = "margins"
         const val JUSTIFY = "justify"
         const val PAGE_TURN = "page_turn"
@@ -45,7 +47,7 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
         const val FOOTER_LAYOUT = "footer_layout"
 
         /** «Свои параметры» fields; the switch goes first, their values after it. */
-        val TEXT = listOf(TEXT_PRESET, CUSTOM_COLORS, FONT, BOLD, CUSTOM_SPACING, LINE_SPACING, LETTER_SPACING, WORD_SPACING, MARGINS, JUSTIFY)
+        val TEXT = listOf(TEXT_PRESET, CUSTOM_COLORS, FONT, BOLD, CUSTOM_SPACING, LINE_SPACING, LETTER_SPACING, WORD_SPACING, PARAGRAPH_SPACING, FIRST_LINE_INDENT, MARGINS, JUSTIFY)
         val HEADER_KEYS = listOf(HEADER, HEADER_STYLE, HEADER_LAYOUT, HEADER_UNDER)
         val FOOTER_KEYS = listOf(FOOTER_PAGE, FOOTER_LEFT, FOOTER_CLOCK, FOOTER_BATTERY, FOOTER_UNDER, FOOTER_STYLE, FOOTER_LAYOUT)
 
@@ -75,6 +77,12 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
             floatField(LINE_SPACING, { it.textSet.lineSpacing }) { s, v -> s.text { it.copy(lineSpacing = v) } },
             intField(LETTER_SPACING, { it.textSet.letterSpacingPct }) { s, v -> s.text { it.copy(letterSpacingPct = v) } },
             intField(WORD_SPACING, { it.textSet.wordSpacingPct }) { s, v -> s.text { it.copy(wordSpacingPct = v) } },
+            floatField(PARAGRAPH_SPACING, { it.textSet.paragraphSpacing }) { s, v ->
+                if (v.isFinite()) s.text { it.copy(paragraphSpacing = v.coerceIn(0f, 2f)) } else s
+            },
+            floatField(FIRST_LINE_INDENT, { it.textSet.firstLineIndent }) { s, v ->
+                if (v.isFinite()) s.text { it.copy(firstLineIndent = v.coerceIn(0f, 3f)) } else s
+            },
             intField(MARGINS, { it.textSet.marginsPct }) { s, v -> s.text { it.copy(marginsPct = v) } },
             boolField(JUSTIFY, { it.textSet.justify }) { s, v -> s.text { it.copy(justify = v) } },
             enumField(PAGE_TURN, { it.pageTurn }) { s, v -> s.copy(pageTurn = v) },

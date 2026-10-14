@@ -15,18 +15,16 @@ import androidx.compose.runtime.MutableState
 
 internal enum class ReaderSheet { Contents, Bookmarks, Search, Themes }
 
-/** Screen-local overlays; window preferences, including the last manual brightness, are saveable. */
+/** Screen-local overlays; window preferences are saveable. */
 @Stable
 internal class ReaderControls(
     chromeVisible: MutableState<Boolean>,
     rotationLocked: MutableState<Boolean>,
     brightness: MutableState<Float>,
-    manualBrightness: MutableState<Float>,
 ) {
     var chromeVisible by chromeVisible
     var rotationLocked by rotationLocked
     var brightness by brightness
-    var manualBrightness by manualBrightness
     var menuVisible by mutableStateOf(false)
     var sheet by mutableStateOf<ReaderSheet?>(null)
     var note by mutableStateOf<List<Block>?>(null)
@@ -44,6 +42,5 @@ internal fun rememberReaderControls(): ReaderControls {
     val chrome = rememberSaveable { mutableStateOf(true) }
     val rotation = rememberSaveable { mutableStateOf(false) }
     val brightness = rememberSaveable { mutableFloatStateOf(-1f) }
-    val manualBrightness = rememberSaveable { mutableFloatStateOf(0.5f) }
-    return remember { ReaderControls(chrome, rotation, brightness, manualBrightness) }
+    return remember { ReaderControls(chrome, rotation, brightness) }
 }

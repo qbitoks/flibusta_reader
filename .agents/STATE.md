@@ -9,7 +9,7 @@ status: active
 - Catalog browse/search, EPUB/FB2 downloads and Range resume were checked against a live OPDS server on an emulator.
 - ReaderPhone checks cover upgrade/restart, presets, menu palettes and guide landings in Slide/Curl/Fade.
 - Finish on-device default/book reset checks and physical-phone verification before distribution.
-- 0.3.9 (theme «Моя» with colour and text cards, one brightness row) committed; user checks it on a phone, then tag v0.3.9.
+- 0.3.10 includes preset paragraph spacing/indent and restored seam leading; verify on a phone before distribution.
 
 ## Next steps
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.
@@ -21,5 +21,5 @@ status: active
 - Wrapper download of Gradle 9.8 was flaky on this machine (connection resets).
 - The emulator's DNS proxy fails behind the host VPN; a fresh AVD with `-dns-server` works.
 - No download notification: progress is visible only in the app («Загрузки»).
-- Paragraph seam pitch is a few px shorter than a line pitch; see `.agents/design/reader.md`.
+- Paragraph seam leading is restored locally; verify preset gaps on a physical phone before distribution.
 - The archived prototype roadmap is historical: `.agents/archive/prototype-roadmap.md`.

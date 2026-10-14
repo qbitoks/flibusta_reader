@@ -35,7 +35,7 @@ import app.folio.core.designsystem.*
 import app.folio.core.designsystem.components.*
 
 /** Window brightness controls; only the reader has a window to brighten. */
-internal class SheetBrightness(val value: Float, val manual: Float, val onChange: (Float) -> Unit)
+internal class SheetBrightness(val value: Float, val onChange: (Float) -> Unit)
 
 /** «Темы и настройки» in a book: the book's own settings or the shared ones, chosen under the title. */
 @Composable
@@ -113,7 +113,7 @@ internal fun ReadingSettingsSheet(
                 @Composable fun Editor(modifier: Modifier) {
                     Column(modifier) {
                         SettingsTabs(section) { section = it }
-                        Column(Modifier.weight(1f).verticalScroll(scrollStates[section]).padding(bottom = 24.dp)) {
+                        Column(Modifier.weight(1f).verticalScroll(scrollStates[section], overscrollEffect = null).padding(bottom = 24.dp)) {
                             when (section) {
                                 0 -> ReaderAppearanceSettings(editor, brightness)
                                 1 -> ReaderPageSettings(editor, palette, jump)

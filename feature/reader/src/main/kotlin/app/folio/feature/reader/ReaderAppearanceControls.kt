@@ -26,7 +26,6 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -55,7 +54,7 @@ internal fun ReaderAppearanceSettings(editor: SettingsEditor, brightness: SheetB
     val dark = ReaderPalettes.isDark(settings.appearance, androidInDarkTheme())
     if (brightness != null) {
         SettingsGroupHeader(stringResource(R.string.settings_brightness))
-        GroupedCard { BrightnessSlider(brightness.value, brightness.manual, brightness.onChange) }
+        GroupedCard { BrightnessSlider(brightness.value, brightness.onChange) }
     }
     SettingsGroupHeader(stringResource(R.string.settings_themes),
         if (settings.custom) stringResource(R.string.theme_mine) else themeName(settings.theme),
@@ -123,28 +122,29 @@ private fun ThemeSwatch(name: String, selected: Boolean, style: TextSet, palette
     }
 }
 
-/** One row: «Авто» follows the device; moving the slider switches to manual brightness. */
+/** Auto follows the device; switching it off starts at the currently shown device brightness. */
 @Composable
-internal fun BrightnessSlider(brightness: Float, manual: Float, onChange: (Float) -> Unit) {
+internal fun BrightnessSlider(brightness: Float, onChange: (Float) -> Unit) {
     val auto = brightness < 0
     val c = Folio.colors
     val title = stringResource(R.string.settings_brightness)
-    val shown = if (auto) manual else brightness
+    val deviceBrightness = rememberDeviceBrightness()
+    val shown = if (auto) deviceBrightness else brightness
     Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Box(Modifier.clip(CircleShape).background(if (auto) c.label else c.fill)
-            .toggleable(auto, role = Role.Switch) { onChange(if (it) -1f else manual) }
+            .toggleable(auto, role = Role.Switch) { onChange(if (it) -1f else deviceBrightness) }
             .heightIn(min = 36.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.settings_brightness_auto), style = FolioType.subheadline,
                 fontWeight = FontWeight.SemiBold, color = if (auto) c.groupedBackground else c.label)
         }
         Icon(Icons.Rounded.BrightnessLow, null, tint = c.secondaryLabel, modifier = Modifier.size(20.dp))
         IosSlider(value = shown, onValueChange = { onChange(it.coerceIn(0.02f, 1f)) },
-            valueRange = 0.02f..1f, enabled = true,
+            valueRange = 0.02f..1f, enabled = !auto,
             contentDescription = title,
-            modifier = Modifier.weight(1f).heightIn(min = 48.dp).alpha(if (auto) 0.45f else 1f).semantics {
+            modifier = Modifier.weight(1f).heightIn(min = 48.dp).semantics {
                 progressBarRangeInfo = ProgressBarRangeInfo(shown, 0.02f..1f)
-                setProgress { onChange(it.coerceIn(0.02f, 1f)); true }
+                if (!auto) setProgress { onChange(it.coerceIn(0.02f, 1f)); true }
             })
         Icon(Icons.Rounded.BrightnessHigh, null, tint = c.secondaryLabel, modifier = Modifier.size(24.dp))
     }

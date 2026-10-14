@@ -38,6 +38,8 @@
     <string name="settings_font">Font</string>
     <string name="settings_bold_text">Bold Text</string>
     <string name="settings_line_spacing">Line Spacing</string>
+    <string name="settings_paragraph_spacing">Paragraph Spacing</string>
+    <string name="settings_first_line_indent">First-line Indent</string>
     <string name="settings_character_spacing">Character Spacing</string>
     <string name="settings_word_spacing">Word Spacing</string>
     <string name="settings_margins">Margins</string>

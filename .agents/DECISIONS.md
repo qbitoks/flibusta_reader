@@ -46,4 +46,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-14 | reader settings | Text style card (`TextPreset`) apart from colour theme; theme picks its card unless «Мой» | user decision; no migration
 - 2026-10-14 «Моя» theme (7th swatch) replaces the theme: page colour, warmth, contrast, text; see design/reader.md.
   Its reset goes to the last standard theme, not to defaults: that is what the user started from.
+- 2026-10-14 | reader | Presets supply paragraph gap and indent; «Моя» edits both, with no per-theme saved overrides | user decision.
   Free colour picker rejected: too easy to get unreadable text.

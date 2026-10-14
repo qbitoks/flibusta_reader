@@ -5,6 +5,7 @@ import app.folio.core.model.Align
 import app.folio.core.model.Block
 import app.folio.core.model.Chapter
 import app.folio.core.model.Position
+import app.folio.core.model.TextKind
 
 /** Everything that determines where page breaks fall. Equal specs ⇒ identical pagination. */
 data class LayoutSpec(
@@ -128,13 +129,24 @@ class Paginator(
                 }
 
                 is Block.Text -> {
-                    val style = BlockStyle.of(block, spec.style.justify)
+                    val style = BlockStyle.of(block, spec.style.justify, spec.style.firstLineIndent)
                     val left = style.insetStart * width
                     val layoutWidth = (width * (1f - style.insetStart - style.insetEnd)).toInt().coerceAtLeast(1)
                     val layout = styler.layout(block, style, layoutWidth)
                     val lineCount = layout.lineCount
 
                     if (builder.y > 0f) builder.y += style.spaceBefore * em
+                    if (block.kind == TextKind.Body &&
+                        (chapter.blocks.getOrNull(i - 1) as? Block.Text)?.kind == TextKind.Body
+                    ) {
+                        val previous = builder.items.lastOrNull() as? PageItem.Text
+                        if (previous != null) {
+                            val last = previous.layout.lineCount - 1
+                            val lastLineHeight = previous.layout.getLineBottom(last) - previous.layout.getLineTop(last)
+                            builder.y += paragraphGap(lastLineHeight, spec.style.lineSpacing,
+                                spec.style.paragraphSpacing * styler.bodyLineHeight)
+                        }
+                    }
                     // Keep headings together with at least two lines of what follows.
                     if (style.keepWithNext && builder.y > 0f &&
                         builder.y + layout.height + styler.bodyLineHeight * 2 > height

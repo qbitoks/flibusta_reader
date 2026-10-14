@@ -14,8 +14,8 @@ android {
         applicationId = "app.folio"
         minSdk = 34
         targetSdk = 37
-        versionCode = 13
-        versionName = "0.3.9"
+        versionCode = 14
+        versionName = "0.3.10"
     }
 
     androidResources {

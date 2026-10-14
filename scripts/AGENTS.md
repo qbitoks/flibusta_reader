@@ -14,6 +14,14 @@
 - Treat this as a launch gate; verify reader interactions and the live catalog separately below.
 - Keep retired Readium drivers in `.agents/archive/readium-scripts/` as history; write new checks against the current UI.
 
+## Phone APK first
+- After finishing implementation and writing tests, run `./gradlew.bat :app:assembleRelease --console=plain` first.
+- Copy `app/build/outputs/apk/release/app-release.apk` to `artifacts/Folio-<versionName>-release.apk`.
+- Immediately send an absolute Markdown link to that APK in chat; state that checks are still pending.
+- Then run the root Check command, test suites, lint and device checks; report their results separately.
+- If APK assembly fails, fix the build and retry before starting unrelated checks.
+- This local testing APK needs no tag, push, publication or version bump; see `.agents/rules/release.md` for publication.
+
 ## Manual device workflow
 ```powershell
 $taskAdb = Join-Path $env:LOCALAPPDATA 'Android/Sdk/platform-tools/adb.exe'

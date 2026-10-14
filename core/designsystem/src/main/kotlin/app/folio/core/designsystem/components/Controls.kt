@@ -9,8 +9,8 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,10 +32,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -102,6 +100,8 @@ fun IosSlider(
     val c = Folio.colors
     val density = LocalDensity.current
     val latestValue by rememberUpdatedState(value)
+    val changeValue by rememberUpdatedState(onValueChange)
+    val finishChange by rememberUpdatedState(onValueChangeFinished)
     val span = valueRange.endInclusive - valueRange.start
     fun snap(v: Float): Float {
         val clamped = v.coerceIn(valueRange.start, valueRange.endInclusive)
@@ -122,22 +122,38 @@ fun IosSlider(
         val width = maxWidth
         val trackPx = with(density) { (width - thumbW).toPx() }.coerceAtLeast(1f)
         val fraction = ((value - valueRange.start) / span).coerceIn(0f, 1f)
-        var dragStart by remember { mutableFloatStateOf(0f) }
         val gestures = Modifier
             .pointerInput(valueRange, trackPx) {
-                detectTapGestures { p ->
-                    onValueChange(snap(valueRange.start + ((p.x - thumbW.toPx() / 2) / trackPx) * span))
-                    onValueChangeFinished()
-                }
-            }
-            .pointerInput(valueRange, trackPx) {
-                detectHorizontalDragGestures(
-                    onDragStart = { dragStart = latestValue },
-                    onDragEnd = onValueChangeFinished,
-                ) { change, amount ->
-                    change.consume()
-                    dragStart += amount / trackPx * span
-                    onValueChange(snap(dragStart))
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    down.consume()
+                    val halfThumb = thumbW.toPx() / 2
+                    val thumbCenter = halfThumb + ((latestValue - valueRange.start) / span) * trackPx
+                    // Keep the grab offset on the thumb; a track press chooses its own position.
+                    val grabOffset = if (kotlin.math.abs(down.position.x - thumbCenter) <= halfThumb)
+                        down.position.x - thumbCenter else 0f
+                    var last = latestValue
+                    fun update(x: Float) {
+                        val next = snap(valueRange.start + ((x - grabOffset - halfThumb) / trackPx) * span)
+                        if (next != last) {
+                            last = next
+                            changeValue(next)
+                        }
+                    }
+                    update(down.position.x)
+                    // Own both axes until release, including pauses and movement outside the track.
+                    // Otherwise the surrounding scroll container can take over this same touch.
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        if (change.isConsumed) break
+                        update(change.position.x)
+                        event.changes.forEach { it.consume() }
+                        if (!change.pressed) {
+                            finishChange()
+                            break
+                        }
+                    }
                 }
             }
         Box(Modifier.fillMaxWidth().fillMaxHeight().then(if (enabled) gestures else Modifier), contentAlignment = Alignment.CenterStart) {

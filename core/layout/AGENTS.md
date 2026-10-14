@@ -13,6 +13,9 @@
 - Keep colours in `Ink`; theme changes repaint existing pages through `applyInk` without changing page breaks.
 - Preserve source `Position` values and block offsets when splitting text into pages.
 - Preserve `Page.lead` across breaks; scroll mode restores swallowed paragraph/separator spacing.
+- Apply user paragraph spacing only between adjacent body blocks; keep heading, verse and citation spacing.
+- Restore StaticLayout's omitted final-line leading with `paragraphGap` before adding the theme gap.
+- Apply user first-line indent only to body blocks; retain zero indent for centered/right-aligned text.
 - Use content-box pixels for renderer coordinates; subtract screen insets and margins at the caller.
 - Use `TextGeometry` for hit tests, carets and marks; raw framework offsets drift on justified lines.
 - Read `.agents/design/reader.md` for text layout rules and `feature/reader/AGENTS.md` for callers and verification.

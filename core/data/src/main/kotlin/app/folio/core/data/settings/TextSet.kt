@@ -18,8 +18,10 @@ data class TextSet(
     val wordSpacingPct: Int = 0,
     val marginsPct: Int = 0,
     val justify: Boolean = true,
+    val paragraphSpacing: Float = 0f,
+    val firstLineIndent: Float = 1.6f,
 ) {
-    fun encode(): String = listOf(font, boldText, customize, lineSpacing, letterSpacingPct, wordSpacingPct, marginsPct, justify).joinToString("|")
+    fun encode(): String = listOf(font, boldText, customize, lineSpacing, letterSpacingPct, wordSpacingPct, marginsPct, justify, paragraphSpacing, firstLineIndent).joinToString("|")
 
     /** Typography the paginator uses for this style at the global [fontSize]. */
     fun toReaderStyle(fontSize: Float): ReaderStyle = ReaderStyle(
@@ -33,6 +35,8 @@ data class TextSet(
         justify = justify,
         hyphenate = true,
         boldText = boldText,
+        paragraphSpacing = paragraphSpacing,
+        firstLineIndent = firstLineIndent,
     )
 
     companion object {
@@ -41,12 +45,14 @@ data class TextSet(
 
         fun decode(value: String?, d: TextSet): TextSet {
             val p = value?.split('|') ?: return d
-            if (p.size != 8) return d
+            if (p.size != 8 && p.size != 10) return d
             return runCatching {
                 TextSet(
                     font = p[0], boldText = p[1].toBoolean(), customize = p[2].toBoolean(),
                     lineSpacing = p[3].toFloat(), letterSpacingPct = p[4].toInt(), wordSpacingPct = p[5].toInt(),
                     marginsPct = p[6].toInt(), justify = p[7].toBoolean(),
+                    paragraphSpacing = if (p.size == 10) p[8].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 2f) else 0f,
+                    firstLineIndent = if (p.size == 10) p[9].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 3f) else 1.6f,
                 )
             }.getOrDefault(d)
         }
@@ -59,11 +65,11 @@ data class TextSet(
  */
 enum class TextPreset(val text: TextSet?) {
     Classic(TextSet(font = "literata")),
-    Book(TextSet(font = "source_serif", customize = true, lineSpacing = 1.3f, marginsPct = 4)),
-    Quiet(TextSet(font = "pt_serif", customize = true, lineSpacing = 1.4f, letterSpacingPct = 2, marginsPct = 6)),
-    Soft(TextSet(font = "lora", customize = true, lineSpacing = 1.35f)),
-    Clear(TextSet(font = "inter", justify = false)),
-    Bold(TextSet(font = "inter", boldText = true, justify = false)),
+    Book(TextSet(font = "source_serif", customize = true, lineSpacing = 1.3f, marginsPct = 4, firstLineIndent = 1.8f)),
+    Quiet(TextSet(font = "pt_serif", customize = true, lineSpacing = 1.4f, letterSpacingPct = 2, marginsPct = 6, paragraphSpacing = 0.2f, firstLineIndent = 1.4f)),
+    Soft(TextSet(font = "lora", customize = true, lineSpacing = 1.35f, paragraphSpacing = 0.15f, firstLineIndent = 1.5f)),
+    Clear(TextSet(font = "inter", justify = false, paragraphSpacing = 0.4f, firstLineIndent = 0f)),
+    Bold(TextSet(font = "inter", boldText = true, justify = false, paragraphSpacing = 0.3f, firstLineIndent = 0f)),
     Compact(TextSet(font = "pt_serif", customize = true, lineSpacing = 1.1f, marginsPct = -6)),
     Custom(null),
 }

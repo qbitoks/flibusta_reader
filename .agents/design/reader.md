@@ -4,8 +4,10 @@
   for shared controls; follow `.agents/DECISIONS.md` when a user choice differs from Apple.
 
 ## Page and deliberate deviations
-- Use justified, hyphenated body text, first-line indent about 1.6 em, equal line pitch within/across
-  paragraphs and no extra paragraph gap; fit inline images to the text column.
+- Use justified, hyphenated body text; Original keeps a 1.6 em first-line indent and no paragraph gap.
+  Other presets supply their paragraph gap and indent; keep equal line pitch and fit images to the column.
+- Restore the omitted final-line leading between body blocks before adding their paragraph gap;
+  zero paragraph gap must retain the normal line pitch. Carry the gap across page breaks with `Page.lead`.
 - Apple reference: horizontal margins 39 dp, column about 314 dp, line pitch 23.5 dp;
   «Оригинал» dark uses black/white. Adapt measurements to current font and user settings.
 - Preserve the user decisions from 2026-10-13:
@@ -88,7 +90,7 @@
   Keep the reading palette inside theme tiles and previews; keep selected states accessible.
 - «Оформление» groups: «Яркость», «Тема и размер» (selected name in the header), and for «Моя» «Цвет» and
   «Текст». Brightness is one row: an «Авто» pill (device brightness, slider dimmed)
-  and a slider; moving it switches to manual and keeps the last manual value.
+  and a disabled slider following the device setting; switching Auto off starts at that value.
   Then one card: the size slider, an «Авто / Светлое / Тёмное» segment, then seven «Aa» swatches
   (six themes + «Моя», a pencil until first used).
   «Авто» follows Android's dark theme (`androidInDarkTheme`), not the app's appearance.
@@ -97,6 +99,7 @@
   Bold = Original; «Тон» ±10; «Контраст» ±10) and a text card (font, bold, spacing, margins, justify).
   First pick copies the current theme; later the remembered values return; a standard theme hides them.
   Keep ranges: size 13–42, line spacing 0.80–2.50, letter spacing ±10%, word spacing ±20%, margins ±10%.
+  Add paragraph spacing 0–2 body line heights and first-line indent 0–3 em; both inherit the selected preset.
   Keep justification in the spacing group and hyphenation enabled without a toggle.
 - «Сбросить на «<тема>»» sets «Моя» to the last standard theme (`withCustomReset`); a book also shows
   «Вернуть общее оформление» for its own theme fields; size stays.

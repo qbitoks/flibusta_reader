@@ -45,7 +45,9 @@ internal class SettingsEditor(
      * which made slider drags lag behind the finger.
      */
     fun edit(change: (ReaderSettings) -> ReaderSettings) {
-        settings = change(settings)
+        val edited = change(settings)
+        if (edited == settings) return
+        settings = edited
         if (queued.isEmpty()) pending++
         queued += change
         flushJob?.cancel()

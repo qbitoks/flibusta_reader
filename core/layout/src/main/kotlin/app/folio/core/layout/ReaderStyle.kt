@@ -18,6 +18,10 @@ data class ReaderStyle(
     val justify: Boolean = true,
     val hyphenate: Boolean = true,
     val boldText: Boolean = false,
+    /** Extra gap between body paragraphs, in body line heights. */
+    val paragraphSpacing: Float = 0f,
+    /** First-line indent of body paragraphs, in em. */
+    val firstLineIndent: Float = 1.6f,
 )
 
 /** Resolves a [ReaderStyle.font] key to a typeface family that has real bold/italic faces. */

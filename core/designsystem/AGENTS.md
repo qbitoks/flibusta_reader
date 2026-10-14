@@ -18,3 +18,5 @@
 - Provide `GlassScope` and its source modifier for backdrop blur; preserve fallback fills for separate popup windows.
 - Keep navigation actions and repository mutations in callers; shared components expose callbacks.
 - Use `IosSlider(enabled = false)` for inactive controls; omit adjustable accessibility actions at the caller.
+- Slider gestures use current callbacks, clamp values to the range and omit repeated unchanged values at endpoints.
+- Own slider touches from down to up on both axes, including pauses and movement outside its bounds; keep thumb grab offset.
