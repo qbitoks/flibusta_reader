@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.RemoveCircle
@@ -53,7 +52,6 @@ import app.folio.core.designsystem.ReaderPalette
 import app.folio.core.designsystem.labelColor
 import app.folio.core.designsystem.UiSans
 import app.folio.core.designsystem.components.CircleButton
-import app.folio.core.designsystem.components.CircleButtonStyle
 import app.folio.core.designsystem.components.FolioSheet
 import app.folio.core.designsystem.components.SegmentedControl
 import app.folio.core.designsystem.components.SheetHeader
@@ -151,7 +149,7 @@ internal fun FragmentsSheet(vm: ReaderViewModel, palette: ReaderPalette, bookFon
         SheetHeader(
             title = vm.state.title,
             leading = { CircleButton(Icons.Rounded.Checklist, null, { editing = !editing }) },
-            trailing = { CircleButton(Icons.Rounded.Check, stringResource(R.string.themes_done), onDismiss, style = CircleButtonStyle.Confirm) },
+            trailing = { CircleButton(Icons.Rounded.Close, stringResource(R.string.reader_close), onDismiss) },
         )
         Box(Modifier.padding(horizontal = 20.dp)) {
             SegmentedControl(

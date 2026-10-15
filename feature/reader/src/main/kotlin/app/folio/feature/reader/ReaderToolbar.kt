@@ -17,7 +17,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -37,19 +36,18 @@ internal fun ReaderTopBar(
     Row(Modifier.fillMaxWidth().glass(RectangleShape, tint = palette.background.copy(alpha = 0.92f))
         .readerPanelInput().padding(top = topInset).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        RoundButton(Icons.Rounded.Close, stringResource(R.string.reader_close),
-            palette.menuCapsule(), Folio.colors.label, size = 48.dp, onClick = onClose)
         val shareDescription = stringResource(R.string.reader_share)
         Column(Modifier.weight(1f).heightIn(min = 48.dp).clip(CircleShape)
             .clickable(role = Role.Button, onClickLabel = shareDescription, onClick = onShare)
             .semantics { contentDescription = "$title. $author. $shareDescription" }
             .padding(horizontal = 12.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.Start) {
             Text(title, style = FolioType.headline, color = Folio.colors.label,
-                maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (author.isNotBlank()) Text(author, style = FolioType.subheadline, color = Folio.colors.secondaryLabel,
-                maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Spacer(Modifier.width(48.dp))
+        RoundButton(Icons.Rounded.Close, stringResource(R.string.reader_close),
+            palette.menuCapsule(), Folio.colors.label, size = 48.dp, onClick = onClose)
     }
 }
