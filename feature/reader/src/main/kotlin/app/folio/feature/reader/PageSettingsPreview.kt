@@ -103,9 +103,9 @@ internal fun PageSettingsPreview(
         { resources.getQuantityString(R.plurals.footer_left_in_chapter, it, it) },
         stringResource(R.string.reader_chapter_end),
     )
-    // The excerpt's n-th page counts on from the source's numbers, never from the book.
-    fun footerOf(n: Int) = footerLook.text(footerCenter(footer, source.page + n, source.total,
-        source.progress + n.toFloat() / source.total, (source.pagesLeft - n).coerceAtLeast(1), words,
+    // The excerpt's n-th page counts on from the source's numbers, never from the book; pages left are the excerpt's own.
+    fun footerOf(n: Int, count: Int) = footerLook.text(footerCenter(footer, source.page + n, source.total,
+        source.progress + n.toFloat() / source.total, (count - 1 - n).coerceAtLeast(0), words,
         readerChromeSeparator(settings.chromeStyles.footer)))
     val description = stringResource(R.string.settings_page_preview)
     val scroll = settings.pageTurn == PageTurn.Scroll
@@ -127,7 +127,7 @@ internal fun PageSettingsPreview(
             if (!footer.isEmpty) ReaderLineBlock(false, footerLook, margin,
                 Modifier.align(Alignment.BottomCenter)) {
                 PageFooterBar(
-                    center = footerOf(0),
+                    center = footerOf(0, pages.size),
                     clock = clock, battery = battery, palette = palette, textStyle = footerLook.style,
                     spread = footerLook.layout.align == LineAlign.Spread,
                     modifier = Modifier.padding(horizontal = margin),
@@ -141,6 +141,9 @@ internal fun PageSettingsPreview(
         var index by remember { mutableIntStateOf(0) }
         val last = (pages.size - 1).coerceAtLeast(0)
         val shown = index.coerceIn(0, last)
+        // The guide steps by taps like in the reader: forward lands on the first row, back on the last.
+        var guideRow by remember { mutableIntStateOf(0) }
+        fun rowsOf(i: Int) = pages.getOrNull(i)?.let { PageRenderer.lines(it).size } ?: 0
         // «Отступ сверху/снизу» move a line from the edge, «Отступ до текста» from the text; negatives shrink the default gap.
         val headerLayout = settings.shownHeaderLayout
         val footerLayout = settings.shownFooterLayout
@@ -155,9 +158,15 @@ internal fun PageSettingsPreview(
                 settings.pageTurn == PageTurn.Curl && PageCurl.supported -> TurnMode.Curl
                 else -> TurnMode.Slide
             },
-            onNext = { (shown < last).also { if (it) index = shown + 1 } },
-            onPrev = { (shown > 0).also { if (it) index = shown - 1 } },
-            onTap = { _, _ -> TapAction.Handled },
+            onNext = { (shown < last).also { if (it) { index = shown + 1; guideRow = 0 } } },
+            onPrev = { (shown > 0).also { if (it) { index = shown - 1; guideRow = (rowsOf(shown - 1) - 1).coerceAtLeast(0) } } },
+            onTap = { offset, width ->
+                if (!settings.guideLine) TapAction.Handled
+                else GuideNavigation(index = guideRow).step(if (offset.x >= width / 2) 1 else -1, rowsOf(shown)).let {
+                    guideRow = it.navigation.index
+                    it.action
+                }
+            },
             onDragStart = {},
             onSwipeDown = {},
             pageColor = palette.background,
@@ -168,6 +177,15 @@ internal fun PageSettingsPreview(
             val n = pages.indexOf(page).coerceAtLeast(0)
             Box(Modifier.fillMaxSize().background(palette.background)) {
                 PageView(page, ink, palette, null, source.imageFile, Modifier.fillMaxSize().padding(padding).clipToBounds())
+                if (settings.guideLine && page != null) key(page) {
+                    val lines = remember(page) { PageRenderer.lines(page) }
+                    val row = when (n) {
+                        shown -> guideRow
+                        shown - 1 -> lines.size - 1
+                        else -> 0
+                    }
+                    GuidePage(lines, row, padding, settings.guideDim.fade, palette)
+                }
                 Column(Modifier.align(Alignment.TopCenter).fillMaxWidth()
                     .onSizeChanged { headerHeight = with(density) { it.height.toDp() } }) {
                     Spacer(Modifier.height(10.dp))
@@ -184,7 +202,7 @@ internal fun PageSettingsPreview(
                     if (!footer.isEmpty) {
                         Spacer(Modifier.height((12 + footerLayout.gap).coerceAtLeast(0).dp))
                         PageFooterBar(
-                            center = footerOf(n),
+                            center = footerOf(n, pages.size),
                             clock = clock, battery = battery, palette = palette, textStyle = footerLook.style,
                             spread = footerLook.layout.align == LineAlign.Spread,
                             rule = footerLook.ruleColor.takeIf { footerLook.layout.rule },

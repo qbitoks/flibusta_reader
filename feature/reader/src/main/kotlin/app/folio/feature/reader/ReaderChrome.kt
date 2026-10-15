@@ -65,7 +65,6 @@ internal fun BoxScope.ReaderChrome(
     val density = LocalDensity.current
     var topPanelHeight by remember { mutableStateOf(layout.topInset + 80.dp) }
     val scroll = settings.pageTurn == PageTurn.Scroll
-    val guideOn = settings.guideLine && !scroll
     val footer = settings.shownFooter
     val margin = layout.padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr)
     val headerLook = headerLook(settings, palette)
@@ -90,10 +89,6 @@ internal fun BoxScope.ReaderChrome(
                 spread = footerLook.layout.align == LineAlign.Spread, onCenterTap = onFooterTap,
             )
         }
-    }
-    if (guideOn && !controls.chromeVisible) {
-        GuideLineButton(settings.guideDim, palette, vm::setGuideDim, { vm.setGuideLine(false) },
-            Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = layout.footerY))
     }
     if (state.bookmarked && !controls.chromeVisible) {
         Box(Modifier.align(Alignment.TopEnd).padding(top = layout.topInset, end = 16.dp)

@@ -86,6 +86,7 @@
     <string name="guide_dim_low">Low</string>
     <string name="guide_dim_none">None</string>
     <string name="guide_off">Turn Off Guide Line</string>
+    <string name="guide_scroll_hint">Not available with Scroll page turning.</string>
     <string name="selection_highlight">Highlight</string>
     <string name="selection_remove">Remove</string>
     <string name="selection_add_note">Add Note</string>

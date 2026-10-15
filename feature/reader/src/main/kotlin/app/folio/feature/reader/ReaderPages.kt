@@ -12,6 +12,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import app.folio.core.layout.PageRenderer
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,8 +63,9 @@ internal fun BoxScope.ReaderPages(
     val margin = layout.padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr)
     val headerLook = headerLook(settings, palette)
     val footerLook = footerLook(settings, palette)
-    val footerStart = if (settings.guideLine && !scroll) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
-    val footerEnd = 0.dp
+    val guideOn = settings.guideLine && !scroll
+    // Dimming stays while controls show, only lighter, so opening them never flashes the page.
+    val guideFade = settings.guideDim.fade * if (controls.chromeVisible) 0.5f else 1f
     val headerAlpha by animateFloatAsState(if (marks) 0f else 1f, tween(150), label = "pageHeader")
     val footerAlpha by animateFloatAsState(if (controls.chromeVisible) 0f else 1f, tween(150), label = "pageFooter")
     when {
@@ -139,6 +142,18 @@ internal fun BoxScope.ReaderPages(
                         modifier = Modifier.fillMaxSize().padding(padding),
                         marks = if (page != null && page === state.page && selection != null) savedMarks + Mark(selection, selectionColor) else savedMarks,
                     )
+                    // The guide belongs to the page: an arriving page is already dimmed on the line it lands on.
+                    if (guideOn && page != null) key(page) {
+                        val lines = remember(page) { PageRenderer.lines(page) }
+                        // Match by position, not identity: a re-paginated page is a new object for the same place.
+                        val ref = PageRef(page.chapter, page.index)
+                        val index = when (ref) {
+                            state.current -> controls.guide.landed(ref, state.layoutGeneration, lines.size, jumpId = vm.scrollJump?.id ?: 0).index
+                            state.prev?.let { PageRef(it.chapter, it.index) } -> lines.size - 1
+                            else -> 0
+                        }
+                        GuidePage(lines, index, padding, guideFade, palette)
+                    }
                     // Like a printed book, a chapter's opening page may go without its running title.
                     val chapterStart = page != null && page.index == 0 && headerLook.layout.hideOnChapterStart
                     headerText(header, state.title, page?.let { vm.chapterTitleAt(vm.chapterPositionOf(it)) })?.takeUnless { chapterStart }?.let { title ->
@@ -157,8 +172,6 @@ internal fun BoxScope.ReaderPages(
                             textStyle = footerLook.style,
                             spread = footerLook.layout.align == LineAlign.Spread,
                             rule = footerLook.ruleColor.takeIf { footerLook.layout.rule },
-                            startInset = footerStart,
-                            endInset = footerEnd,
                             onCenterTap = interaction.onFooterTap,
                         )
                     }

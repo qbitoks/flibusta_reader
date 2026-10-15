@@ -146,7 +146,10 @@
 ## Turning and scroll reference
 - Step the guide by visual row with left/right-half taps; a tap on its row toggles controls.
 - Land on the first row forward and the last row backward, for taps and swipes; no-op/canceled turns retain the row.
-- Hide the guide during drag, animation, rollback and waits; clip it to the text viewport.
+- Draw the guide inside each page (`GuidePage`): dimming and plate turn with the page and never vanish;
+  an arriving page shows its landing row. Plate = text column + ≤ half margin; dim only the text area,
+  the shadow may leave it. Controls visible → half dimming. Settings: «Аа» Basic block + long press on
+  the panel's guide action (no floating button, no footer inset).
 - Reset the guide after jumps or pagination changes; keep links, selection dismissal and footer taps ahead of row stepping.
 - For «Скольжение», slide the current page left over a stationary next page; reverse by bringing the
   previous page from the left. Use overlapping pages without gaps or gray background between them.

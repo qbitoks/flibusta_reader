@@ -144,10 +144,6 @@ internal fun ReaderSurface(
         Box(Modifier.fillMaxSize().then(source)) {
             ReaderPages(vm, settings, palette, controls, layout, savedMarks, highlights, marks, interaction, locator, footerWords, clock, battery, onClose)
         }
-        guidePlate?.takeUnless { controls.guideMoving || controls.chromeVisible }?.let {
-            val textArea = Rect(0f, contentTop, widthPx.toFloat(), heightPx - with(density) { padding.calculateBottomPadding().toPx() })
-            GuideLineOverlay(it, textArea, settings.guideDim.fade, palette)
-        }
         ReaderSelectionOverlays(vm, settings, palette, controls, layout, highlights, locator)
         ReaderChrome(vm, settings, palette, controls, layout, fragments, marks, footerWords, clock, battery, onClose, interaction.onFooterTap,
             compact = maxHeight < 500.dp, screenHeight = maxHeight)

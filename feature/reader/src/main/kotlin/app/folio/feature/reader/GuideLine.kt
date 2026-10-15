@@ -1,121 +1,101 @@
 package app.folio.feature.reader
 
+import android.graphics.BlurMaskFilter
+import android.graphics.RectF
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CalendarViewDay
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.dp
-import app.folio.core.data.settings.GuideDim
 import app.folio.core.designsystem.ReaderPalette
-import app.folio.core.designsystem.FolioTheme
-import app.folio.core.designsystem.components.PullDownMenu
 
 /**
- * «Направляющая линия» (white spot 3, screenshot #21): the current line sits on a plate in the
- * page colour with a hairline border and a soft shadow; everything else fades towards the page
- * colour by [fade] (Apple's «Низкая» leaves black text at about 35 % contrast).
+ * «Направляющая линия» drawn as part of one page, so dimming and plate slide, curl and fade with it and
+ * never flash off during a turn (white spot 3, screenshot #21).
  *
- * @param plate the plate in this composable's coordinates.
- * @param text the area that dims: the text column, not the title or page number (as in #21).
+ * The plate spans the whole text column (stable width on short lines) and reaches at most half the
+ * margin past it. Dimming covers only the text area between the page labels; the shadow may leave it.
+ *
+ * @param lines the page's lines in content coordinates ([PageRenderer.lines]).
+ * @param index the guided line; [animate] glides the plate when it changes.
+ * @param padding the text column's insets in this composable, as given to `PageView`.
+ * @param fade dimming of everything outside the plate, 0 = none.
  */
 @Composable
-internal fun GuideLineOverlay(plate: Rect, text: Rect, fade: Float, palette: ReaderPalette, modifier: Modifier = Modifier) {
+internal fun GuidePage(
+    lines: List<RectF>,
+    index: Int,
+    padding: PaddingValues,
+    fade: Float,
+    palette: ReaderPalette,
+    modifier: Modifier = Modifier,
+    animate: Boolean = true,
+) {
+    val line = lines.getOrNull(index.coerceIn(0, (lines.size - 1).coerceAtLeast(0))) ?: return
+    val spec = tween<Float>(if (animate) 180 else 0)
+    val top by animateFloatAsState(line.top, spec, label = "guideTop")
+    val bottom by animateFloatAsState(line.bottom, spec, label = "guideBottom")
+    val shown by animateFloatAsState(fade, tween(220), label = "guideFade")
     Canvas(modifier.fillMaxSize()) {
-        clipRect(text.left, text.top, text.right, text.bottom) {
-            val radius = CornerRadius(9.dp.toPx())
-            val round = RoundRect(plate, radius)
-            if (fade > 0f) {
-                val outside = Path().apply {
-                    fillType = PathFillType.EvenOdd
-                    addRect(text)
-                    addRoundRect(round)
-                }
-                drawPath(outside, palette.background.copy(alpha = fade))
+        val column = Rect(padding.calculateLeftPadding(LayoutDirection.Ltr).toPx(), padding.calculateTopPadding().toPx(),
+            size.width - padding.calculateRightPadding(LayoutDirection.Ltr).toPx(), size.height - padding.calculateBottomPadding().toPx())
+        val padX = minOf(12.dp.toPx(), column.left / 2)
+        val padY = 3.dp.toPx()
+        val plate = Rect(column.left - padX, column.top + top - padY, column.right + padX, column.top + bottom + padY)
+        val radius = CornerRadius(9.dp.toPx())
+        val round = RoundRect(plate, radius)
+        val text = Rect(0f, column.top - padY, size.width, column.bottom + padY)
+        if (shown > 0f) {
+            val outside = Path().apply {
+                fillType = PathFillType.EvenOdd
+                addRect(text)
+                addRoundRect(round)
             }
-            // Soft shadow just outside the plate, then the hairline border.
-            val shadow = Path().apply {
+            drawPath(outside, palette.background.copy(alpha = shown))
+        }
+        // One soft blurred shadow outside the plate; on dark pages a shadow is invisible, so none.
+        if (!palette.isDark) {
+            val outsidePlate = Path().apply {
                 fillType = PathFillType.EvenOdd
                 addRect(Rect(Offset.Zero, size))
                 addRoundRect(round)
             }
-            clipPath(shadow) {
-                val shade = if (palette.isDark) Color.Black else Color.Black.copy(alpha = 0.55f)
-                for (i in 1..6) {
-                    val grow = i * 2.dp.toPx()
-                    drawRoundRect(
-                        shade.copy(alpha = shade.alpha * 0.035f),
-                        topLeft = plate.topLeft - Offset(grow / 2, grow / 2 - 1.dp.toPx()),
-                        size = Size(plate.width + grow, plate.height + grow),
-                        cornerRadius = CornerRadius(radius.x + grow / 2),
-                    )
+            clipPath(outsidePlate) {
+                drawIntoCanvas { canvas ->
+                    val blur = 5.dp.toPx()
+                    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                        color = Color.Black.copy(alpha = 0.16f).toArgb()
+                        maskFilter = BlurMaskFilter(blur, BlurMaskFilter.Blur.NORMAL)
+                    }
+                    val dy = 1.dp.toPx()
+                    canvas.nativeCanvas.drawRoundRect(plate.left, plate.top + dy, plate.right, plate.bottom + dy,
+                        radius.x, radius.y, paint)
                 }
             }
-            drawRoundRect(
-                (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.09f),
-                topLeft = plate.topLeft,
-                size = plate.size,
-                cornerRadius = radius,
-                style = Stroke(1.dp.toPx()),
-            )
         }
-    }
-}
-
-/** Round button bottom-left while the guide line is on; opens «Затемнение фона» (#22). */
-@Composable
-internal fun GuideLineButton(
-    dim: GuideDim,
-    palette: ReaderPalette,
-    onDim: (GuideDim) -> Unit,
-    onTurnOff: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var open by remember { mutableStateOf(false) }
-    Box(modifier) {
-        RoundButton(
-            Icons.Rounded.CalendarViewDay,
-            stringResource(R.string.reader_guide_line),
-            palette.control(),
-            palette.text,
-            Modifier,
-        ) { open = true }
-        // Apple shows this menu dark even over a light page.
-        FolioTheme(dark = palette.isDark) {
-            PullDownMenu(
-                expanded = open,
-                onDismiss = { open = false },
-                width = 230.dp,
-                offset = DpOffset(0.dp, (-8).dp),
-                checkColumn = true,
-            ) {
-                Header(stringResource(R.string.guide_dim))
-                Item(stringResource(R.string.guide_dim_high), { onDim(GuideDim.High) }, checked = dim == GuideDim.High)
-                Item(stringResource(R.string.guide_dim_medium), { onDim(GuideDim.Medium) }, checked = dim == GuideDim.Medium)
-                Item(stringResource(R.string.guide_dim_low), { onDim(GuideDim.Low) }, checked = dim == GuideDim.Low)
-                Item(stringResource(R.string.guide_dim_none), { onDim(GuideDim.None) }, checked = dim == GuideDim.None)
-                Divider()
-                Item(stringResource(R.string.guide_off), onTurnOff)
-            }
-        }
+        drawRoundRect(
+            (if (palette.isDark) Color.White else Color.Black).copy(alpha = if (palette.isDark) 0.14f else 0.08f),
+            topLeft = plate.topLeft,
+            size = plate.size,
+            cornerRadius = radius,
+            style = Stroke(1.dp.toPx()),
+        )
     }
 }

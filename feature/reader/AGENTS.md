@@ -18,7 +18,7 @@
 - Use the fixed `ThemesSheet` dialog (`ReadingSettingsSheet`, also `ReadingDefaultsSheet` from the library) for
   settings; close with X/Back, never drag. Edit through `SettingsEditor`; `vm.settings` = shared + `ownSettings`.
 - Pin `PageSettingsPreview` (a `PreviewSource`) outside per-tab scrolling; use `Paginator`/`PageView` with `samplePreviewSource()`, even in a book (book numbers flicker on re-pagination).
-- Keep preview taps inert; use tabs and manual scrolling to navigate settings. Preserve scroll in «Прокрутка»; paged modes swipe through the sample using `HorizontalPageTurner`.
+- Preview taps only step the guide (turning at its ends); tabs/manual scroll navigate settings. Keep «Прокрутка» scroll; paged modes swipe via `HorizontalPageTurner`.
 - Apply settings immediately; use `SettingsSegments` (labels shrink; `SettingsOptions` only above 130 % text) for short choices, `SettingsChoice` for fonts. See `.agents/design/reader.md`.
 
 ## Rules
@@ -28,7 +28,7 @@
 - Fade page labels when controls appear; retain their chosen text format and fixed margins. Keep visibility out of pagination inputs.
 - Draw lines through `headerLook`/`footerLook` and `settings.shownFooter`; `textInsets` owns the space they take.
 - Count remaining pages from TOC ranges, not parser chapters; leave unknown counts and pre-TOC text unlabeled.
-- Count history expiry only on reading landings; keep history in `ReaderPositionSheet`. Hide guide during turns; use actual landings.
+- Count history expiry only on reading landings; keep history in `ReaderPositionSheet`. Guide is drawn per page (`GuidePage`); use actual landings.
 - Keep plain visible-control taps inert except dismissal; preserve target/selection priority. See `.agents/design/reader.md`.
 - Test pure gestures/progress in `ReaderGesturesTest` / `ReaderProgressTest`; search example: `feature/reader/src/test/kotlin/app/folio/feature/reader/ReaderSearchTest.kt`.
 - Keep reader overlays and window brightness in `ReaderControls`; keep settings tab/scroll state in `ThemesSheet`.

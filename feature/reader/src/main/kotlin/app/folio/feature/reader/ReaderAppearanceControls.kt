@@ -80,6 +80,8 @@ internal fun ReaderAppearanceSettings(editor: SettingsEditor, brightness: SheetB
     }
     SettingsGroupHeader(stringResource(R.string.settings_page_turn))
     ReaderPageTurnSettings(editor)
+    SettingsGroupHeader(stringResource(R.string.reader_guide_line))
+    ReaderGuideSettings(editor)
 }
 
 /** Books-style size row: a small and a large «A» frame the slider; the value sits in the title row. */

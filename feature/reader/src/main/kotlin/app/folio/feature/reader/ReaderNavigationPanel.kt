@@ -2,6 +2,11 @@ package app.folio.feature.reader
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.unit.DpOffset
+import app.folio.core.data.settings.GuideDim
+import app.folio.core.designsystem.FolioTheme
+import app.folio.core.designsystem.components.PullDownMenu
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -101,12 +106,23 @@ internal fun ReaderNavigationPanel(
                 NavigationAction(Icons.Rounded.TextFields, stringResource(R.string.reader_themes), modifier = Modifier.weight(1f)) {
                     controls.sheet = ReaderSheet.Themes
                 }
-                NavigationAction(Icons.Rounded.CalendarViewDay, stringResource(R.string.reader_guide_line),
-                    active = settings.guideLine && guideAvailable, enabled = guideAvailable,
-                    modifier = Modifier.weight(1f)) {
-                    val enable = !settings.guideLine
-                    vm.setGuideLine(enable)
-                    if (enable) controls.chromeVisible = false
+                // Tap toggles; long press opens dimming (the full block lives in «Аа»).
+                var guideMenu by remember { mutableStateOf(false) }
+                Box(Modifier.weight(1f)) {
+                    NavigationAction(Icons.Rounded.CalendarViewDay, stringResource(R.string.reader_guide_line),
+                        active = settings.guideLine && guideAvailable, enabled = guideAvailable,
+                        modifier = Modifier.fillMaxWidth(), onLongClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            guideMenu = true
+                        }) {
+                        val enable = !settings.guideLine
+                        vm.setGuideLine(enable)
+                        if (enable) controls.chromeVisible = false
+                    }
+                    GuideDimMenu(guideMenu, settings, palette, onDismiss = { guideMenu = false }, onDim = { dim ->
+                        vm.setGuideDim(dim)
+                        if (!settings.guideLine) vm.setGuideLine(true)
+                    }, onTurnOff = { vm.setGuideLine(false) })
                 }
                 NavigationAction(Icons.Rounded.Search, stringResource(R.string.reader_search), modifier = Modifier.weight(1f)) {
                     controls.sheet = ReaderSheet.Search
@@ -118,17 +134,38 @@ internal fun ReaderNavigationPanel(
 @Composable
 private fun NavigationAction(
     icon: ImageVector, description: String, modifier: Modifier,
-    active: Boolean = false, enabled: Boolean = true, activeTint: Color? = null, badge: Int = 0, onClick: () -> Unit,
+    active: Boolean = false, enabled: Boolean = true, activeTint: Color? = null, badge: Int = 0,
+    onLongClick: (() -> Unit)? = null, onClick: () -> Unit,
 ) {
     val c = Folio.colors
     val label = if (badge > 0) "$description, $badge" else description
     Box(modifier.heightIn(min = 52.dp).clip(CircleShape)
         .background(if (active) c.label.copy(alpha = 0.08f) else Color.Transparent)
-        .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+        .combinedClickable(enabled = enabled, role = Role.Button, onLongClick = onLongClick, onClick = onClick)
         .semantics {
             if (activeTint != null || icon == Icons.Rounded.CalendarViewDay) selected = active
         }, contentAlignment = Alignment.Center) {
         Icon(icon, label, tint = if (!enabled) c.secondaryLabel.copy(alpha = 0.45f) else if (active) activeTint ?: c.label else c.label,
             modifier = Modifier.size(26.dp))
+    }
+}
+
+/** Quick dimming choice from the panel; picking a level also turns the line on. */
+@Composable
+private fun GuideDimMenu(
+    expanded: Boolean, settings: ReaderSettings, palette: ReaderPalette,
+    onDismiss: () -> Unit, onDim: (GuideDim) -> Unit, onTurnOff: () -> Unit,
+) {
+    FolioTheme(dark = palette.isDark) {
+        PullDownMenu(expanded = expanded, onDismiss = onDismiss, width = 230.dp, offset = DpOffset(0.dp, (-8).dp), checkColumn = true) {
+            Header(stringResource(R.string.guide_dim))
+            guideDimOptions().asReversed().forEach { option ->
+                Item(option.label, { onDim(option.value) }, checked = settings.guideLine && settings.guideDim == option.value)
+            }
+            if (settings.guideLine) {
+                Divider()
+                Item(stringResource(R.string.guide_off), onTurnOff)
+            }
+        }
     }
 }

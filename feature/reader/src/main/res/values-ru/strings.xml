@@ -90,6 +90,7 @@
     <string name="guide_dim_low">Низкая</string>
     <string name="guide_dim_none">Нет</string>
     <string name="guide_off">Выключить направляющую линию</string>
+    <string name="guide_scroll_hint">Недоступна при перелистывании «Прокрутка».</string>
     <string name="selection_highlight">Выделить</string>
     <string name="selection_remove">Убрать</string>
     <string name="selection_add_note">Добавить заметку</string>

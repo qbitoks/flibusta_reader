@@ -45,6 +45,33 @@ internal fun ReaderPageTurnSettings(editor: SettingsEditor) {
     GroupedCard { SettingsSegments(settings.pageTurn, turns, stacked = true) { v -> editor.edit { it.copy(pageTurn = v) } } }
 }
 
+/** «Направляющая линия»: on/off and how much the rest of the page dims; paged modes only. */
+@Composable
+internal fun ReaderGuideSettings(editor: SettingsEditor) {
+    val settings = editor.settings
+    GroupedCard {
+        if (settings.pageTurn == PageTurn.Scroll) {
+            Text(stringResource(R.string.guide_scroll_hint), style = FolioType.footnote, color = Folio.colors.secondaryLabel,
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp))
+            return@GroupedCard
+        }
+        SettingsToggle(stringResource(R.string.reader_guide_line), settings.guideLine) { on -> editor.edit { it.copy(guideLine = on) } }
+        if (settings.guideLine) {
+            SettingsDivider()
+            SettingsSubheader(stringResource(R.string.guide_dim))
+            SettingsSegments(settings.guideDim, guideDimOptions()) { v -> editor.edit { it.copy(guideDim = v) } }
+        }
+    }
+}
+
+@Composable
+internal fun guideDimOptions() = listOf(
+    SegmentOption(GuideDim.None, stringResource(R.string.guide_dim_none)),
+    SegmentOption(GuideDim.Low, stringResource(R.string.guide_dim_low)),
+    SegmentOption(GuideDim.Medium, stringResource(R.string.guide_dim_medium)),
+    SegmentOption(GuideDim.High, stringResource(R.string.guide_dim_high)),
+)
+
 @Composable
 internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource) {
     val settings = editor.settings
