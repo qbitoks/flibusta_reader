@@ -67,13 +67,11 @@ internal fun ReaderSurface(
     val topInset = with(density) { WindowInsets.statusBarsIgnoringVisibility.getTop(density).toDp() }
     val bottomInset = with(density) { WindowInsets.navigationBarsIgnoringVisibility.getBottom(density).toDp() }
     val footer = settings.shownFooter
-    val margin = settings.style.margin.dp
     val headerStyle = headerLook(settings, palette).style
     val footerStyle = footerLook(settings, palette).style
     val (topSpace, bottomSpace) = textInsets(settings,
         if (settings.pageTurn == PageTurn.Scroll) lineLabelHeight(headerLook(settings, palette)) else with(density) { headerStyle.lineHeight.toDp() },
         if (settings.pageTurn == PageTurn.Scroll) lineLabelHeight(footerLook(settings, palette)) else with(density) { footerStyle.lineHeight.toDp() })
-    val padding = PaddingValues(start = margin, end = margin, top = topInset + topSpace, bottom = bottomInset + bottomSpace)
 
     val clock by rememberClock(footer.clock)
     val battery by rememberBattery(footer.battery)
@@ -85,6 +83,8 @@ internal fun ReaderSurface(
     )
     GlassScope { source ->
     BoxWithConstraints(Modifier.fillMaxSize().background(palette.background)) {
+        val margin = settings.style.horizontalMargin(maxWidth.value).dp
+        val padding = PaddingValues(start = margin, end = margin, top = topInset + topSpace, bottom = bottomInset + bottomSpace)
         val widthPx = constraints.maxWidth
         val heightPx = constraints.maxHeight
         val contentLeft = with(density) { padding.calculateLeftPadding(LayoutDirection.Ltr).toPx() }

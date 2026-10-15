@@ -96,10 +96,14 @@
 - Keep two tabs: Basic («Основные») and Advanced («Дополнительно»), with independent scrolling and a pinned preview.
   In Basic, omit group headings: brightness, appearance with rotation icon, palettes/size, then turning.
   Brightness Auto follows the device and disables its slider; manual takeover starts at the current device value.
-- Start Advanced with the existing upper/lower line cards; follow with collapsed font, spacing and tone/contrast cards.
+- Start Advanced with upper/lower line cards, then font disclosure, visible spacing cards with collapsed details and tone/contrast disclosure.
   Preserve local line disclosures; keep Advanced card expansion across tab changes. Collapsing never changes settings.
-- Use `ReaderStyle` for factory typography and `TextSet.DEFAULT` for settings; retain legacy preset values only for upgrade decoding.
-  Apply new defaults only to fresh installs or explicit resets; preserve actual legacy text and palette for shared and unopened books.
+- Use `ReaderStyle` for factory typography and `TextSet.DEFAULT` for settings; ignore obsolete linked-text settings without migration.
+- Show two cyclic spacing cards above their «Подробнее»: line spacing 1.0/1.2/1.4, side margins 3/5/8% of viewport width.
+  Start at the middle values. Derive each card from the current value; custom values show a fourth sliders glyph without emphasis.
+  Keep custom cards tappable: restart at the minimum. Details edit the same values; opening or collapsing changes no settings.
+  Reuse stacked `SegmentedControl` as for page turning: 58 dp track, 22 dp vector icons and one caption underneath.
+  Use `ReaderSpacingIcons` on the same 24-unit grid and 1.7-unit rounded stroke as `PageTurnIcons`; omit extra value rows.
 - Put one «Сбросить дополнительные настройки» action at the end of Advanced; confirm its book/shared scope.
   Use `withAdvancedDefaults` to reset only Advanced; preserve Basic values, window controls, guide and annotation state.
   In book scope store factory values as differences from current shared settings; keep the scope-menu action for inheriting shared settings.

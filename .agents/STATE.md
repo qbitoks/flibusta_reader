@@ -10,7 +10,8 @@ status: active
 - ReaderPhone checks cover upgrade/restart, presets, menu palettes and guide landings in Slide/Curl/Fade.
 - Finish on-device default/book reset checks and physical-phone verification before distribution.
 - 0.3.10 includes preset paragraph spacing/indent and restored seam leading; verify on a phone before distribution.
-- Verify Basic/Advanced tabs, palette-only cards, Advanced-only scoped reset and legacy upgrade on a phone.
+- Verify Basic/Advanced tabs, palette-only cards and Advanced-only scoped reset on a phone; old settings migrations are removed.
+- Verify cyclic interval/margin cards, custom glyphs and percentage margins in book and preview on a phone.
 - Verify footer capsules on a phone: cyclic format, independent toggles, large text wrap and persisted settings.
 - Verify compact 36 dp Scroll defaults, reordered details, vertical alignment and zero gap at rules on a phone.
 

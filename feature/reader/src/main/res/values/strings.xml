@@ -237,4 +237,13 @@
     <string name="footer_battery_short">Battery</string>
     <string name="footer_chapter_value">%1$d pp.</string>
     <string name="footer_next_format">Next progress format</string>
+    <string name="spacing_narrow">Narrow</string>
+    <string name="spacing_interval">Line spacing</string>
+    <string name="spacing_medium">Medium</string>
+    <string name="spacing_wide">Wide</string>
+    <string name="spacing_dense">Dense</string>
+    <string name="spacing_normal">Normal</string>
+    <string name="spacing_loose">Loose</string>
+    <string name="spacing_custom">Custom</string>
+    <string name="spacing_next">Next value</string>
 </resources>

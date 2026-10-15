@@ -6,6 +6,7 @@
 - Use `core/designsystem/src/main/kotlin/app/folio/core/designsystem/ReaderPalette.kt` for reading-surface colours.
 - Use `core/designsystem/src/main/kotlin/app/folio/core/designsystem/ReaderFonts.kt` for font keys and `TypefaceProvider`.
 - Use `readerChromeTextStyle` for page labels and their style chips; `PageTurnIcons` for page-turn modes.
+- Use `ReaderSpacingIcons` with the stacked `SegmentedControl` for spacing; preserve page-turn geometry and outline weight.
 - Use `core/designsystem/src/main/kotlin/app/folio/core/designsystem/BookCover.kt` for local-file and generated covers.
 - Use `core/designsystem/src/main/kotlin/app/folio/core/designsystem/components/Sections.kt` as the canonical themed component example.
 - Use `core/designsystem/src/main/kotlin/app/folio/core/designsystem/components/Glass.kt` for backdrop source and glass fallback.

@@ -65,7 +65,7 @@ internal fun BoxScope.ReaderChrome(
     val scroll = settings.pageTurn == PageTurn.Scroll
     val guideOn = settings.guideLine && !scroll
     val footer = settings.shownFooter
-    val margin = settings.style.margin.dp
+    val margin = layout.padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr)
     val headerLook = headerLook(settings, palette)
     val footerLook = footerLook(settings, palette)
     val footerAlpha by animateFloatAsState(if (controls.chromeVisible) 0f else 1f, tween(150), label = "scrollFooter")

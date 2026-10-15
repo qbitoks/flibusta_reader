@@ -245,4 +245,13 @@
     <string name="footer_battery_short">Заряд</string>
     <string name="footer_chapter_value">%1$d стр.</string>
     <string name="footer_next_format">Следующий формат прогресса</string>
+    <string name="spacing_narrow">Узкие</string>
+    <string name="spacing_interval">Интервал</string>
+    <string name="spacing_medium">Средние</string>
+    <string name="spacing_wide">Широкие</string>
+    <string name="spacing_dense">Плотный</string>
+    <string name="spacing_normal">Обычный</string>
+    <string name="spacing_loose">Разреженный</string>
+    <string name="spacing_custom">Свои</string>
+    <string name="spacing_next">Следующее значение</string>
 </resources>

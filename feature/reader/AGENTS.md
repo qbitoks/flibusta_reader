@@ -33,11 +33,11 @@
 - Test pure gestures/progress in `ReaderGesturesTest` / `ReaderProgressTest`; search example: `feature/reader/src/test/kotlin/app/folio/feature/reader/ReaderSearchTest.kt`.
 - Keep reader overlays and window brightness in `ReaderControls`; keep settings tab/scroll state in `ThemesSheet`.
 - Keep annotation flows and `viewModelScope.launch` in the ViewModel; helpers must preserve persistence order and read timing.
-- Tests: `./gradlew.bat :feature:reader:testDebugUnitTest --console=plain`.
 
 - Auto brightness disables touch/accessibility adjustment; observe the device setting and use it on manual takeover.
 - Ignore unchanged settings edits, including repeated slider endpoint events.
-- Keep palette/size/window/turning on Basic; start Advanced with line cards, then collapsible text/colour. Reset only Advanced. See `.agents/design/reader.md`.
+- Use `SpacingSettingsCard` for cyclic interval/margin controls and shared-value sliders; follow `.agents/design/reader.md` for custom states.
+- Keep palette/size/window/turning on Basic; start Advanced with lines, then font/spacing/colour. Reset only Advanced. See `.agents/design/reader.md`.
 - Disable overscroll stretch in the settings panel; horizontal slider drags at either edge must not deform the panel.
 - Use `FooterContentCapsules`; cycle progress on tap. Show only geometry in «Подробнее», or a hidden-line hint when empty; retain saved settings.
 - Order line details: size/opacity, placement, separator/gap/boundary; default Scroll blocks to 36 dp.

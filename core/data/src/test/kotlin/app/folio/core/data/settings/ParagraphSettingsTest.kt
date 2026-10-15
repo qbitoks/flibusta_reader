@@ -6,8 +6,8 @@ import org.junit.Test
 
 class ParagraphSettingsTest {
     @Test fun extendedTextSetSurvivesSharedAndBookPersistence() {
-        val encoded = "lora|false|true|1.35|0|0|0|true|0.5|1.2"
-        val text = TextSet.decode(encoded, TextPreset.Classic.text!!)
+        val encoded = "lora|false|1.35|0|0|5|true|0.5|1.2"
+        val text = TextSet.decode(encoded, TextSet.DEFAULT)
         assertEquals(text, TextSet.decode(text.encode(), TextSet.DEFAULT))
         val shared = ReaderSettings()
         val edited = shared.withText(text)
@@ -18,12 +18,8 @@ class ParagraphSettingsTest {
         assertEquals(edited.textSet, BookOverrides.decode(overrides.encode()).applyTo(shared).textSet)
     }
 
-    @Test fun legacyTextKeepsItsFontAndIntervals() {
-        val text = TextSet.decode("pt_serif|true|true|1.4|2|3|6|false", TextPreset.Classic.text!!)
-        assertEquals("pt_serif", text.font)
-        assertEquals(1.4f, text.toReaderStyle(19f).lineSpacing, 0f)
-        assertEquals(0f, text.paragraphSpacing, 0f)
-        assertEquals(1.6f, text.firstLineIndent, 0f)
+    @Test fun obsoleteTextFormatUsesDefaults() {
+        assertEquals(TextSet.DEFAULT, TextSet.decode("pt_serif|true|true|1.4|2|3|6|false", TextSet.DEFAULT))
     }
 
     @Test fun themesPreserveIndependentParagraphSettings() {
@@ -38,9 +34,9 @@ class ParagraphSettingsTest {
     }
 
     @Test fun invalidParagraphSettingsAreRejectedAndRangesAreClamped() {
-        val fallback = TextPreset.Classic.text!!
-        assertEquals(fallback, TextSet.decode("lora|false|true|1.35|0|0|0|true|NaN|1.2", fallback))
-        val clamped = TextSet.decode("lora|false|true|1.35|0|0|0|true|-1.0|8.0", fallback)
+        val fallback = TextSet.DEFAULT
+        assertEquals(fallback, TextSet.decode("lora|false|1.35|0|0|5|true|NaN|1.2", fallback))
+        val clamped = TextSet.decode("lora|false|1.35|0|0|5|true|-1.0|8.0", fallback)
         assertEquals(0f, clamped.paragraphSpacing, 0f)
         assertEquals(3f, clamped.firstLineIndent, 0f)
     }

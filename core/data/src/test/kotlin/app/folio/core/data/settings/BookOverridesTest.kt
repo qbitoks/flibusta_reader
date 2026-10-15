@@ -60,31 +60,16 @@ class BookOverridesTest {
         assertEquals(own.applyTo(shared), withFuture.applyTo(shared))
     }
 
-    @Test fun oldBookKeysAreReadAndRemovedOnWrite() {
+    @Test fun obsoleteBookKeysAreIgnored() {
         val p = mutablePreferencesOf(
             stringPreferencesKey("book_appearance_a") to "Dark",
             stringPreferencesKey("book_header_chrome_style_a") to "Classic",
         )
-        val own = ReaderPreferences.readBook(p, "a")
-        assertEquals(Appearance.Dark, own.applyTo(shared).appearance)
-        assertEquals(ChromeStyle.Classic, own.applyTo(shared).chromeStyles.header)
-
-        ReaderPreferences.writeBook(p, "a", own)
-        assertNull(p[stringPreferencesKey("book_appearance_a")])
-        assertNull(p[stringPreferencesKey("book_header_chrome_style_a")])
-        assertEquals(own, ReaderPreferences.readBook(p, "a"))
-
+        assertTrue(ReaderPreferences.readBook(p, "a").isEmpty)
+        ReaderPreferences.writeBook(p, "a", BookOverrides.between(shared, shared.copy(fontSize = 25f)))
+        assertEquals(25f, ReaderPreferences.readBook(p, "a").applyTo(shared).fontSize, 0f)
         ReaderPreferences.writeBook(p, "a", BookOverrides())
         assertNull(p[stringPreferencesKey("book_reader_a")])
-    }
-
-    @Test fun changedFooterContentStartsCustomisedSoNothingMoves() {
-        val p = mutablePreferencesOf(booleanPreferencesKey("footer_battery") to true)
-        val settings = ReaderPreferences.read(p)
-        assertTrue(settings.footerLayout.customize)
-        assertTrue(settings.shownFooter.battery)
-
-        assertFalse(ReaderPreferences.read(mutablePreferencesOf()).footerLayout.customize)
     }
 
     @Test fun sharedSettingsRoundTrip() {
@@ -92,7 +77,7 @@ class BookOverridesTest {
         val settings = shared.copy(
             theme = ReaderTheme.Original, appearance = Appearance.Light, header = PageHeader.Chapter,
             footerLayout = LineLayout.FOOTER.copy(customize = true, gap = -6, rule = true),
-        ).let { it.withText(it.textSet.copy(customize = true, marginsPct = 5)) }
+        ).let { it.withText(it.textSet.copy(marginsPct = 4)) }
         ReaderPreferences.write(p, settings)
         assertEquals(settings, ReaderPreferences.read(p))
     }

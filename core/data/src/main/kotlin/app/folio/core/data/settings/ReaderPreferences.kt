@@ -21,50 +21,32 @@ internal object ReaderPreferences {
     private val footerPagesLeft = booleanPreferencesKey("footer_pages_left")
     private val footerClock = booleanPreferencesKey("footer_clock")
     private val footerBattery = booleanPreferencesKey("footer_battery")
-    // "footer_style" held Fade/Strip when fading was the default; only its Strip carries over to "footer_under",
-    // where the removed «Полоска» (Strip) reads as «Обрезка».
-    private val oldFooterStyle = stringPreferencesKey("footer_style")
     private val footerUnder = stringPreferencesKey("footer_under")
     private val headerLayout = stringPreferencesKey("header_layout")
     private val footerLayout = stringPreferencesKey("footer_layout")
     private val headerUnder = stringPreferencesKey("header_under")
-    // "theme_style_<theme>" held per-theme typography before style cards; left unread (no migration, user decision).
-    private val textPreset = stringPreferencesKey("text_preset")
-    private val customText = stringPreferencesKey("custom_text")
     private val customColors = stringPreferencesKey("custom_colors")
     private val readingText = stringPreferencesKey("reading_text")
     private fun book(bookId: String) = stringPreferencesKey("book_reader_$bookId")
-    // Before per-book settings a book kept only its Light/Dark; read once, then folded into book_reader_<id>.
-    private fun oldBookAppearance(bookId: String) = stringPreferencesKey("book_appearance_$bookId")
 
     fun read(p: Preferences): ReaderSettings {
-        val legacyKeys = listOf(fontSize, theme, appearance, pageTurn, guideLine, guideDim, highlightColor,
-            pageHeader, footerPage, footerPagesLeft, footerClock, footerBattery, oldFooterStyle, footerUnder,
-            headerLayout, footerLayout, headerUnder, textPreset, customText, customColors)
-        val legacy = p[readingText] == null && legacyKeys.any { it in p.asMap() }
-        return readRaw(p, legacy).independent()
-    }
-
-    private fun readRaw(p: Preferences, legacy: Boolean): ReaderSettings {
+        val palette = enumOr(p[theme], ReaderTheme.Original)
         val footer = PageFooter().let { d ->
             PageFooter(
                 page = enumOr(p[footerPage], d.page),
                 pagesLeft = p[footerPagesLeft] ?: d.pagesLeft,
                 clock = p[footerClock] ?: d.clock,
                 battery = p[footerBattery] ?: d.battery,
-                style = enumOr(withoutStrip(p[footerUnder] ?: p[oldFooterStyle]?.takeIf { it == OLD_STRIP }), d.style),
+                style = enumOr(p[footerUnder], d.style),
             )
         }
         return ReaderSettings(
             fontSize = p[fontSize] ?: ReaderStyle().fontSize,
-            theme = enumOr(p[theme], ReaderTheme.Original),
+            theme = palette,
             appearance = enumOr(p[appearance], Appearance.Auto),
-            textPreset = enumOr(p[textPreset], TextPreset.Classic),
-            customText = TextSet.decode(p[customText], ReaderSettings().customText),
-            customColors = CustomColors.decode(p[customColors]),
-            readingText = if (legacy) null else TextSet.decode(p[readingText], TextSet.DEFAULT),
-            // "None" was the old name of «Быстрое выцветание».
-            pageTurn = if (p[pageTurn] == "None") PageTurn.Fade else enumOr(p[pageTurn], PageTurn.Slide),
+            customColors = CustomColors.decode(p[customColors])?.copy(base = CustomColors.of(palette).base),
+            readingText = TextSet.decode(p[readingText], TextSet.DEFAULT),
+            pageTurn = enumOr(p[pageTurn], PageTurn.Slide),
             guideLine = p[guideLine] ?: false,
             guideDim = enumOr(p[guideDim], GuideDim.Low),
             highlightColor = p[highlightColor] ?: "yellow",
@@ -72,24 +54,15 @@ internal object ReaderPreferences {
             footer = footer,
             chromeStyles = ChromeStylePreferences.readDefaults(p),
             headerLayout = LineLayout.decode(p[headerLayout], LineLayout.HEADER),
-            // Footer content used to be plain settings: keep a changed footer as it was by starting customised.
-            footerLayout = LineLayout.decode(p[footerLayout], LineLayout.FOOTER.copy(customize = !footer.hasDefaultContent)),
+            footerLayout = LineLayout.decode(p[footerLayout], LineLayout.FOOTER),
             headerUnder = enumOr(p[headerUnder], FooterStyle.None),
         )
     }
 
     fun write(p: MutablePreferences, s: ReaderSettings) {
-        // Materialize unopened books before the old shared text is replaced; keep this in one edit.
-        val bookPrefixes = listOf("book_reader_", "book_appearance_", "book_header_chrome_style_", "book_footer_chrome_style_")
-        p.asMap().keys.mapNotNull { key -> bookPrefixes.firstOrNull { key.name.startsWith(it) }?.let { key.name.removePrefix(it) } }
-            .distinct().forEach { id ->
-                if (!BookOverrides.decode(p[book(id)]).independentText) writeBook(p, id, readBook(p, id))
-            }
         p[fontSize] = s.fontSize
         p[theme] = s.theme.name
         p[appearance] = s.appearance.name
-        p[textPreset] = s.textPreset.name
-        p[customText] = s.customText.encode()
         p[readingText] = s.textSet.encode()
         s.customColors?.let { p[customColors] = it.encode() } ?: p.remove(customColors)
         p[pageTurn] = s.pageTurn.name
@@ -102,41 +75,17 @@ internal object ReaderPreferences {
         p[footerClock] = s.footer.clock
         p[footerBattery] = s.footer.battery
         p[footerUnder] = s.footer.style.name
-        p.remove(oldFooterStyle)
         ChromeStylePreferences.writeDefaults(p, s.chromeStyles)
         p[headerLayout] = s.headerLayout.encode()
         p[footerLayout] = s.footerLayout.encode()
         p[headerUnder] = s.headerUnder.name
     }
 
-    fun readBook(p: Preferences, bookId: String): BookOverrides {
-        val own = BookOverrides.decode(p[book(bookId)]).values.toMutableMap()
-        val oldStyles = ChromeStylePreferences.readBook(p, bookId)
-        p[oldBookAppearance(bookId)]?.takeIf { it == Appearance.Light.name || it == Appearance.Dark.name }
-            ?.let { own.putIfAbsent(BookOverrides.APPEARANCE, it) }
-        oldStyles.header?.let { own.putIfAbsent(BookOverrides.HEADER_STYLE, it.name) }
-        oldStyles.footer?.let { own.putIfAbsent(BookOverrides.FOOTER_STYLE, it.name) }
-        // "footer_scroll" held Fade/Strip when fading was the default; only Strip stays the book's own.
-        own.remove(OLD_FOOTER_SCROLL)?.takeIf { it == OLD_STRIP }?.let { own.putIfAbsent(BookOverrides.FOOTER_UNDER, it) }
-        if (own[BookOverrides.FOOTER_UNDER] == OLD_STRIP) own[BookOverrides.FOOTER_UNDER] = FooterStyle.Clip.name
-        val decoded = BookOverrides.decode(p[book(bookId)])
-        if (decoded.independentText || own.isEmpty()) return BookOverrides(own)
-        val legacy = BookOverrides(own, independentText = false).applyTo(readRaw(p, legacy = true)).independent()
-        return BookOverrides.between(read(p), legacy)
-    }
+    fun readBook(p: Preferences, bookId: String): BookOverrides = BookOverrides.decode(p[book(bookId)])
 
-    /** Writes the book's own values; an empty set removes the key, as do the keys it replaced. */
     fun writeBook(p: MutablePreferences, bookId: String, value: BookOverrides) {
         if (value.isEmpty) p.remove(book(bookId)) else p[book(bookId)] = value.encode()
-        p.remove(oldBookAppearance(bookId))
-        ChromeStylePreferences.writeBook(p, bookId, BookChromeStyles())
     }
-
-    private const val OLD_FOOTER_SCROLL = "footer_scroll"
-    private const val OLD_STRIP = "Strip"
-
-    /** «Полоска» was removed; it was closest to «Обрезка» at the line's rule. */
-    private fun withoutStrip(name: String?): String? = if (name == OLD_STRIP) FooterStyle.Clip.name else name
 
     private inline fun <reified E : Enum<E>> enumOr(name: String?, default: E): E =
         name?.let { runCatching { enumValueOf<E>(it) }.getOrNull() } ?: default

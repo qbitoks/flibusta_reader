@@ -113,14 +113,14 @@ internal fun PageSettingsPreview(
         stringResource(R.string.reader_chapter_end),
     )
     val description = stringResource(R.string.settings_page_preview)
-    val margin = settings.style.margin.dp
     val scroll = settings.pageTurn == PageTurn.Scroll
     val scrollInsets = textInsets(settings, lineLabelHeight(headerLook), lineLabelHeight(footerLook))
     var headerHeight by remember { mutableStateOf(0.dp) }
     var footerHeight by remember { mutableStateOf(0.dp) }
-    Box(modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp))
+    BoxWithConstraints(modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp))
         .background(palette.background).border(0.5.dp, Folio.colors.separator, RoundedCornerShape(16.dp))
         .semantics { contentDescription = description }) {
+        val margin = settings.style.horizontalMargin(maxWidth.value).dp
         if (scroll) {
             PreviewText(chapter, source, settings, palette, true,
                 PaddingValues(start = margin, end = margin, top = scrollInsets.first, bottom = scrollInsets.second),
@@ -139,7 +139,7 @@ internal fun PageSettingsPreview(
                     modifier = Modifier.padding(horizontal = margin),
                 )
             }
-            return@Box
+            return@BoxWithConstraints
         }
         PreviewText(chapter, source, settings, palette, scroll, PaddingValues(start = margin, end = margin, top = headerHeight, bottom = footerHeight),
             Modifier.fillMaxSize())

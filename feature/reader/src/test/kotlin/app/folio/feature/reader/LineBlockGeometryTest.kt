@@ -39,13 +39,10 @@ class LineBlockGeometryTest {
         assertEquals(8.dp, geometry.labelOffset)
     }
 
-    @Test fun legacyAndExtendedLayoutsRoundTripThroughBookOverrides() {
-        val legacy = LineLayout.decode("true|120|80|End|8|-12|true|true|false", LineLayout.HEADER)
-        assertEquals(120, legacy.sizePct)
-        assertEquals(-12, legacy.gap)
-        assertNull(legacy.blockHeight)
-        assertEquals(LineVertical.Center, legacy.vertical)
-        val layout = legacy.copy(blockHeight = 72, vertical = LineVertical.Text, textGap = 0)
+    @Test fun currentLayoutsRoundTripAndObsoleteFormatsUseDefaults() {
+        assertEquals(LineLayout.HEADER, LineLayout.decode("true|120|80|End|8|-12|true|true|false", LineLayout.HEADER))
+        val layout = LineLayout(customize = true, sizePct = 120, gap = -12,
+            blockHeight = 72, vertical = LineVertical.Text, textGap = 0)
         assertEquals(layout, LineLayout.decode(layout.encode(), LineLayout.HEADER))
         val shared = ReaderSettings()
         val edited = shared.copy(headerLayout = layout)

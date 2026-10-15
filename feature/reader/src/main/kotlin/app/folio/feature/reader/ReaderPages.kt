@@ -58,7 +58,7 @@ internal fun BoxScope.ReaderPages(
     val footer = settings.shownFooter
     val headerY = layout.headerY
     val footerY = layout.footerY
-    val margin = settings.style.margin.dp
+    val margin = layout.padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr)
     val headerLook = headerLook(settings, palette)
     val footerLook = footerLook(settings, palette)
     val footerStart = if (settings.guideLine && !scroll) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp

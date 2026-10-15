@@ -2,91 +2,44 @@ package app.folio.core.data.settings
 
 import app.folio.core.layout.ReaderStyle
 
-/**
- * Typography independent of the reading palette. Legacy spacing switches remain decodable.
- * Spacing overrides take effect while [customize] is on.
- *
- * Percent ranges follow Apple Books: letter spacing −10…+10 %, word spacing −20…+20 %,
- * margins −10…+10 %; line spacing is a multiplier 0.80…2.50.
- */
+/** Typography independent of the reading palette. Margins are percent of the viewport on each side. */
 data class TextSet(
     val font: String,
     val boldText: Boolean = false,
-    val customize: Boolean = false,
     val lineSpacing: Float = DEFAULT_LINE_SPACING,
     val letterSpacingPct: Int = 0,
     val wordSpacingPct: Int = 0,
-    val marginsPct: Int = 0,
+    val marginsPct: Int = 5,
     val justify: Boolean = true,
     val paragraphSpacing: Float = 0f,
     val firstLineIndent: Float = 1.6f,
-    val baseMarginDp: Float = BASE_MARGIN,
 ) {
-    fun encode(): String = listOf(font, boldText, customize, lineSpacing, letterSpacingPct, wordSpacingPct, marginsPct, justify, paragraphSpacing, firstLineIndent, baseMarginDp).joinToString("|")
+    fun encode(): String = listOf(font, boldText, lineSpacing, letterSpacingPct, wordSpacingPct,
+        marginsPct, justify, paragraphSpacing, firstLineIndent).joinToString("|")
 
-    /** Typography the paginator uses for this style at the global [fontSize]. */
     fun toReaderStyle(fontSize: Float): ReaderStyle = ReaderStyle(
-        font = font,
-        fontSize = fontSize,
-        lineSpacing = if (customize) lineSpacing else DEFAULT_LINE_SPACING,
-        // 10 % of tracking ≈ 0.05 em; 20 % of word spacing ≈ a whole space (0.25 em).
-        letterSpacing = if (customize) letterSpacingPct * 0.005f else 0f,
-        wordSpacing = if (customize) wordSpacingPct * 0.0125f else 0f,
-        margin = baseMarginDp * (1f + (if (customize) marginsPct else 0) * 0.07f),
-        justify = justify,
-        hyphenate = true,
-        boldText = boldText,
-        paragraphSpacing = paragraphSpacing,
-        firstLineIndent = firstLineIndent,
+        font = font, fontSize = fontSize, lineSpacing = lineSpacing,
+        letterSpacing = letterSpacingPct * 0.005f, wordSpacing = wordSpacingPct * 0.0125f,
+        marginPercent = marginsPct.toFloat(), justify = justify, hyphenate = true,
+        boldText = boldText, paragraphSpacing = paragraphSpacing, firstLineIndent = firstLineIndent,
     )
 
     companion object {
-        const val DEFAULT_LINE_SPACING = 1.25f
-        const val BASE_MARGIN = 30f
-        val DEFAULT = ReaderStyle().let {
-            TextSet(font = it.font, customize = true, lineSpacing = it.lineSpacing,
-                justify = it.justify, firstLineIndent = it.firstLineIndent, baseMarginDp = it.margin)
-        }
+        const val DEFAULT_LINE_SPACING = 1.2f
+        val DEFAULT = ReaderStyle().let { TextSet(font = it.font, justify = it.justify, firstLineIndent = it.firstLineIndent) }
 
-        fun decode(value: String?, d: TextSet): TextSet {
-            val p = value?.split('|') ?: return d
-            if (p.size !in listOf(8, 10, 11)) return d
+        fun decode(value: String?, default: TextSet): TextSet {
+            val p = value?.split('|')?.takeIf { it.size == 9 } ?: return default
             return runCatching {
-                TextSet(
-                    font = p[0], boldText = p[1].toBoolean(), customize = p[2].toBoolean(),
-                    lineSpacing = p[3].toFloat(), letterSpacingPct = p[4].toInt(), wordSpacingPct = p[5].toInt(),
-                    marginsPct = p[6].toInt(), justify = p[7].toBoolean(),
-                    paragraphSpacing = if (p.size >= 10) p[8].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 2f) else 0f,
-                    firstLineIndent = if (p.size >= 10) p[9].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 3f) else 1.6f,
-                    baseMarginDp = if (p.size == 11) p[10].toFloat().also { require(it.isFinite() && it > 0f) } else BASE_MARGIN,
-                )
-            }.getOrDefault(d)
+                TextSet(font = p[0], boldText = p[1].toBooleanStrict(),
+                    lineSpacing = p[2].toFloat().also { require(it.isFinite()) }.coerceIn(0.8f, 2.5f),
+                    letterSpacingPct = p[3].toInt().coerceIn(-10, 10), wordSpacingPct = p[4].toInt().coerceIn(-20, 20),
+                    marginsPct = p[5].toInt().coerceIn(0, 15), justify = p[6].toBooleanStrict(),
+                    paragraphSpacing = p[7].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 2f),
+                    firstLineIndent = p[8].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 3f))
+            }.getOrDefault(default)
         }
     }
-}
-
-/**
- * Frozen pre-independent-text presets, used only when decoding saved settings from older releases.
- */
-enum class TextPreset(val text: TextSet?) {
-    Classic(TextSet(font = "literata")),
-    Book(TextSet(font = "source_serif", customize = true, lineSpacing = 1.3f, marginsPct = 4, firstLineIndent = 1.8f)),
-    Quiet(TextSet(font = "pt_serif", customize = true, lineSpacing = 1.4f, letterSpacingPct = 2, marginsPct = 6, paragraphSpacing = 0.2f, firstLineIndent = 1.4f)),
-    Soft(TextSet(font = "lora", customize = true, lineSpacing = 1.35f, paragraphSpacing = 0.15f, firstLineIndent = 1.5f)),
-    Clear(TextSet(font = "inter", justify = false, paragraphSpacing = 0.4f, firstLineIndent = 0f)),
-    Bold(TextSet(font = "inter", boldText = true, justify = false, paragraphSpacing = 0.3f, firstLineIndent = 0f)),
-    Compact(TextSet(font = "pt_serif", customize = true, lineSpacing = 1.1f, marginsPct = -6)),
-    Custom(null),
-}
-
-/** Legacy theme-to-text pairing for upgrades only. */
-val ReaderTheme.textPreset: TextPreset get() = when (this) {
-    ReaderTheme.Original -> TextPreset.Classic
-    ReaderTheme.Quiet -> TextPreset.Quiet
-    ReaderTheme.Paper -> TextPreset.Book
-    ReaderTheme.Bold -> TextPreset.Bold
-    ReaderTheme.Calm -> TextPreset.Soft
-    ReaderTheme.Focus -> TextPreset.Clear
 }
 
 /**

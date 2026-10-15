@@ -17,5 +17,6 @@
 - Restore StaticLayout's omitted final-line leading with `paragraphGap` before adding the theme gap.
 - Apply user first-line indent only to body blocks; retain zero indent for centered/right-aligned text.
 - Use content-box pixels for renderer coordinates; subtract screen insets and margins at the caller.
+- Resolve `ReaderStyle.horizontalMargin` against the full viewport width; share this inset between book text and chrome.
 - Use `TextGeometry` for hit tests, carets and marks; raw framework offsets drift on justified lines.
 - Read `.agents/design/reader.md` for text layout rules and `feature/reader/AGENTS.md` for callers and verification.

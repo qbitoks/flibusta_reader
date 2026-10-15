@@ -52,13 +52,12 @@ internal fun ReadingTextSettings(editor: SettingsEditor) {
     SettingsDivider()
     SettingsToggle(stringResource(R.string.settings_bold_text), style.boldText) { update(style.copy(boldText = it)) }
     }
-    SettingsDisclosure(stringResource(R.string.settings_spacing_group)) {
-    // Sliders show what is drawn; moving one turns the set's spacing on.
-    val shown = if (style.customize) style else style.copy(lineSpacing = TextSet.DEFAULT_LINE_SPACING,
-        letterSpacingPct = 0, wordSpacingPct = 0, marginsPct = 0)
-    fun spacing(change: TextSet.() -> TextSet) = update(shown.copy(boldText = style.boldText, justify = style.justify, customize = true).change())
-    SettingsSlider(stringResource(R.string.settings_line_spacing), shown.lineSpacing, 0.8f..2.5f, 0.05f,
-        String.format(Locale.getDefault(), "%.2f", shown.lineSpacing)) { spacing { copy(lineSpacing = it) } }
+    SpacingSettingsCard(style, ::update) {
+    SettingsSlider(stringResource(R.string.settings_line_spacing), style.lineSpacing, 0.8f..2.5f, 0.05f,
+        String.format(Locale.getDefault(), "%.2f", style.lineSpacing)) { update(style.copy(lineSpacing = it)) }
+    SettingsDivider()
+    SettingsSlider(stringResource(R.string.settings_margins), style.marginsPct.toFloat(), 0f..15f, 1f,
+        "${style.marginsPct} %") { update(style.copy(marginsPct = it.roundToInt())) }
     SettingsDivider()
     SettingsSlider(stringResource(R.string.settings_paragraph_spacing), style.paragraphSpacing, 0f..2f, 0.05f,
         String.format(Locale.getDefault(), "%.2f", style.paragraphSpacing)) { update(style.copy(paragraphSpacing = it)) }
@@ -66,14 +65,11 @@ internal fun ReadingTextSettings(editor: SettingsEditor) {
     SettingsSlider(stringResource(R.string.settings_first_line_indent), style.firstLineIndent, 0f..3f, 0.1f,
         String.format(Locale.getDefault(), "%.1f", style.firstLineIndent)) { update(style.copy(firstLineIndent = it)) }
     SettingsDivider()
-    SettingsSlider(stringResource(R.string.settings_character_spacing), shown.letterSpacingPct.toFloat(), -10f..10f, 1f,
-        "${shown.letterSpacingPct} %") { spacing { copy(letterSpacingPct = it.roundToInt()) } }
+    SettingsSlider(stringResource(R.string.settings_character_spacing), style.letterSpacingPct.toFloat(), -10f..10f, 1f,
+        "${style.letterSpacingPct} %") { update(style.copy(letterSpacingPct = it.roundToInt())) }
     SettingsDivider()
-    SettingsSlider(stringResource(R.string.settings_word_spacing), shown.wordSpacingPct.toFloat(), -20f..20f, 1f,
-        "${shown.wordSpacingPct} %") { spacing { copy(wordSpacingPct = it.roundToInt()) } }
-    SettingsDivider()
-    SettingsSlider(stringResource(R.string.settings_margins), shown.marginsPct.toFloat(), -10f..10f, 1f,
-        "${shown.marginsPct} %") { spacing { copy(marginsPct = it.roundToInt()) } }
+    SettingsSlider(stringResource(R.string.settings_word_spacing), style.wordSpacingPct.toFloat(), -20f..20f, 1f,
+        "${style.wordSpacingPct} %") { update(style.copy(wordSpacingPct = it.roundToInt())) }
     SettingsDivider()
     SettingsToggle(stringResource(R.string.settings_justify), style.justify) { update(style.copy(justify = it)) }
     }

@@ -8,7 +8,7 @@ import org.junit.Test
 class ReaderThemeSettingsTest {
     @Test fun changingPalettePreservesTypographyAndColourAdjustments() {
         val start = ReaderSettings(fontSize = 27f).let {
-            it.withText(it.textSet.copy(font = "inter", boldText = true, lineSpacing = 1.8f, customize = true))
+            it.withText(it.textSet.copy(font = "inter", boldText = true, lineSpacing = 1.8f))
         }.withColors(CustomColors(ReaderTheme.Calm, 3, -2))
         for (theme in listOf(ReaderTheme.Original, ReaderTheme.Focus, ReaderTheme.Calm, ReaderTheme.Paper, ReaderTheme.Quiet)) {
             val changed = start.withTheme(theme)
@@ -21,54 +21,24 @@ class ReaderThemeSettingsTest {
         val settings = ReaderPreferences.read(mutablePreferencesOf())
         assertEquals(19f, settings.fontSize, 0f)
         assertEquals("literata", settings.style.font)
-        assertEquals(1.4f, settings.style.lineSpacing, 0f)
-        assertEquals(24f, settings.style.margin, 0f)
+        assertEquals(1.2f, settings.style.lineSpacing, 0f)
+        assertEquals(5f, settings.style.marginPercent, 0f)
         assertEquals(1.5f, settings.style.firstLineIndent, 0f)
         assertFalse(settings.style.justify)
         for (theme in ReaderTheme.entries) assertEquals(settings.style, settings.withTheme(theme).style)
     }
 
-    @Test fun oldSharedThemeKeepsItsActualTypographyWhenUpgrading() {
-        val p = mutablePreferencesOf(stringPreferencesKey("theme") to "Calm")
-        val upgraded = ReaderPreferences.read(p)
-        assertEquals("lora", upgraded.textSet.font)
-        assertEquals(1.35f, upgraded.style.lineSpacing, 0f)
-        assertEquals(30f, upgraded.style.margin, 0f)
-        assertEquals(upgraded.style, upgraded.withTheme(ReaderTheme.Quiet).style)
-        ReaderPreferences.write(p, upgraded)
-        assertEquals(upgraded, ReaderPreferences.read(p))
-    }
-
-    @Test fun oldCustomThemeKeepsVisibleBaseAndText() {
+    @Test fun obsoleteTypographyIsIgnoredAndSharedEditsDoNotRewriteBooks() {
         val p = mutablePreferencesOf(
-            stringPreferencesKey("theme") to "Paper",
+            stringPreferencesKey("theme") to "Calm",
             stringPreferencesKey("text_preset") to "Custom",
-            stringPreferencesKey("custom_colors") to "Quiet|4|-3",
-            stringPreferencesKey("custom_text") to "inter|true|false|1.35|0|0|0|false|0.4|0.0",
+            stringPreferencesKey("custom_text") to "obsolete",
+            stringPreferencesKey("book_reader_a") to "theme=Paper\nfont_size=25.0",
         )
-        val upgraded = ReaderPreferences.read(p)
-        assertEquals(ReaderTheme.Quiet, upgraded.theme)
-        assertEquals("inter", upgraded.style.font)
-        assertEquals(1.25f, upgraded.style.lineSpacing, 0f)
-        assertEquals(CustomColors(ReaderTheme.Quiet, 4, -3), upgraded.customColors)
-        assertEquals(upgraded.style, upgraded.withTheme(ReaderTheme.Original).style)
-    }
-
-    @Test fun sharedEditMigratesUnopenedBooksBeforeReplacingLegacyValues() {
-        val p = mutablePreferencesOf(
-            stringPreferencesKey("theme") to "Paper",
-            stringPreferencesKey("book_reader_a") to "theme=Calm\nfont_size=25.0",
-            stringPreferencesKey("book_reader_b") to "theme=Bold",
-        )
-        val before = ReaderPreferences.readBook(p, "a").applyTo(ReaderPreferences.read(p))
-        assertEquals("lora", before.style.font)
+        assertEquals(TextSet.DEFAULT, ReaderPreferences.read(p).textSet)
+        val before = p[stringPreferencesKey("book_reader_a")]
         ReaderPreferences.write(p, ReaderPreferences.read(p).copy(fontSize = 29f))
-        val after = ReaderPreferences.readBook(p, "a").applyTo(ReaderPreferences.read(p))
-        assertEquals(before.style, after.style)
-        val bold = ReaderPreferences.readBook(p, "b").applyTo(ReaderPreferences.read(p))
-        assertEquals(ReaderTheme.Original, bold.theme)
-        assertEquals("inter", bold.style.font)
-        assertTrue(bold.style.boldText)
+        assertEquals(before, p[stringPreferencesKey("book_reader_a")])
     }
 
     @Test fun advancedResetPreservesBasicsAndSurvivesBookReopen() {

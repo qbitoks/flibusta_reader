@@ -8,13 +8,13 @@ data class ReaderStyle(
     /** Base font size in sp. */
     val fontSize: Float = 19f,
     /** Multiplier over the font's natural line height. */
-    val lineSpacing: Float = 1.4f,
+    val lineSpacing: Float = 1.2f,
     /** Extra tracking in em. */
     val letterSpacing: Float = 0f,
     /** Extra word spacing in em (applied on API 34+, where Paint supports it). */
     val wordSpacing: Float = 0f,
-    /** Horizontal page margin in dp. */
-    val margin: Float = 24f,
+    /** Horizontal margin on each side, as a percentage of the viewport width. */
+    val marginPercent: Float = 5f,
     val justify: Boolean = false,
     val hyphenate: Boolean = true,
     val boldText: Boolean = false,
@@ -22,7 +22,9 @@ data class ReaderStyle(
     val paragraphSpacing: Float = 0f,
     /** First-line indent of body paragraphs, in em. */
     val firstLineIndent: Float = 1.5f,
-)
+) {
+    fun horizontalMargin(width: Float): Float = width * marginPercent / 100f
+}
 
 /** Resolves a [ReaderStyle.font] key to a typeface family that has real bold/italic faces. */
 fun interface TypefaceProvider {

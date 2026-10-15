@@ -208,6 +208,7 @@ fun SegmentedControl(
     descriptions: List<String>? = null,
     role: Role = Role.Tab,
     stacked: Boolean = false,
+    activeIndices: Set<Int>? = null,
 ) {
     val c = Folio.colors
     val outer = if (stacked) RoundedCornerShape(16.dp) else CircleShape
@@ -223,7 +224,7 @@ fun SegmentedControl(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         options.forEachIndexed { i, label ->
-            val isSelected = i == selected
+            val isSelected = activeIndices?.contains(i) ?: (i == selected)
             val segment = Modifier
                 .weight(1f)
                 .fillMaxHeight()

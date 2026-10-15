@@ -8,33 +8,26 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
 - `files/books/<sha1>.<ext>` — original file; book id = SHA-1 of its bytes. `files/covers/<id>.jpg`.
 - `cache/books/<id>/book.bin` + `res/` — parsed model; rebuilt from the original if the cache is cleared.
 - Room `folio.db` (`FolioDatabase`, v2): books, collections, bookmarks, highlights, sessions, search
-  history, `downloads` (v2, auto-migration from v1). Schemas in `core/data/schemas/`; bump the version with
-  a migration (auto-migration where possible).
+  history, `downloads`. Schemas in `core/data/schemas/`; v1 upgrades are unsupported (user decision).
+  Keep the current v2 schema; do not add destructive fallback or restore removed migrations.
 - `files/downloads/<sha1 of link>.part` — catalog download in progress; resumed with HTTP Range, deleted
   after import. `cache/catalog-covers/<sha1 of url>` — OPDS cover thumbnails (safe to clear).
 - DataStore `settings`: reader/library prefs; `app_appearance` (app-wide), `book_appearance_<book id>`
   (absent = follow the app; removed on delete). Old `appearance` key is no longer read (no migration).
 - Shared reader settings: `ReaderPreferences` (existing keys plus `reader_appearance`, `header_layout`,
   `footer_layout`); visual presets stay in `ChromeStylePreferences` keys;
-  `footer_under` (None/Clip/Fade; removed Strip reads as Clip) and `header_under` (None/Clip/Fade) = what scrolling text does
+  `footer_under` and `header_under` (None/Clip/Fade) = what scrolling text does
   under each line independently; resolve None to Fade in Scroll without rewriting saved values.
-  Keep legacy `footer_style` and book `footer_scroll` carry-over for Strip only.
-- Keep nine-field line layouts readable; append block height, vertical alignment and absolute text gap as fields 10–12.
-  Missing fields derive height/gap from legacy edge/gap and centre labels; preserve legacy values for paged mode.
+- Decode only current twelve-field line layouts; obsolete nine-field layouts fall back to factory defaults.
 - A book's own settings: `book_reader_<book id>`, `name=value` lines, only fields that differ from shared
-  (`BookOverrides`); removed on reset/delete. Old `book_appearance_<id>` and `book_*_chrome_style_<id>`
-  are read as part of it and dropped on the next write of that book. Unknown fields are ignored.
-- Keep legacy 8-field `custom_text` readable; append paragraph spacing and first-line indent as fields 9–10.
-  Missing fields retain 0 gap and 1.6 em indent; book overrides use `paragraph_spacing` and `first_line_indent`.
-- Read legacy `custom_text` after individual text fields; preserve its active typography when upgrading.
-- Store independent shared typography in `reading_text`; append base margin as TextSet field 11; old 8/10-field text keeps 30 dp.
-- Mark new book overrides with `settings_version=2`; migrate legacy book text before changing shared settings in the same DataStore edit.
-- Keep removed Bold identifiers readable as Original while preserving their legacy typography.
-- Store book warmth/contrast as separate `warmth`/`contrast` fields; retain legacy `custom_colors` decoding and inherit untouched controls.
-- A missing `footer_layout` starts customised when the old footer content differs from the standard one.
+  (`BookOverrides`); removed on reset/delete. Ignore obsolete separate book appearance/style keys and unknown fields.
+- Store shared typography in the current nine-field `reading_text` codec; reject old text formats to factory defaults.
+  Store margins as 0–15 percent of viewport width on each side; do not migrate old dp margins or linked text presets.
+- Store book warmth/contrast as separate `warmth`/`contrast` fields and inherit untouched controls.
+- Ignore obsolete footer-style, page-turn aliases and book settings-version markers; do not rewrite unopened books on shared edits.
 - `shared_prefs/catalog.xml`: `catalog`, `downloads` HTTPS origins; `recent` — catalog searches, newline-joined.
 
 ## Changing any of this
-- Never drop a table/column or rename a key without a migration; never reset data.
+- Preserve books and database contents; unsupported old schemas must fail instead of silently resetting data.
 - `Position.encode()` format is persisted: keep old strings decodable.
 - Changing applicationId or APK signature needs a separate decision.

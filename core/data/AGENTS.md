@@ -3,7 +3,7 @@
 ## Entry points
 - Use `core/data/src/main/kotlin/app/folio/core/data/library/LibraryRepository.kt` as the canonical import/load/mutation example.
 - Use `core/data/src/main/kotlin/app/folio/core/data/library/BookFiles.kt` for original, parsed cache and image paths.
-- Use `core/data/src/main/kotlin/app/folio/core/data/db/FolioDatabase.kt` for Room schema registration and migrations.
+- Use `core/data/src/main/kotlin/app/folio/core/data/db/FolioDatabase.kt` for Room schema registration; old migrations are removed.
 - Use `core/data/src/main/kotlin/app/folio/core/data/settings/SettingsRepository.kt` for persisted reader/library preferences.
 - Use `ReaderPreferences.kt` there for shared reader codecs and `BookOverrides.kt` for a book's own settings.
 - Use `core/data/src/main/kotlin/app/folio/core/data/catalog/CatalogRepository.kt` for feeds, covers and catalog sources.
@@ -22,3 +22,4 @@
 - Keep want-to-read/finished shelves as book flags; user collection membership belongs to Room cross-reference rows.
 - Preserve SAF source URI tracking and depth limits when extending folder scans; use the existing scanner worker.
 - Edit reader settings through `updateReader`/`updateBookReader` (one DataStore edit); keep only book fields that differ.
+- Use `SpacingPresets` for card cycles; persist actual spacing and margin values, without a custom-mode flag or saved preset index.

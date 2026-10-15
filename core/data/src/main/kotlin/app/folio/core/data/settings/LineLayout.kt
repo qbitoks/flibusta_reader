@@ -50,15 +50,15 @@ data class LineLayout(
 
         fun decode(value: String?, default: LineLayout): LineLayout {
             val p = value?.split('|') ?: return default
-            if (p.size < 9) return default
+            if (p.size != 12) return default
             return runCatching {
                 LineLayout(
                     customize = p[0].toBooleanStrict(), sizePct = p[1].toInt().coerceIn(SIZE), opacityPct = p[2].toInt().coerceIn(OPACITY),
                     align = LineAlign.valueOf(p[3]), edge = p[4].toInt().coerceIn(EDGE), gap = p[5].toInt().coerceIn(GAP),
                     uppercase = p[6].toBooleanStrict(), rule = p[7].toBooleanStrict(), hideOnChapterStart = p[8].toBooleanStrict(),
-                    blockHeight = p.getOrNull(9)?.toIntOrNull()?.coerceIn(BLOCK_HEIGHT),
-                    vertical = p.getOrNull(10)?.let { runCatching { LineVertical.valueOf(it) }.getOrNull() } ?: LineVertical.Center,
-                    textGap = p.getOrNull(11)?.toIntOrNull()?.coerceIn(TEXT_GAP),
+                    blockHeight = p[9].takeIf { it.isNotEmpty() }?.toInt()?.coerceIn(BLOCK_HEIGHT),
+                    vertical = LineVertical.valueOf(p[10]),
+                    textGap = p[11].takeIf { it.isNotEmpty() }?.toInt()?.coerceIn(TEXT_GAP),
                 )
             }.getOrDefault(default)
         }
