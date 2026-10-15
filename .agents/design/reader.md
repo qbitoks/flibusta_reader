@@ -94,8 +94,10 @@
   Use identical Literata samples and accessible palette names. Resolve light/dark variants from appearance, including Android Auto.
   Keep typography unchanged when selecting a palette; preserve independent tone/contrast and inheritance of untouched controls. Omit custom/add/edit tiles and background circles.
 - Keep two tabs: Basic («Основные») and Advanced («Дополнительно»), with independent scrolling and a pinned preview.
-  In Basic, omit group headings: brightness, appearance with rotation icon, palettes/size, then turning.
-  Brightness Auto follows the device and disables its slider; manual takeover starts at the current device value.
+  In Basic, use `SettingsGroupHeader` sections: Theme (palette tiles with names under them, accent ring on the selected one;
+  appearance segments), Text (size slider framed by small/large «A»), Screen (brightness, rotation-lock toggle), Turning.
+  Palette changes cross-fade the preview (~220 ms) and give a light haptic tick.
+  Brightness Auto (accent-tinted capsule when on) follows the device and disables its slider; manual takeover starts at the current device value.
 - Start Advanced with upper/lower line cards, then the font card (one scrolling row of «Аа» tiles in each font, bold as a «Ж» toggle in its group header), visible spacing cards with collapsed details, then the tone/contrast card.
   Preserve local line disclosures; keep Advanced card expansion across tab changes. Collapsing never changes settings.
 - Use `ReaderStyle` for factory typography and `TextSet.DEFAULT` for settings; ignore obsolete linked-text settings without migration.

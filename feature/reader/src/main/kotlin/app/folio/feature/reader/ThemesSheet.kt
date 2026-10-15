@@ -1,5 +1,7 @@
 package app.folio.feature.reader
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -80,7 +82,7 @@ internal fun ReadingSettingsSheet(
     val scrollStates = List(2) { rememberScrollState() }
     val c = Folio.colors
     val settings = editor.settings
-    val palette = readerPalette(settings)
+    val palette = animatedPalette(readerPalette(settings))
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(
         usePlatformDefaultWidth = false, dismissOnClickOutside = false, decorFitsSystemWindows = false,
     )) {
@@ -163,4 +165,12 @@ private fun SettingsTabs(selected: Int, onSelect: (Int) -> Unit) {
             }
         }
     }
+}
+
+/** Theme switches cross-fade the preview instead of snapping. */
+@Composable
+private fun animatedPalette(target: ReaderPalette): ReaderPalette {
+    @Composable fun Color.animated() = animateColorAsState(this, tween(220), label = "palette").value
+    return target.copy(background = target.background.animated(), text = target.text.animated(),
+        secondary = target.secondary.animated(), chrome = target.chrome.animated())
 }

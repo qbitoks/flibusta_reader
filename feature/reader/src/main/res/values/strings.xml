@@ -254,4 +254,7 @@
     <string name="tone_night">Night</string>
     <string name="tone_cool">Cool</string>
     <string name="tone_custom">Custom</string>
+    <string name="settings_basic_theme">Theme</string>
+    <string name="settings_basic_text">Text</string>
+    <string name="settings_basic_screen">Screen</string>
 </resources>

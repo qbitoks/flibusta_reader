@@ -262,4 +262,7 @@
     <string name="tone_night">Ночной</string>
     <string name="tone_cool">Холодный</string>
     <string name="tone_custom">Свой</string>
+    <string name="settings_basic_theme">Тема</string>
+    <string name="settings_basic_text">Текст</string>
+    <string name="settings_basic_screen">Экран</string>
 </resources>
