@@ -43,6 +43,14 @@ internal fun ReaderPalette.control(): Color = controlColor()
 internal fun ReaderPalette.menuCapsule(): Color = capsuleColor()
 internal val BookmarkRed = Color(0xFFFF3B30)
 
+/** Red ribbon in the page corner; a tap removes the bookmark. */
+@Composable
+internal fun BookmarkRibbon(modifier: Modifier, onRemove: () -> Unit) {
+    Box(modifier.size(48.dp).clickable(role = Role.Button, onClick = onRemove), contentAlignment = Alignment.Center) {
+        Icon(Icons.Rounded.Bookmark, stringResource(R.string.reader_remove_bookmark), tint = BookmarkRed, modifier = Modifier.size(26.dp))
+    }
+}
+
 @Composable
 internal fun BoxScope.ReaderChrome(
     vm: ReaderViewModel,
@@ -90,11 +98,9 @@ internal fun BoxScope.ReaderChrome(
             )
         }
     }
-    if (state.bookmarked && !controls.chromeVisible) {
-        Box(Modifier.align(Alignment.TopEnd).padding(top = layout.topInset, end = 16.dp)
-            .size(48.dp).clickable(role = Role.Button) { vm.toggleBookmark() }, contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.Bookmark, stringResource(R.string.reader_remove_bookmark), tint = BookmarkRed, modifier = Modifier.size(26.dp))
-        }
+    // Paged mode draws the ribbon on each page (ReaderPages); scroll has no page to carry it.
+    if (scroll && state.bookmarked && !controls.chromeVisible) {
+        BookmarkRibbon(Modifier.align(Alignment.TopEnd).padding(top = layout.topInset, end = 16.dp)) { vm.toggleBookmark() }
     }
     AnimatedVisibility(controls.chromeVisible, Modifier.align(Alignment.TopCenter)
         .onSizeChanged { topPanelHeight = with(density) { it.height.toDp() } }, enter = fadeIn(tween(150)), exit = fadeOut(tween(150))) {

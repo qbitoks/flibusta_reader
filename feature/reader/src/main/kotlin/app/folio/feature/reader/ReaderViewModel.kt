@@ -489,9 +489,16 @@ class ReaderViewModel @Inject constructor(
 
     // --- Bookmarks ---
 
-    private fun currentRange(): Pair<Position, Position?>? {
+    private fun currentRange(): Pair<Position, Position?>? = state.current?.let(::rangeOf)
+
+    /** Whether [page] holds one of [marks]; callers pass the collected list so they redraw on changes. */
+    fun isBookmarked(page: Page, marks: List<BookmarkEntity>): Boolean {
+        val (start, end) = rangeOf(PageRef(page.chapter, page.index)) ?: return false
+        return annotations.isBookmarked(marks, start, end)
+    }
+
+    private fun rangeOf(ref: PageRef): Pair<Position, Position?>? {
         val engine = engine ?: return null
-        val ref = state.current ?: return null
         val page = engine.page(ref) ?: return null
         val end = engine.nextRef(ref)?.let { next ->
             engine.page(next)?.start ?: Position(next.chapter)

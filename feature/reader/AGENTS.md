@@ -24,7 +24,7 @@
 ## Rules
 - Header/footer settings change the text insets, so they re-paginate (new `layoutGeneration`) like a font
   change. Keep the position (`ReaderViewModel.readingPosition`), never the page index.
-- Page title and footer are part of the page in paged mode (they slide with it); in scroll mode they are fixed.
+- Page title, footer and bookmark ribbon (`BookmarkRibbon`) are part of the page in paged mode (they slide with it); in scroll mode they are fixed.
 - Fade page labels when controls appear; retain their chosen text format and fixed margins. Keep visibility out of pagination inputs.
 - Draw lines through `headerLook`/`footerLook` and `settings.shownFooter`; `textInsets` owns the space they take.
 - Count remaining pages from TOC ranges, not parser chapters; leave unknown counts and pre-TOC text unlabeled.

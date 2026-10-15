@@ -1,6 +1,7 @@
 package app.folio.feature.reader
 
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -64,6 +65,7 @@ internal fun BoxScope.ReaderPages(
     val headerLook = headerLook(settings, palette)
     val footerLook = footerLook(settings, palette)
     val guideOn = settings.guideLine && !scroll
+    val bookmarks by vm.bookmarks.collectAsStateWithLifecycle()
     // Dimming stays while controls show, only lighter, so opening them never flashes the page.
     val guideFade = settings.guideDim.fade * if (controls.chromeVisible) 0.5f else 1f
     val headerAlpha by animateFloatAsState(if (marks) 0f else 1f, tween(150), label = "pageHeader")
@@ -161,6 +163,10 @@ internal fun BoxScope.ReaderPages(
                             headerLook.text(title), palette, Modifier.align(Alignment.TopCenter).padding(top = headerY).alpha(headerAlpha),
                             headerLook.titleMargin(24.dp, margin), headerLook,
                         )
+                    }
+                    // The ribbon is on the page too, so it leaves and arrives with the page it marks.
+                    if (page != null && !controls.chromeVisible && vm.isBookmarked(page, bookmarks)) {
+                        BookmarkRibbon(Modifier.align(Alignment.TopEnd).padding(top = layout.topInset, end = 16.dp)) { vm.toggleBookmark() }
                     }
                     if (!footer.isEmpty && page != null) {
                         PageFooterBar(
