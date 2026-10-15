@@ -20,9 +20,9 @@ object PageTurnIcons {
         icon("Curl", "M7,3H17Q19,3 19,5V14L13,21H7Q5,21 5,19V5Q5,3 7,3Z", "M19,14H15Q13,14 13,16V21")
     }
 
-    /** «Быстрое выцветание»: a page fading into the next one. */
-    val Fade: ImageVector by lazy {
-        icon("Fade", "M12,7H18Q20,7 20,9V19Q20,21 18,21H12Q10,21 10,19V9Q10,7 12,7Z", faint = "M6,3H12Q14,3 14,5V7M10,17H6Q4,17 4,15V5Q4,3 6,3")
+    /** «Без анимации»: a page with a lightning bolt, replaced at once. */
+    val Instant: ImageVector by lazy {
+        icon("Instant", "M7,3H17Q19,3 19,5V19Q19,21 17,21H7Q5,21 5,19V5Q5,3 7,3Z", "M13,7L9.5,12.5H14.5L11,17")
     }
 
     /** «Прокрутка»: a page of lines with a vertical arrow. */

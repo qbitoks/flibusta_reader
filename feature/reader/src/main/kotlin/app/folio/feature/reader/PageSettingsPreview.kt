@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -33,34 +34,23 @@ import app.folio.core.model.Chapter
 import app.folio.core.model.TextKind
 import java.io.File
 
-/** What the preview shows: a bounded excerpt, the titles and the page numbers of its lines. */
+/** What the preview shows: a bounded excerpt, the titles and the page numbers of its first page. */
 internal class PreviewSource(
     val blocks: List<Block>,
     val title: String,
     val chapterTitle: String?,
-    val page: Int?,
-    val total: Int?,
+    val page: Int,
+    val total: Int,
     val progress: Float,
-    val pagesLeft: Int?,
+    val pagesLeft: Int,
     val language: String?,
     val imageFile: (String) -> File,
 )
 
-/** The book's own lines over the sample text: the text stays the same in every book. */
-@Composable
-internal fun bookPreviewSource(vm: ReaderViewModel): PreviewSource {
-    val blocks = previewSampleBlocks()
-    val state = vm.state
-    // Each settings change re-paginates and briefly clears the page numbers; keep the last known ones
-    // so the footer doesn't flash the percent fallback.
-    val numbers = remember { mutableStateOf<Triple<Int?, Int?, Int?>>(Triple(null, null, null)) }
-    if (state.globalPage != null && state.totalPages != null) numbers.value = Triple(state.globalPage, state.totalPages, state.pagesLeftInChapter)
-    val (page, total, left) = numbers.value
-    return PreviewSource(blocks, state.title, state.chapterTitle, page, total, state.progress,
-        left, null, vm::imageFile)
-}
-
-/** A neutral sample for the shared settings, edited outside any book. */
+/**
+ * A neutral sample, also inside a book: the book's numbers change with every re-pagination and made the
+ * preview and the footer capsules flicker.
+ */
 @Composable
 internal fun samplePreviewSource(): PreviewSource {
     val blocks = previewSampleBlocks()
@@ -88,7 +78,8 @@ private fun previewSampleBlocks(): List<Block> {
 /**
  * Fixed, readable excerpt using the book renderer; pagination here never updates the reading viewport.
  * The lines lie over the text as in the reader, so with «Прокрутка» the excerpt scrolls under them
- * and shows «Под строкой при прокрутке».
+ * and shows «Под строкой при прокрутке». Paged modes turn the excerpt's pages by swipe with the chosen
+ * animation; taps stay inert.
  */
 @Composable
 internal fun PageSettingsPreview(
@@ -112,6 +103,10 @@ internal fun PageSettingsPreview(
         { resources.getQuantityString(R.plurals.footer_left_in_chapter, it, it) },
         stringResource(R.string.reader_chapter_end),
     )
+    // The excerpt's n-th page counts on from the source's numbers, never from the book.
+    fun footerOf(n: Int) = footerLook.text(footerCenter(footer, source.page + n, source.total,
+        source.progress + n.toFloat() / source.total, (source.pagesLeft - n).coerceAtLeast(1), words,
+        readerChromeSeparator(settings.chromeStyles.footer)))
     val description = stringResource(R.string.settings_page_preview)
     val scroll = settings.pageTurn == PageTurn.Scroll
     val scrollInsets = textInsets(settings, lineLabelHeight(headerLook), lineLabelHeight(footerLook))
@@ -122,9 +117,9 @@ internal fun PageSettingsPreview(
         .semantics { contentDescription = description }) {
         val margin = settings.style.horizontalMargin(maxWidth.value).dp
         if (scroll) {
-            PreviewText(chapter, source, settings, palette, true,
-                PaddingValues(start = margin, end = margin, top = scrollInsets.first, bottom = scrollInsets.second),
-                Modifier.fillMaxSize())
+            val padding = PaddingValues(start = margin, end = margin, top = scrollInsets.first, bottom = scrollInsets.second)
+            val (pages, ink) = previewPages(chapter, source, settings, palette, padding, maxWidth, maxHeight)
+            ScrollText(pages, ink, source, settings, palette, padding)
             if (header != null) ReaderLineBlock(true, headerLook, margin,
                 Modifier.align(Alignment.TopCenter)) {
                 BlockTitle(header, headerLook, headerLook.titleMargin(24.dp, margin))
@@ -132,8 +127,7 @@ internal fun PageSettingsPreview(
             if (!footer.isEmpty) ReaderLineBlock(false, footerLook, margin,
                 Modifier.align(Alignment.BottomCenter)) {
                 PageFooterBar(
-                    center = footerLook.text(footerCenter(footer, source.page, source.total, source.progress, source.pagesLeft, words,
-                        readerChromeSeparator(settings.chromeStyles.footer))),
+                    center = footerOf(0),
                     clock = clock, battery = battery, palette = palette, textStyle = footerLook.style,
                     spread = footerLook.layout.align == LineAlign.Spread,
                     modifier = Modifier.padding(horizontal = margin),
@@ -141,44 +135,73 @@ internal fun PageSettingsPreview(
             }
             return@BoxWithConstraints
         }
-        PreviewText(chapter, source, settings, palette, scroll, PaddingValues(start = margin, end = margin, top = headerHeight, bottom = footerHeight),
-            Modifier.fillMaxSize())
+        val padding = PaddingValues(start = margin, end = margin, top = headerHeight, bottom = footerHeight)
+        val (pages, ink) = previewPages(chapter, source, settings, palette, padding, maxWidth, maxHeight)
+        // Stays on its page across re-paginations while that page still exists.
+        var index by remember { mutableIntStateOf(0) }
+        val last = (pages.size - 1).coerceAtLeast(0)
+        val shown = index.coerceIn(0, last)
         // «Отступ сверху/снизу» move a line from the edge, «Отступ до текста» from the text; negatives shrink the default gap.
         val headerLayout = settings.shownHeaderLayout
         val footerLayout = settings.shownFooterLayout
-        Column(Modifier.align(Alignment.TopCenter).fillMaxWidth()
-            .onSizeChanged { headerHeight = with(density) { it.height.toDp() } }) {
-            Spacer(Modifier.height(10.dp))
-            if (header != null) {
-                Spacer(Modifier.height(headerLayout.edge.coerceAtLeast(0).dp))
-                Text(headerLook.text(header), style = headerLook.style, modifier = Modifier.fillMaxWidth().padding(horizontal = margin, vertical = 4.dp),
-                    textAlign = headerLook.textAlign, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (headerLook.layout.rule) LineRule(headerLook.ruleColor, Modifier.padding(horizontal = margin, vertical = 2.dp))
-                Spacer(Modifier.height((12 + headerLayout.gap).coerceAtLeast(0).dp))
+        HorizontalPageTurner(
+            current = pages.getOrNull(shown),
+            prev = pages.getOrNull(shown - 1),
+            next = pages.getOrNull(shown + 1),
+            canPrev = shown > 0,
+            canNext = shown < last,
+            mode = when {
+                settings.pageTurn == PageTurn.Fade -> TurnMode.None
+                settings.pageTurn == PageTurn.Curl && PageCurl.supported -> TurnMode.Curl
+                else -> TurnMode.Slide
+            },
+            onNext = { (shown < last).also { if (it) index = shown + 1 } },
+            onPrev = { (shown > 0).also { if (it) index = shown - 1 } },
+            onTap = { _, _ -> TapAction.Handled },
+            onDragStart = {},
+            onSwipeDown = {},
+            pageColor = palette.background,
+            pageCorner = 16.dp,
+            modifier = Modifier.fillMaxSize(),
+        ) { page ->
+            // Title and page number belong to the page and slide with it, as in the reader.
+            val n = pages.indexOf(page).coerceAtLeast(0)
+            Box(Modifier.fillMaxSize().background(palette.background)) {
+                PageView(page, ink, palette, null, source.imageFile, Modifier.fillMaxSize().padding(padding).clipToBounds())
+                Column(Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                    .onSizeChanged { headerHeight = with(density) { it.height.toDp() } }) {
+                    Spacer(Modifier.height(10.dp))
+                    if (header != null) {
+                        Spacer(Modifier.height(headerLayout.edge.coerceAtLeast(0).dp))
+                        Text(headerLook.text(header), style = headerLook.style, modifier = Modifier.fillMaxWidth().padding(horizontal = margin, vertical = 4.dp),
+                            textAlign = headerLook.textAlign, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        if (headerLook.layout.rule) LineRule(headerLook.ruleColor, Modifier.padding(horizontal = margin, vertical = 2.dp))
+                        Spacer(Modifier.height((12 + headerLayout.gap).coerceAtLeast(0).dp))
+                    }
+                }
+                Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    .onSizeChanged { footerHeight = with(density) { it.height.toDp() } }) {
+                    if (!footer.isEmpty) {
+                        Spacer(Modifier.height((12 + footerLayout.gap).coerceAtLeast(0).dp))
+                        PageFooterBar(
+                            center = footerOf(n),
+                            clock = clock, battery = battery, palette = palette, textStyle = footerLook.style,
+                            spread = footerLook.layout.align == LineAlign.Spread,
+                            rule = footerLook.ruleColor.takeIf { footerLook.layout.rule },
+                            modifier = Modifier.padding(horizontal = margin, vertical = 5.dp),
+                        )
+                        Spacer(Modifier.height(footerLayout.edge.coerceAtLeast(0).dp + 10.dp))
+                    } else Spacer(Modifier.height(10.dp))
+                }
             }
-        }
-        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-            .onSizeChanged { footerHeight = with(density) { it.height.toDp() } }) {
-            if (!footer.isEmpty) {
-                Spacer(Modifier.height((12 + footerLayout.gap).coerceAtLeast(0).dp))
-                PageFooterBar(
-                    center = footerLook.text(footerCenter(footer, source.page, source.total, source.progress, source.pagesLeft, words,
-                        readerChromeSeparator(settings.chromeStyles.footer))),
-                    clock = clock, battery = battery, palette = palette, textStyle = footerLook.style,
-                    spread = footerLook.layout.align == LineAlign.Spread,
-                    rule = footerLook.ruleColor.takeIf { footerLook.layout.rule },
-                    modifier = Modifier.padding(horizontal = margin, vertical = 5.dp),
-                )
-                Spacer(Modifier.height(footerLayout.edge.coerceAtLeast(0).dp + 10.dp))
-            } else Spacer(Modifier.height(10.dp))
         }
     }
 }
 
-/** One page of the excerpt between the lines, or with «Прокрутка» all of it, scrolling under them. */
+/** The excerpt's pages for the text area inside [padding]; the previous pages stay until the new ones are ready. */
 @Composable
-private fun PreviewText(chapter: Chapter, source: PreviewSource, settings: ReaderSettings, palette: ReaderPalette,
-                        scroll: Boolean, padding: PaddingValues, modifier: Modifier) {
+private fun previewPages(chapter: Chapter, source: PreviewSource, settings: ReaderSettings, palette: ReaderPalette,
+                         padding: PaddingValues, maxWidth: Dp, maxHeight: Dp): Pair<List<Page>, Ink> {
     val context = LocalContext.current
     val typefaces = remember(context) { ResourceTypefaceProvider(context) }
     val density = LocalDensity.current
@@ -188,30 +211,32 @@ private fun PreviewText(chapter: Chapter, source: PreviewSource, settings: Reade
         ink.secondary = palette.secondary.toArgb()
         ink.link = palette.link.toArgb()
     }
-    BoxWithConstraints(modifier) {
-        val width = with(density) { (maxWidth - padding.calculateStartPadding(LayoutDirection.Ltr) - padding.calculateEndPadding(LayoutDirection.Ltr)).roundToPx() }.coerceAtLeast(1)
-        val height = with(density) { (maxHeight - padding.calculateTopPadding() - padding.calculateBottomPadding()).roundToPx() }.coerceAtLeast(1)
-        val spec = LayoutSpec(settings.style, width, height, density.density, density.fontScale, source.language)
-        val pages by produceState(emptyList<Page>(), chapter, spec) {
-            value = withContext(Dispatchers.Default) {
-                Paginator(spec, typefaces, ImageSizer { null }, ink).paginate(0, chapter).pages
-            }
+    val width = with(density) { (maxWidth - padding.calculateStartPadding(LayoutDirection.Ltr) - padding.calculateEndPadding(LayoutDirection.Ltr)).roundToPx() }.coerceAtLeast(1)
+    val height = with(density) { (maxHeight - padding.calculateTopPadding() - padding.calculateBottomPadding()).roundToPx() }.coerceAtLeast(1)
+    val spec = LayoutSpec(settings.style, width, height, density.density, density.fontScale, source.language)
+    val pages by produceState(emptyList<Page>(), chapter, spec) {
+        value = withContext(Dispatchers.Default) {
+            Paginator(spec, typefaces, ImageSizer { null }, ink).paginate(0, chapter).pages
         }
-        if (!scroll) {
-            PageView(pages.firstOrNull(), ink, palette, null, source.imageFile, Modifier.fillMaxSize().padding(padding).clipToBounds())
-            return@BoxWithConstraints
-        }
-        val footer = settings.shownFooter
-        val top = settings.scrollHeaderBoundary.takeUnless { settings.header == PageHeader.None } ?: FooterStyle.None
-        val bottom = settings.scrollFooterBoundary.takeUnless { footer.isEmpty } ?: FooterStyle.None
-        Column(Modifier.fillMaxSize()
-            .scrollEdges(top, padding.calculateTopPadding(), bottom, padding.calculateBottomPadding())
-            .verticalScroll(rememberScrollState())
-            .padding(padding)) {
-            pages.forEach { page ->
-                PageView(page, ink, palette, null, source.imageFile,
-                    Modifier.fillMaxWidth().height(with(density) { (page.lead + page.contentHeight()).toDp() }).padding(top = with(density) { page.lead.toDp() }))
-            }
+    }
+    return pages to ink
+}
+
+/** With «Прокрутка» all of the excerpt, scrolling under the lines. */
+@Composable
+private fun ScrollText(pages: List<Page>, ink: Ink, source: PreviewSource, settings: ReaderSettings,
+                       palette: ReaderPalette, padding: PaddingValues) {
+    val density = LocalDensity.current
+    val footer = settings.shownFooter
+    val top = settings.scrollHeaderBoundary.takeUnless { settings.header == PageHeader.None } ?: FooterStyle.None
+    val bottom = settings.scrollFooterBoundary.takeUnless { footer.isEmpty } ?: FooterStyle.None
+    Column(Modifier.fillMaxSize()
+        .scrollEdges(top, padding.calculateTopPadding(), bottom, padding.calculateBottomPadding())
+        .verticalScroll(rememberScrollState())
+        .padding(padding)) {
+        pages.forEach { page ->
+            PageView(page, ink, palette, null, source.imageFile,
+                Modifier.fillMaxWidth().height(with(density) { (page.lead + page.contentHeight()).toDp() }).padding(top = with(density) { page.lead.toDp() }))
         }
     }
 }

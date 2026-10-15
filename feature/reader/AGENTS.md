@@ -17,8 +17,8 @@
 
 - Use the fixed `ThemesSheet` dialog (`ReadingSettingsSheet`, also `ReadingDefaultsSheet` from the library) for
   settings; close with X/Back, never drag. Edit through `SettingsEditor`; `vm.settings` = shared + `ownSettings`.
-- Pin `PageSettingsPreview` (a `PreviewSource`) outside per-tab scrolling; use `Paginator`/`PageView` with the fixed sample text, not the book.
-- Keep preview taps inert; use tabs and manual scrolling to navigate settings. Preserve preview text scrolling.
+- Pin `PageSettingsPreview` (a `PreviewSource`) outside per-tab scrolling; use `Paginator`/`PageView` with `samplePreviewSource()`, even in a book (book numbers flicker on re-pagination).
+- Keep preview taps inert; use tabs and manual scrolling to navigate settings. Preserve scroll in «Прокрутка»; paged modes swipe through the sample using `HorizontalPageTurner`.
 - Apply settings immediately; use `SettingsSegments` (labels shrink; `SettingsOptions` only above 130 % text) for short choices, `SettingsChoice` for fonts. See `.agents/design/reader.md`.
 
 ## Rules

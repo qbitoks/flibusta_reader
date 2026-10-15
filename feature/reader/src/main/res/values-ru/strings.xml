@@ -106,7 +106,6 @@
     <string name="reader_highlights">Выделенное</string>
     <string name="reader_untitled">Без заголовка</string>
     <string name="settings_brightness">Яркость</string>
-    <string name="page_turn_fade">Быстрое выцветание</string>
     <string name="page_turn_curl">Загиб</string>
     <string name="themes_customize_title">Настройка темы</string>
     <string name="settings_layout">Универсальный доступ и макет</string>
@@ -207,7 +206,6 @@
     <string name="settings_own_header">верхняя строка</string>
     <string name="settings_own_footer">нижняя строка</string>
     <string name="settings_reset_book_text">Вернуть общее оформление</string>
-    <string name="page_turn_fade_short">Выцветание</string>
     <string name="line_custom">Свои параметры</string>
     <string name="line_size">Размер</string>
     <string name="line_opacity">Заметность</string>

@@ -42,6 +42,7 @@ import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.folio.core.layout.Page
 import kotlinx.coroutines.CoroutineScope
@@ -63,7 +64,7 @@ data class PageTurnEvent(val active: Boolean, val direction: Int = 0, val from: 
  * so turning never depends on knowing the total page count.
  *
  * @param mode «Скольжение» slides the top page over the lower one (Apple's overlay),
- *   «Быстрое выцветание» cross-fades in 100 ms (both as in Apple Books).
+ *   «Без анимации» replaces the page at once; a swipe only picks the direction.
  * @param canPrev / [canNext] whether the book goes on; the neighbouring page itself may still be
  *   laying out (a new chapter), and a turn then waits for it instead of bouncing.
  * @param onTap decides what a tap at a point means (edge zones, links, chrome toggle).
@@ -90,6 +91,8 @@ fun HorizontalPageTurner(
     onLongPressDrag: (Offset) -> Unit = {},
     modifier: Modifier = Modifier,
     onTurnEvent: (PageTurnEvent) -> Unit = {},
+    /** Corner radius of a sliding page; match the container's so the corners don't jump when the turn ends. */
+    pageCorner: Dp = 27.dp,
     content: @Composable (Page?) -> Unit,
 ) {
     /** Offset of an animation; while a finger drags, [dragOffset] is shown instead. */
@@ -97,9 +100,6 @@ fun HorizontalPageTurner(
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var dragging by remember { mutableStateOf(false) }
     var gesturing by remember { mutableStateOf(false) }
-    /** Cross-fade progress towards the page in [fadeDirection] (Fade mode only). */
-    val fade = remember { Animatable(0f) }
-    var fadeDirection by remember { mutableIntStateOf(0) }
     /** A turn is waiting for the next chapter to lay out. */
     var waiting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -194,12 +194,8 @@ fun HorizontalPageTurner(
                             ),
                         )
                     }
-                    TurnMode.Fade -> {
-                        offset.snapTo(0f)
-                        fadeDirection = direction
-                        fade.snapTo(0f)
-                        fade.animateTo(1f, tween(durationMillis = 100))
-                    }
+                    // «Без анимации»: the page is replaced at once.
+                    TurnMode.None -> offset.snapTo(0f)
                 }
             } finally {
                 withContext(NonCancellable) {
@@ -210,8 +206,6 @@ fun HorizontalPageTurner(
                         committedTo = destination
                     }
                     offset.snapTo(0f)
-                    fade.snapTo(0f)
-                    fadeDirection = 0
                     latestOnTurnEvent(PageTurnEvent(active = gesturing || dragging, direction = direction, from = origin, to = destination.takeIf { moved }))
                 }
             }
@@ -292,8 +286,8 @@ fun HorizontalPageTurner(
                     gesturing = true
                     turnJob?.cancel()
                     latestOnTurnEvent(PageTurnEvent(active = true))
-                    if (latestMode == TurnMode.Fade) {
-                        // Fade mode does not follow the finger: the swipe only picks the direction.
+                    if (latestMode == TurnMode.None) {
+                        // Without animation the page does not follow the finger: the swipe only picks the direction.
                         var dx = overSlop
                         val released = horizontalDrag(drag.id) { change ->
                             dx += change.positionChange().x
@@ -338,7 +332,7 @@ fun HorizontalPageTurner(
         // page leaves to the left over the next one; back, the previous page arrives from the left
         // over the current one. The moving page has rounded corners and a soft shadow.
         // All layers stay composed; only layer properties change per frame (no recomposition).
-        val movingShape = RoundedCornerShape(with(density) { 27.dp })
+        val movingShape = RoundedCornerShape(pageCorner)
         val shadow = with(density) { 14.dp.toPx() }
         fun Modifier.layer(block: GraphicsLayerScope.() -> Unit) = graphicsLayer(block)
 
@@ -374,17 +368,18 @@ fun HorizontalPageTurner(
                         // Lower page when going forward.
                         ROLE_NEXT -> {
                             translationX = 0f
-                            alpha = if (fadeDirection == 0 && o < 0f) 1f else 0f
+                                            alpha = if (o < 0f) 1f else 0f
                             clip = false
                             shadowElevation = 0f
                         }
                         // On top going forward, underneath going back.
                         ROLE_CURRENT -> {
                             translationX = if (o < 0f) o else 0f
-                            alpha = if (fadeDirection != 0) 1f - fade.value else 1f
+                            alpha = 1f
                             shape = movingShape
                             clip = o < 0f
-                            shadowElevation = if (o < 0f) shadow else 0f
+                            // Off the left edge the shadow would still lie over it and vanish at once; fade it out.
+                            shadowElevation = if (o < 0f) shadow * ((step + o) / (step * 0.15f)).coerceIn(0f, 1f) else 0f
                         }
                         // Previous page arrives from the left over the current one.
                         else -> {
@@ -411,13 +406,6 @@ fun HorizontalPageTurner(
                 )
             }
         }
-        // During a fade the target page is drawn in place, over the current one.
-        if (fadeDirection > 0 && next != null) {
-            Box(Modifier.fillMaxSize().graphicsLayer { alpha = fade.value }.background(pageColor)) { content(next) }
-        } else if (fadeDirection < 0 && prev != null) {
-            Box(Modifier.fillMaxSize().graphicsLayer { alpha = fade.value }.background(pageColor)) { content(prev) }
-        }
-
         // A spinner only if the next chapter takes noticeably long to lay out.
         var spinner by remember { mutableStateOf(false) }
         LaunchedEffect(waiting) {
@@ -430,7 +418,7 @@ fun HorizontalPageTurner(
     }
 }
 
-enum class TurnMode { Slide, Fade, Curl }
+enum class TurnMode { None, Slide, Curl }
 
 private const val ROLE_NEXT = 1
 private const val ROLE_CURRENT = 0

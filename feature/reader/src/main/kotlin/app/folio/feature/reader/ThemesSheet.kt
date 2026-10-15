@@ -59,7 +59,7 @@ internal fun ThemesSheet(vm: ReaderViewModel, brightness: SheetBrightness, rotat
                 onShare = { vm.shareOwnSettings(); bookScope = false },
                 onReset = { vm.resetOwnSettings(); bookScope = false })
         },
-        preview = bookPreviewSource(vm),
+        preview = samplePreviewSource(),
         brightness = brightness,
         rotation = rotation,
         onDismiss = onDismiss,

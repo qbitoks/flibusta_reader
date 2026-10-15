@@ -102,7 +102,6 @@
     <string name="reader_highlights">Highlights</string>
     <string name="reader_untitled">Untitled</string>
     <string name="settings_brightness">Brightness</string>
-    <string name="page_turn_fade">Fast Fade</string>
     <string name="page_turn_curl">Curl</string>
     <string name="themes_customize_title">Customize Theme</string>
     <string name="settings_layout">Accessibility &amp; Layout</string>
@@ -199,7 +198,6 @@
     <string name="settings_own_header">top line</string>
     <string name="settings_own_footer">bottom line</string>
     <string name="settings_reset_book_text">Use shared appearance</string>
-    <string name="page_turn_fade_short">Fade</string>
     <string name="line_custom">Custom settings</string>
     <string name="line_size">Size</string>
     <string name="line_opacity">Visibility</string>

@@ -38,12 +38,12 @@ internal fun FooterContentCapsules(editor: SettingsEditor, source: PreviewSource
         R.string.footer_clock, R.string.footer_battery).map { stringResource(it) }
     val values = listOf(
         when (footer.page) {
-            FooterPage.NumberOfTotal -> "42/300"
-            FooterPage.Percent -> stringResource(R.string.reader_percent, 7)
-            FooterPage.Number -> "42"
+            FooterPage.NumberOfTotal -> "${source.page}/${source.total}"
+            FooterPage.Percent -> stringResource(R.string.reader_percent, (source.progress * 100).toInt())
+            FooterPage.Number -> source.page.toString()
             FooterPage.None -> stringResource(R.string.header_none)
         },
-        source.pagesLeft?.let { stringResource(R.string.footer_chapter_value, it) } ?: "—",
+        stringResource(R.string.footer_chapter_value, source.pagesLeft),
         clock ?: "—",
         battery?.let { stringResource(R.string.reader_percent, it.level) } ?: "—",
     )

@@ -36,9 +36,10 @@ import kotlin.math.roundToInt
 internal fun ReaderPageTurnSettings(editor: SettingsEditor) {
     val settings = editor.settings
     val turns = buildList {
+        // Stored as Fade for saved settings: the old «Быстрое выцветание» became «Без анимации».
+        add(SegmentOption(PageTurn.Fade, stringResource(R.string.page_turn_none), icon = PageTurnIcons.Instant))
         add(SegmentOption(PageTurn.Slide, stringResource(R.string.page_turn_slide), icon = PageTurnIcons.Slide))
         if (PageCurl.supported) add(SegmentOption(PageTurn.Curl, stringResource(R.string.page_turn_curl), icon = PageTurnIcons.Curl))
-        add(SegmentOption(PageTurn.Fade, stringResource(R.string.page_turn_fade_short), stringResource(R.string.page_turn_fade), PageTurnIcons.Fade))
         add(SegmentOption(PageTurn.Scroll, stringResource(R.string.page_turn_scroll), icon = PageTurnIcons.Scroll))
     }
     GroupedCard { SettingsSegments(settings.pageTurn, turns, stacked = true) { v -> editor.edit { it.copy(pageTurn = v) } } }

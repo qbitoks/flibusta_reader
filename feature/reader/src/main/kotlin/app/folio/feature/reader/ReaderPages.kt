@@ -107,7 +107,7 @@ internal fun BoxScope.ReaderPages(
             canPrev = state.hasPrev,
             canNext = state.hasNext,
             mode = when {
-                settings.pageTurn == PageTurn.Fade -> TurnMode.Fade
+                settings.pageTurn == PageTurn.Fade -> TurnMode.None
                 settings.pageTurn == PageTurn.Curl && PageCurl.supported -> TurnMode.Curl
                 else -> TurnMode.Slide
             },

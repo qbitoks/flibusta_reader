@@ -152,7 +152,7 @@
   previous page from the left. Use overlapping pages without gaps or gray background between them.
 - While moving, round the upper page about 27 dp; add a weak right-edge shadow about 7 dp wide.
   Dim the lower page about `0.25 × coveredFraction` (23% at start, 11% midway, 3% near end).
-- For «Быстрое выцветание», crossfade about 100 ms; for «Загиб», deform from edge in both directions,
+- For «Без анимации» (stored as `PageTurn.Fade`, listed first), replace the page at once; a swipe only picks the direction; for «Загиб», deform from edge in both directions,
   with mirrored text showing through the back and a soft shadow; follow the dragging finger.
 - Keep scroll positions and page numbers consistent with paged mode, including chapter jumps and seams.
 - Treat the right-edge draggable scroll scrubber with «Глава … / с. N» bubble as a remaining reference
