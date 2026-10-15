@@ -62,7 +62,7 @@ internal fun BoxScope.ReaderPages(
     val headerLook = headerLook(settings, palette)
     val footerLook = footerLook(settings, palette)
     val footerStart = if (settings.guideLine && !scroll) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
-    val footerEnd = if (state.bookmarked) (74.dp - margin).coerceAtLeast(0.dp) else 0.dp
+    val footerEnd = 0.dp
     val headerAlpha by animateFloatAsState(if (marks) 0f else 1f, tween(150), label = "pageHeader")
     val footerAlpha by animateFloatAsState(if (controls.chromeVisible) 0f else 1f, tween(150), label = "pageFooter")
     when {
@@ -90,7 +90,6 @@ internal fun BoxScope.ReaderPages(
             onLongPressDrag = interaction.extendSelection,
             onScrollStart = {
                 controls.chromeVisible = false
-                controls.menuVisible = false
                 vm.select(null)
                 controls.activeHighlight = null
             },
@@ -118,7 +117,6 @@ internal fun BoxScope.ReaderPages(
             onTurnEvent = interaction.onTurnEvent,
             onDragStart = {
                 controls.chromeVisible = false
-                controls.menuVisible = false
                 vm.clearHighlight()
                 vm.select(null)
                 controls.activeHighlight = null

@@ -6,7 +6,7 @@
 - `ReaderRoute`, `ReaderScreen` — appearance, ink, lifecycle and screen composition; `ReaderControls` — local/saveable UI state.
 - `ReaderSurface` — viewport, insets, guide geometry and layer order; `ReaderPages` — paged/scroll rendering.
 - `readerInteractions` — tap targets, tap zones, long-press selection; `ReaderSelectionOverlays` — selection, notes, palette.
-- `ReaderChrome` — fixed controls, history, footer; `ReaderMenu` — capsules/buttons; `ReaderSheets` — sheet dispatch.
+- `ReaderChrome` — overlays and page labels; `ReaderToolbar` / `ReaderNavigationPanel` — controls; `ReaderSheets` — sheets.
 - `WindowEffects`, `ImmersiveMode`, `ReadingSessionEffect` — orientation, brightness, bars, session lifecycle.
 - `ReaderViewModel` — snapshot `state`, `PaginationEngine`, navigation/history, eager flows and coroutine scope.
 - `ReaderSearch` / `searchBook` — search job/state, normalization and snippets; `ReaderAnnotations` — range/text and persistence.
@@ -28,9 +28,9 @@
 - Fade page labels when controls appear; retain their chosen text format and fixed margins. Keep visibility out of pagination inputs.
 - Draw lines through `headerLook`/`footerLook` and `settings.shownFooter`; `textInsets` owns the space they take.
 - Count remaining pages from TOC ranges, not parser chapters; leave unknown counts and pre-TOC text unlabeled.
-- Hide the guide during turns; apply direction only to an actual landing. Keep footer taps ahead of guide stepping.
-- Pure logic goes into small top-level functions with tests in `src/test` (`ReaderGesturesTest` is the example).
-- Search example: `feature/reader/src/test/kotlin/app/folio/feature/reader/ReaderSearchTest.kt`.
+- Count history expiry only on reading landings; keep history in `ReaderPositionSheet`. Hide guide during turns; use actual landings.
+- Keep plain visible-control taps inert except dismissal; preserve target/selection priority. See `.agents/design/reader.md`.
+- Test pure gestures/progress in `ReaderGesturesTest` / `ReaderProgressTest`; search example: `feature/reader/src/test/kotlin/app/folio/feature/reader/ReaderSearchTest.kt`.
 - Keep reader overlays and window brightness in `ReaderControls`; keep settings tab/scroll state in `ThemesSheet`.
 - Keep annotation flows and `viewModelScope.launch` in the ViewModel; helpers must preserve persistence order and read timing.
 - Tests: `./gradlew.bat :feature:reader:testDebugUnitTest --console=plain`.

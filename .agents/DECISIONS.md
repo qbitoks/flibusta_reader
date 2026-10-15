@@ -54,3 +54,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-15 | reader settings | Supersede footer format menu with tap cycle; use segment styling and stable width-based wrapping | user correction
 2026-10-15 | reader settings | Add slot copies current theme; saved custom swatch has pencil; delete returns to last standard | user-approved design
 2026-10-15 | reader settings | Remove deletion Undo and bottom scope explanation from Appearance | user correction
+2026-10-15 | reader | Replace floating menu with top/bottom overlay panels and release-only scrubber; visible-control taps only dismiss | user-approved design; supersedes edge-tap dismissal+turn
+2026-10-15 | reader history | Keep arrows beside tappable percent for five reading pages; remove floating return, retain history in position sheet | user correction

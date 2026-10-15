@@ -13,7 +13,7 @@ import java.io.File
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.MutableState
 
-internal enum class ReaderSheet { Contents, Bookmarks, Search, Themes }
+internal enum class ReaderSheet { Contents, Bookmarks, Search, Themes, Position }
 
 /** Screen-local overlays; window preferences are saveable. */
 @Stable
@@ -25,7 +25,6 @@ internal class ReaderControls(
     var chromeVisible by chromeVisible
     var rotationLocked by rotationLocked
     var brightness by brightness
-    var menuVisible by mutableStateOf(false)
     var sheet by mutableStateOf<ReaderSheet?>(null)
     var note by mutableStateOf<List<Block>?>(null)
     var image by mutableStateOf<File?>(null)

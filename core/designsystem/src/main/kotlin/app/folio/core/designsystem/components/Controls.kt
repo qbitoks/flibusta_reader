@@ -96,12 +96,14 @@ fun IosSlider(
     onValueChangeFinished: () -> Unit = {},
     contentDescription: String? = null,
     enabled: Boolean = true,
+    onValueChangeCancelled: () -> Unit = {},
 ) {
     val c = Folio.colors
     val density = LocalDensity.current
     val latestValue by rememberUpdatedState(value)
     val changeValue by rememberUpdatedState(onValueChange)
     val finishChange by rememberUpdatedState(onValueChangeFinished)
+    val cancelChange by rememberUpdatedState(onValueChangeCancelled)
     val span = valueRange.endInclusive - valueRange.start
     fun snap(v: Float): Float {
         val clamped = v.coerceIn(valueRange.start, valueRange.endInclusive)
@@ -140,19 +142,24 @@ fun IosSlider(
                             changeValue(next)
                         }
                     }
-                    update(down.position.x)
-                    // Own both axes until release, including pauses and movement outside the track.
-                    // Otherwise the surrounding scroll container can take over this same touch.
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                        if (change.isConsumed) break
-                        update(change.position.x)
-                        event.changes.forEach { it.consume() }
-                        if (!change.pressed) {
-                            finishChange()
-                            break
+                    var released = false
+                    try {
+                        update(down.position.x)
+                        // Own both axes until release, including movement outside the track.
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (change.isConsumed) break
+                            update(change.position.x)
+                            event.changes.forEach { it.consume() }
+                            if (!change.pressed) {
+                                released = true
+                                finishChange()
+                                break
+                            }
                         }
+                    } finally {
+                        if (!released) cancelChange()
                     }
                 }
             }

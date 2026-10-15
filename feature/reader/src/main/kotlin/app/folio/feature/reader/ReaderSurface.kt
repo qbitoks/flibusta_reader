@@ -1,9 +1,9 @@
 package app.folio.feature.reader
 
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,10 +26,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import app.folio.core.data.db.HighlightEntity
 import app.folio.core.data.settings.PageTurn
-import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
 import app.folio.core.designsystem.ReaderPalette
+import app.folio.core.designsystem.components.GlassScope
 import app.folio.core.layout.PageRenderer
 import app.folio.core.layout.Mark
 import app.folio.core.layout.MarkStyle
@@ -78,16 +75,6 @@ internal fun ReaderSurface(
         if (settings.pageTurn == PageTurn.Scroll) lineLabelHeight(footerLook(settings, palette)) else with(density) { footerStyle.lineHeight.toDp() })
     val padding = PaddingValues(start = margin, end = margin, top = topInset + topSpace, bottom = bottomInset + bottomSpace)
 
-    // «↶» shows by itself for a moment after a jump, until the first page turn; otherwise only with the controls.
-    var backFlash by remember { mutableStateOf(false) }
-    LaunchedEffect(vm.landedJumps) {
-        if (vm.landedJumps == 0) return@LaunchedEffect
-        val landed = vm.state.current
-        backFlash = true
-        withTimeoutOrNull(3000) { snapshotFlow { vm.state.current }.first { it != landed } }
-        backFlash = false
-    }
-
     val clock by rememberClock(footer.clock)
     val battery by rememberBattery(footer.battery)
     val footerWords = FooterWords(
@@ -96,6 +83,7 @@ internal fun ReaderSurface(
         pagesLeft = { context.resources.getQuantityString(R.plurals.footer_left_in_chapter, it, it) },
         chapterEnd = stringResource(R.string.reader_chapter_end),
     )
+    GlassScope { source ->
     BoxWithConstraints(Modifier.fillMaxSize().background(palette.background)) {
         val widthPx = constraints.maxWidth
         val heightPx = constraints.maxHeight
@@ -108,7 +96,7 @@ internal fun ReaderSurface(
         }
         val scroll = settings.pageTurn == PageTurn.Scroll
         val guideOn = settings.guideLine && !scroll
-        val marks = controls.chromeVisible || backFlash
+        val marks = controls.chromeVisible
         val guideLines = remember(state.page, guideOn) { state.page?.takeIf { guideOn }?.let(PageRenderer::lines).orEmpty() }
         val jumpId = vm.scrollJump?.id ?: 0
         val guide = controls.guide.landed(state.current, state.layoutGeneration, guideLines.size, jumpId = jumpId)
@@ -153,12 +141,16 @@ internal fun ReaderSurface(
                 )
             }
         }
-        ReaderPages(vm, settings, palette, controls, layout, savedMarks, highlights, marks, interaction, locator, footerWords, clock, battery, onClose)
-        guidePlate?.takeUnless { controls.guideMoving }?.let {
+        Box(Modifier.fillMaxSize().then(source)) {
+            ReaderPages(vm, settings, palette, controls, layout, savedMarks, highlights, marks, interaction, locator, footerWords, clock, battery, onClose)
+        }
+        guidePlate?.takeUnless { controls.guideMoving || controls.chromeVisible }?.let {
             val textArea = Rect(0f, contentTop, widthPx.toFloat(), heightPx - with(density) { padding.calculateBottomPadding().toPx() })
             GuideLineOverlay(it, textArea, settings.guideDim.fade, palette)
         }
         ReaderSelectionOverlays(vm, settings, palette, controls, layout, highlights, locator)
-        ReaderChrome(vm, settings, palette, controls, layout, fragments, marks, footerWords, clock, battery, onClose, interaction.onFooterTap)
+        ReaderChrome(vm, settings, palette, controls, layout, fragments, marks, footerWords, clock, battery, onClose, interaction.onFooterTap,
+            compact = maxHeight < 500.dp, screenHeight = maxHeight)
+    }
     }
 }

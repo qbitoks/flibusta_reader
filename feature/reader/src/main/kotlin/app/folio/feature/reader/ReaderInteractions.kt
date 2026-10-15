@@ -44,7 +44,6 @@ internal fun readerInteractions(
     val currentGuideLines by rememberUpdatedState(guideLines)
     /** Long press at [local] (content-box coordinates of [page]) selects the word there. */
     fun startSelection(page: Page, local: Offset): Boolean {
-        if (controls.menuVisible) return false
         val word = PageRenderer.wordAt(page, local.x, local.y) ?: return false
         anchor = word
         controls.focusPage = page
@@ -74,10 +73,6 @@ internal fun readerInteractions(
 
     /** A tap that closes what is open or opens what is under it ([local]: content box of [page]); false if it did neither. */
     fun tapOnPage(page: Page?, local: Offset): Boolean {
-        if (controls.menuVisible) {
-            controls.menuVisible = false
-            return true
-        }
         if (vm.selection != null || controls.activeHighlight != null) {
             vm.select(null)
             controls.activeHighlight = null
@@ -94,6 +89,10 @@ internal fun readerInteractions(
 
     fun onTap(offset: Offset, width: Float): TapAction {
         if (tapOnPage(vm.state.page, offset - contentOrigin)) return TapAction.Handled
+        if (controls.chromeVisible) {
+            controls.chromeVisible = false
+            return TapAction.ToggleChrome
+        }
         val plate = currentGuidePlate
         if (plate != null) {
             // With the guide line on, a tap on the right half steps it down a line and on the left half
@@ -106,8 +105,8 @@ internal fun readerInteractions(
                 }
             }
         }
-        // Outer thirds turn the page (and put the controls away); the middle toggles them.
-        return when (tapZone(offset.x, width)) {
+        // Visible controls consume a plain tap before guide stepping or page turning.
+        return when (tapZone(offset.x, width, controls.chromeVisible)) {
             -1 -> { controls.chromeVisible = false; TapAction.Prev }
             1 -> { controls.chromeVisible = false; TapAction.Next }
             else -> {

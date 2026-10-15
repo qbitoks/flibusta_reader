@@ -36,10 +36,11 @@ import app.folio.core.designsystem.components.*
 
 /** Window brightness controls; only the reader has a window to brighten. */
 internal class SheetBrightness(val value: Float, val onChange: (Float) -> Unit)
+internal class SheetRotation(val locked: Boolean, val onChange: (Boolean) -> Unit)
 
 /** «Темы и настройки» in a book: the book's own settings or the shared ones, chosen under the title. */
 @Composable
-internal fun ThemesSheet(vm: ReaderViewModel, brightness: SheetBrightness, onDismiss: () -> Unit) {
+internal fun ThemesSheet(vm: ReaderViewModel, brightness: SheetBrightness, rotation: SheetRotation, onDismiss: () -> Unit) {
     val shared by vm.sharedSettings.collectAsStateWithLifecycle()
     val effective by vm.settings.collectAsStateWithLifecycle()
     val own by vm.ownSettings.collectAsStateWithLifecycle()
@@ -58,6 +59,10 @@ internal fun ThemesSheet(vm: ReaderViewModel, brightness: SheetBrightness, onDis
         },
         preview = bookPreviewSource(vm),
         brightness = brightness,
+        pageExtra = {
+            SettingsGroupHeader(stringResource(R.string.reader_screen))
+            GroupedCard { SettingsToggle(stringResource(R.string.reader_rotation_lock), rotation.locked, rotation.onChange) }
+        },
         onDismiss = onDismiss,
     )
 }
@@ -71,6 +76,7 @@ internal fun ReadingSettingsSheet(
     preview: PreviewSource,
     brightness: SheetBrightness?,
     onDismiss: () -> Unit,
+    pageExtra: @Composable () -> Unit = {},
 ) {
     var section by rememberSaveable { mutableIntStateOf(0) }
     val scrollStates = List(2) { rememberScrollState() }
@@ -106,7 +112,10 @@ internal fun ReadingSettingsSheet(
                         Column(Modifier.weight(1f).verticalScroll(scrollStates[section], overscrollEffect = null).padding(bottom = 24.dp)) {
                             when (section) {
                                 0 -> ReaderAppearanceSettings(editor, brightness)
-                                1 -> ReaderPageSettings(editor, preview)
+                                1 -> {
+                                    ReaderPageSettings(editor, preview)
+                                    pageExtra()
+                                }
                             }
                         }
                     }

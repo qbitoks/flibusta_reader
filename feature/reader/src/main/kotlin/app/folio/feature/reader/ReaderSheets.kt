@@ -8,6 +8,7 @@ import app.folio.core.data.settings.ReaderSettings
 @Composable
 internal fun ReaderSheets(vm: ReaderViewModel, settings: ReaderSettings, palette: ReaderPalette, controls: ReaderControls) {
     when (controls.sheet) {
+        ReaderSheet.Position -> ReaderPositionSheet(vm, onDismiss = { controls.sheet = null })
         ReaderSheet.Contents -> ContentsSheet(vm, palette, onDismiss = { controls.sheet = null })
         ReaderSheet.Bookmarks -> FragmentsSheet(vm, palette, ReaderFont.of(settings.textSet.font).composeFamily, onDismiss = { controls.sheet = null })
         ReaderSheet.Search -> SearchSheet(vm, palette, ReaderFont.of(settings.textSet.font).composeFamily, onDismiss = { controls.sheet = null })
@@ -16,6 +17,7 @@ internal fun ReaderSheets(vm: ReaderViewModel, settings: ReaderSettings, palette
             SheetBrightness(controls.brightness) {
                 controls.brightness = it
             },
+            SheetRotation(controls.rotationLocked) { controls.rotationLocked = it },
             onDismiss = { controls.sheet = null },
         )
         null -> Unit

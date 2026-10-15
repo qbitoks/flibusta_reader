@@ -49,7 +49,7 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
     ImmersiveMode(showBars = controls.chromeVisible || controls.sheet != null, lightBars = !palette.isDark)
     ReadingSessionEffect(vm)
     WindowEffects(rotationLocked = controls.rotationLocked, brightness = controls.brightness)
-    BackHandler(enabled = controls.menuVisible) { controls.menuVisible = false }
+    BackHandler(enabled = controls.chromeVisible && controls.sheet == null) { controls.chromeVisible = false }
     ReaderSurface(vm, settings, palette, controls, bookmarks.size + highlights.size, highlights, onClose)
     ReaderSheets(vm, settings, palette, controls)
 }

@@ -9,7 +9,8 @@ import kotlin.math.roundToInt
 internal const val EDGE_TAP = 1f / 3f
 
 /** -1 for the left edge zone (back), +1 for the right one (forward), 0 for the middle. */
-internal fun tapZone(x: Float, width: Float): Int = when {
+internal fun tapZone(x: Float, width: Float, controlsVisible: Boolean = false): Int = when {
+    controlsVisible -> 0
     x < width * EDGE_TAP -> -1
     x > width * (1 - EDGE_TAP) -> 1
     else -> 0

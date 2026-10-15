@@ -235,9 +235,10 @@ class ReaderViewModel @Inject constructor(
     var scrollJump by mutableStateOf<ScrollJump?>(null)
         private set
 
-    private fun setCurrent(ref: PageRef, keepPosition: Position? = null, highlight: TextRange? = null) {
+    private fun setCurrent(ref: PageRef, keepPosition: Position? = null, highlight: TextRange? = null, reading: Boolean = false) {
         val engine = engine ?: return
         val page = engine.page(ref) ?: return
+        if (reading) historyVisibility = historyVisibility.read(state.current, ref, engine.pageOffsets.value)
         position = keepPosition ?: page.start
         savedPosition.value = position
         engine.prefetchAround(ref.chapter)
@@ -320,11 +321,11 @@ class ReaderViewModel @Inject constructor(
         val ref = state.current ?: return false
         val nextRef = engine.nextRef(ref) ?: return false
         if (engine.page(nextRef) != null) {
-            setCurrent(nextRef)
+            setCurrent(nextRef, reading = true)
         } else {
             viewModelScope.launch {
                 engine.pages(nextRef.chapter)
-                setCurrent(nextRef)
+                setCurrent(nextRef, reading = true)
             }
         }
         return true
@@ -336,11 +337,11 @@ class ReaderViewModel @Inject constructor(
         val prevRef = engine.prevRef(ref) ?: return false
         val resolved = if (prevRef.index == PaginationEngine.LAST) null else prevRef
         if (resolved != null && engine.page(resolved) != null) {
-            setCurrent(resolved)
+            setCurrent(resolved, reading = true)
         } else {
             viewModelScope.launch {
                 val pages = engine.pages(prevRef.chapter)
-                setCurrent(PageRef(prevRef.chapter, if (prevRef.index == PaginationEngine.LAST) pages.pages.lastIndex else prevRef.index))
+                setCurrent(PageRef(prevRef.chapter, if (prevRef.index == PaginationEngine.LAST) pages.pages.lastIndex else prevRef.index), reading = true)
             }
         }
         return true
@@ -368,6 +369,7 @@ class ReaderViewModel @Inject constructor(
         }
         val engine = engine ?: return
         if (state.current?.chapter != ref.chapter) engine.prefetchAround(ref.chapter)
+        historyVisibility = historyVisibility.read(state.current, ref, engine.pageOffsets.value)
         // Neighbours too, so switching to page turning from here works at once.
         update {
             it.copy(
@@ -394,12 +396,11 @@ class ReaderViewModel @Inject constructor(
         }
         viewModelScope.launch {
             showPosition(target, highlight)
-            if (record) landedJumps++
+            historyVisibility = historyVisibility.jumped()
         }
     }
 
-    /** Counts recorded jumps once they land, so the reader can show «↶» for a moment after each. */
-    var landedJumps by mutableIntStateOf(0)
+    internal var historyVisibility by mutableStateOf(HistoryVisibility())
         private set
 
     /** Pages after [page] before the next TOC target; null while the boundary's pagination is unknown. */
@@ -438,25 +439,22 @@ class ReaderViewModel @Inject constructor(
     }
 
     fun goToProgress(fraction: Float) {
-        val book = book ?: return
-        val targetChars = (book.totalChars * fraction.coerceIn(0f, 1f)).toLong()
-        var acc = 0L
-        for ((c, chapter) in book.chapters.withIndex()) {
-            if (acc + chapter.charCount >= targetChars) {
-                var inChapter = targetChars - acc
-                for ((b, block) in chapter.blocks.withIndex()) {
-                    val len = if (block is Block.Text) block.text.length else 1
-                    if (inChapter <= len) {
-                        goTo(Position(c, b, inChapter.toInt().coerceAtMost((len - 1).coerceAtLeast(0))))
-                        return
-                    }
-                    inChapter -= len
-                }
-                goTo(Position(c))
-                return
-            }
-            acc += chapter.charCount
+        val target = book?.readerPositionAtProgress(fraction) ?: return
+        if (target != position) goTo(target)
+    }
+
+    internal fun goToPage(number: Int) {
+        val currentEngine = engine ?: return
+        val ref = readerPageRef(number, currentEngine.pageOffsets.value) ?: return
+        viewModelScope.launch {
+            val target = currentEngine.pages(ref.chapter).pages.getOrNull(ref.index)?.start ?: return@launch
+            if (engine === currentEngine && target != position) goTo(target)
         }
+    }
+
+    internal fun previewProgress(fraction: Float): ReaderProgressPreview {
+        val target = book?.readerPositionAtProgress(fraction)
+        return ReaderProgressPreview(target?.let(::chapterTitleAt), target?.let(::pageNumberOf))
     }
 
     fun clearHighlight() {

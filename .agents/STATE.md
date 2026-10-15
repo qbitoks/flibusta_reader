@@ -14,6 +14,8 @@ status: active
 - Verify footer capsules on a phone: cyclic format, independent toggles, large text wrap and persisted settings.
 - Verify compact 36 dp Scroll defaults, reordered details, vertical alignment and zero gap at rules on a phone.
 
+- Verify themed scrubber, five-page history arrows, exact position sheet, bottom search and corner bookmark on a phone.
+
 ## Next steps
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.
 - Replace archived Readium regressions with checks for the current UI; CI uses `scripts/ci-emulator.ps1`.

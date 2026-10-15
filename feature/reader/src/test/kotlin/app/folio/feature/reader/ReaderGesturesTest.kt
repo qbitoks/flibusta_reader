@@ -7,6 +7,18 @@ import org.junit.Test
 class ReaderGesturesTest {
     private val width = 1080f
 
+    @Test fun visibleControlsConsumeEveryTapZoneWithoutTurning() {
+        for (x in listOf(0f, 100f, 540f, 1000f, width)) {
+            assertEquals(0, tapZone(x, width, controlsVisible = true))
+        }
+    }
+
+    @Test fun hiddenControlsKeepTheOuterThirdsForTurning() {
+        assertEquals(-1, tapZone(100f, width, controlsVisible = false))
+        assertEquals(0, tapZone(540f, width, controlsVisible = false))
+        assertEquals(1, tapZone(1000f, width, controlsVisible = false))
+    }
+
     @Test fun outerThirdsTurnPagesAndTheMiddleToggles() {
         assertEquals(-1, tapZone(100f, width))
         assertEquals(-1, tapZone(350f, width))

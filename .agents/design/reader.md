@@ -22,36 +22,41 @@
     Use `ReaderLineBlock` for shared book/preview geometry and rules fixed to the text-facing block edge.
   - Put independent «Граница текста: Чёткая / Плавная», block height and vertical label position
     inside each line's «Подробнее» in Scroll. Absolute text gap 0 reaches the rule or invisible block edge.
-  - The settings preview mirrors this: lines overlay the text, scroll mode scrolls; a tap on a line
-    opens its group in «На странице», on the text «Оформление».
+  - Keep preview taps inert; use the tabs to navigate settings, and preserve manual preview scrolling.
     In paged mode, reserve space below the footer.
-  - Show history «↶ / ↷» with controls; briefly show «↶» after a jump for 3 s or until first turn.
-  - Use left/right thirds for tap turning; an edge tap with controls visible turns and hides them.
+  - Keep history arrows inside the controls only; expire after five reading pages, with no floating return icon.
+  - Use left/right thirds for tap turning only with controls hidden; any plain tap with controls visible hides them.
 - Keep the header/footer inside each paged page so they travel with it; fix them in scroll mode.
 - Use `ChapterProgress` TOC ranges for title, contents selection and remaining pages across all levels.
   Use the current reading position for current labels and page starts for neighboring layers; omit unknown/pre-TOC remainder.
   Do not restore Apple's always-visible book title or 10% edge tap zones.
 
-## Chrome, menus and navigation
-- On book opening, show status bar, top-right × and bottom-right menu; a central tap toggles controls
-  and status bar. With reader menu open, hide × and replace the menu button with the menu.
-- Size round reader controls about 47 dp, right inset 34, bottom inset 33 for menu;
-  align them with header/footer. A page-number tap also toggles controls.
-- Open the glass reader menu above the footer, 17 dp from right, width 265; leave the page undimmed.
-- Use 45 dp capsule rows on 50 dp pitch: «Оглавление • N %», conditional «Закладки и фрагменты N»,
-  «Поиск в книге», «Темы и настройки»; text left (15 dp inset), icon right.
-- Add four 62 × 44 dp controls below: «Поделиться», rotation lock, «Направляющая линия», «Закладка».
-- Mark bookmarks red (`#FF3B30`), including menu badge and hidden-mode bookmark circle;
-  reveal «Закладки и фрагменты» when bookmarks/highlights exist.
-- Use semantic interface text/icon colours in reader menus, including low-contrast reading palettes.
-- Reserve footer side space for the guide/bookmark controls; size equal side columns from actual label widths.
-- Record jumps from search, contents and links in history; display neighboring page numbers with
-  «↶ / ↷», supporting both directions. Use history for returning from footnotes.
-- Navigate ordinary note/internal links to their section with history; open a popup when the parser
-  extracted a dedicated footnote body (FB2 notes or EPUB footnote/asides). Style note links as blue superscripts.
-- Keep horizontal swipes for turning and swipe down for animated close to cover; no swipe-up action.
-- Keep the last book page as the end, with no separate completion screen; mark completion through
-  the existing reader logic.
+## Chrome, panels and navigation
+- Open books with the controls visible; use two states, reading and controls, without a floating reader menu.
+- Overlay both panels without changing viewport/pagination. Fade page labels out under controls and restore them on dismissal.
+- Use page-tinted backdrop glass and semantic interface colours; keep buttons accessible at low reading contrast.
+- Top: 48 dp down-chevron closes the book; centred title/author shares it. Keep the right slot empty.
+- Bottom: whole chapter/remainder row opens contents; omit unknown remainder and use TOC ranges for titles/counts.
+- Keep a local progress-slider draft: preview chapter/page while dragging; record one jump only on release.
+  Clear drafts on cancellation; reuse the position resolver for preview/navigation and show unknown counts honestly.
+- Centre tappable book percent between equal reserved history slots: back at left, forward at right.
+- Hide arrows after five natural page crossings; count successful turns/scroll distance, preserve history on expiry.
+- Reset arrow visibility after a landed jump/history action; retain the window across repagination.
+- Open `ReaderPositionSheet` from percent: validate exact page/percent input and list recent history positions.
+- Use the settings dialog geometry for position: fixed header, root system/IME insets, weighted scroll body.
+  Reuse `SettingsSegments`, `GroupedCard`, `CapsuleButton` and grouped history rows; omit Material outlined fields.
+- Cap the lower panel below the measured top panel; scroll navigation details when needed and pin the tool row.
+- Show five fixed tools: bookmarks/fragments even when empty, bookmark, themes/settings, guide, search.
+  Mark an active bookmark red; disable guide in Scroll. Enabling guide hides the panels immediately.
+- Put rotation lock in the reader settings Page tab; keep it a saveable window preference, outside book/shared settings.
+- Show a small red bookmark at the upper-right corner while controls are hidden; tapping removes it directly.
+- Use `ReaderProgressSlider`: thin themed track, round thumb, 48 dp touch target, ink contrast at least 3:1.
+- With controls visible, plain text taps only dismiss them, including side thirds and guide taps.
+  Keep links, images, notes and selection/highlight handling ahead of plain text tap zones.
+- With controls hidden, page with outer-thirds taps and toggle with the centre/footer; Scroll toggles on any plain text tap.
+- Keep swipes for page turning and hide panels on drag; swipe down closes to the cover, with no swipe-up action.
+- Navigate ordinary note/internal links with history; use a popup for dedicated FB2/EPUB footnote bodies.
+  Style note links as blue superscripts; retain the last book page as the end without a completion screen.
 
 ## Contents, bookmarks and search
 - Use contents sheet top near 61 dp, corners 23, dark `#242424`; header has 46 × 68 dp cover,
