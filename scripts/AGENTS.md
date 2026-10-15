@@ -22,6 +22,11 @@
 - If APK assembly fails, fix the build and retry before starting unrelated checks.
 - This local testing APK needs no tag, push, publication or version bump; see `.agents/rules/release.md` for publication.
 
+## User's phone (Wi-Fi ADB)
+- The user's phone (vivo V2514) is paired over Wi-Fi ADB; it shows in `adb devices` as `adb-...._adb-tls-connect._tcp`.
+- Standing authorization: install the release APK (`install -r`, keep app data) and launch/test on it without asking.
+- Not listed → the phone is off Wi-Fi or asleep; say so and fall back to the emulator. Never uninstall or clear data.
+
 ## Manual device workflow
 ```powershell
 $taskAdb = Join-Path $env:LOCALAPPDATA 'Android/Sdk/platform-tools/adb.exe'
