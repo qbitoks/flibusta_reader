@@ -55,6 +55,7 @@
     <string name="settings_reset_reading_all_text">Restore default shared Advanced settings? Basic settings and individual book settings will stay unchanged.</string>
     <string name="settings_font">Font</string>
     <string name="settings_bold_text">Bold Text</string>
+    <string name="settings_bold_glyph">B</string>
     <string name="settings_line_spacing">Line Spacing</string>
     <string name="settings_paragraph_spacing">Paragraph Spacing</string>
     <string name="settings_first_line_indent">First-line Indent</string>

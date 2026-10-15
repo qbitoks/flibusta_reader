@@ -44,14 +44,7 @@ internal fun ReadingColorSettings(editor: SettingsEditor) {
 internal fun ReadingTextSettings(editor: SettingsEditor) {
     val style = editor.settings.textSet
     fun update(value: TextSet) = editor.edit { it.withText(value) }
-    SettingsDisclosure(stringResource(R.string.settings_font)) {
-    SettingsOptions(style.font,
-        ReaderFont.entries.map { it.key to it.displayName }, { update(style.copy(font = it)) }, optionStyle = {
-        FolioType.body.copy(fontFamily = ReaderFont.of(it).composeFamily)
-    })
-    SettingsDivider()
-    SettingsToggle(stringResource(R.string.settings_bold_text), style.boldText) { update(style.copy(boldText = it)) }
-    }
+    FontSettingsCard(style, editor.isOwn(listOf(BookOverrides.FONT, BookOverrides.BOLD)), ::update)
     SpacingSettingsCard(style, editor.isOwn(listOf(BookOverrides.LINE_SPACING, BookOverrides.MARGINS)), ::update) {
     SettingsSlider(stringResource(R.string.settings_line_spacing), style.lineSpacing, 0.8f..2.5f, 0.05f,
         String.format(Locale.getDefault(), "%.2f", style.lineSpacing)) { update(style.copy(lineSpacing = it)) }

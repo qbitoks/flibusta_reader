@@ -133,7 +133,8 @@ internal fun <T> SettingsSegments(current: T, options: List<SegmentOption<T>>, s
  * a group this book sets itself while its own settings are edited.
  */
 @Composable
-internal fun SettingsGroupHeader(title: String, value: String? = null, own: Boolean = false) {
+internal fun SettingsGroupHeader(title: String, value: String? = null, own: Boolean = false,
+    trailing: (@Composable () -> Unit)? = null) {
     val c = Folio.colors
     val ownLabel = stringResource(R.string.settings_own_mark)
     Row(Modifier.fillMaxWidth().padding(start = 36.dp, end = 36.dp, top = 20.dp, bottom = 10.dp),
@@ -143,6 +144,7 @@ internal fun SettingsGroupHeader(title: String, value: String? = null, own: Bool
         Text(title, style = FolioType.title3, color = c.label, modifier = Modifier.weight(1f))
         if (value != null) Text(value, style = FolioType.subheadline, color = c.secondaryLabel,
             maxLines = 1, modifier = Modifier.padding(start = 12.dp))
+        trailing?.invoke()
     }
 }
 
