@@ -57,15 +57,17 @@ object ReaderPalettes {
 
     /**
      * «Свои параметры»: warmth tints page and text towards amber or blue; contrast moves the text
-     * towards pure black/white (crisp) or towards the page (soft, at most like «Тихая»).
+     * towards pure black/white (crisp) or towards the page (soft, at most like «Тихая»). The direction
+     * follows the palette, not the appearance: light «Тишина» is a dark page with light text.
      */
     fun custom(colors: CustomColors, dark: Boolean): ReaderPalette {
         val base = of(colors.base, dark)
+        val darkPage = base.isDark
         val tint = if (colors.warmth >= 0) warm else cool
         val w = colors.warmth / 10f * (if (colors.warmth >= 0) 1f else -1f)
-        val bg = lerp(base.background, tint, w * if (dark) 0.10f else 0.16f)
+        val bg = lerp(base.background, tint, w * if (darkPage) 0.10f else 0.16f)
         val tinted = lerp(base.text, tint, w * 0.08f)
-        val text = if (colors.contrast >= 0) lerp(tinted, if (dark) Color.White else Color.Black, colors.contrast / 10f)
+        val text = if (colors.contrast >= 0) lerp(tinted, if (darkPage) Color.White else Color.Black, colors.contrast / 10f)
             else lerp(tinted, bg, -colors.contrast / 10f * 0.5f)
         return base.copy(background = bg, text = text, secondary = lerp(bg, text, 0.55f))
     }

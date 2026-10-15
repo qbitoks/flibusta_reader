@@ -255,4 +255,11 @@
     <string name="spacing_loose">Разреженный</string>
     <string name="spacing_custom">Свои</string>
     <string name="spacing_next">Следующее значение</string>
+    <string name="tone_normal">Обычный</string>
+    <string name="tone_warm">Тёплый</string>
+    <string name="tone_soft">Мягкий</string>
+    <string name="tone_crisp">Чёткий</string>
+    <string name="tone_night">Ночной</string>
+    <string name="tone_cool">Холодный</string>
+    <string name="tone_custom">Свой</string>
 </resources>

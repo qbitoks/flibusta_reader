@@ -96,9 +96,10 @@
 - Keep two tabs: Basic («Основные») and Advanced («Дополнительно»), with independent scrolling and a pinned preview.
   In Basic, omit group headings: brightness, appearance with rotation icon, palettes/size, then turning.
   Brightness Auto follows the device and disables its slider; manual takeover starts at the current device value.
-- Start Advanced with upper/lower line cards, then the font card (one scrolling row of «Аа» tiles in each font, bold as a «Ж» toggle in its group header), visible spacing cards with collapsed details and tone/contrast disclosure.
+- Start Advanced with upper/lower line cards, then the font card (one scrolling row of «Аа» tiles in each font, bold as a «Ж» toggle in its group header), visible spacing cards with collapsed details, then the tone/contrast card.
   Preserve local line disclosures; keep Advanced card expansion across tab changes. Collapsing never changes settings.
 - Use `ReaderStyle` for factory typography and `TextSet.DEFAULT` for settings; ignore obsolete linked-text settings without migration.
+- Tone/contrast: a choice row of `TonePreset` swatches over the current theme, sliders in «Подробнее»; values outside presets add a selected «Свой» tile that stays while the tab lives.
 - Show two cyclic spacing cards above their «Подробнее»: line spacing 1.0/1.2/1.4, side margins 3/5/8% of viewport width.
   Start at the middle values. Derive each card from the current value; custom values show a fourth sliders glyph without emphasis.
   Keep custom cards tappable: restart at the minimum. Details edit the same values; opening or collapsing changes no settings.

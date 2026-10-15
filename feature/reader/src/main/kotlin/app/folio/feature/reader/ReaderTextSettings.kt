@@ -3,18 +3,10 @@ package app.folio.feature.reader
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import app.folio.core.data.settings.CustomColors
 import app.folio.core.data.settings.BookOverrides
@@ -24,13 +16,14 @@ import app.folio.core.designsystem.components.*
 import java.util.Locale
 import kotlin.math.roundToInt
 
-/** Independent palette adjustments on the Advanced tab. */
+/** Independent palette adjustments on the Advanced tab: ready pairs, exact sliders in «Подробнее». */
 @Composable
 internal fun ReadingColorSettings(editor: SettingsEditor) {
     val settings = editor.settings
     val colors = (settings.customColors ?: CustomColors.of(settings.theme)).copy(base = settings.theme)
     fun paint(value: CustomColors) = editor.edit { it.withColors(value) }
-    SettingsDisclosure(stringResource(R.string.settings_tone_contrast)) {
+    val dark = ReaderPalettes.isDark(settings.appearance, androidInDarkTheme())
+    ToneSettingsCard(colors, dark, editor.isOwn(BookOverrides.COLOR_KEYS), ::paint) {
     SettingsSlider(stringResource(R.string.settings_warmth), colors.warmth.toFloat(), -10f..10f, 1f,
         signed(colors.warmth)) { paint(colors.copy(warmth = it.roundToInt())) }
     SettingsDivider()
@@ -67,29 +60,6 @@ internal fun ReadingTextSettings(editor: SettingsEditor) {
     SettingsToggle(stringResource(R.string.settings_justify), style.justify) { update(style.copy(justify = it)) }
     }
 }
-
-/** Disclosure state belongs to the tab, never to persisted reading settings. */
-@Composable
-private fun SettingsDisclosure(title: String, content: @Composable () -> Unit) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    val state = stringResource(if (expanded) R.string.line_details_expanded else R.string.line_details_collapsed)
-    Spacer(Modifier.height(12.dp))
-    GroupedCard {
-        Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { expanded = !expanded }
-            .semantics { stateDescription = state }.heightIn(min = 54.dp)
-            .padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = FolioType.body, color = Folio.colors.label, modifier = Modifier.weight(1f))
-            Icon(if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-                null, tint = Folio.colors.secondaryLabel, modifier = Modifier.size(22.dp))
-        }
-        if (expanded) {
-            SettingsDivider()
-            content()
-        }
-    }
-}
-
-private fun signed(value: Int) = if (value > 0) "+$value" else "$value"
 
 /** Centred reset row in its own card, greyed out while there is nothing to reset. */
 @Composable

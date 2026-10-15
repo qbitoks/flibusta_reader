@@ -160,8 +160,8 @@ private fun SegmentsTitle(text: String) = Text(text, style = FolioType.body, col
 
 private fun IntRange.toRange() = first.toFloat()..last.toFloat()
 
-/** «+4», «0», «−6»: a shift from the standard spacing. */
-private fun signed(value: Int): String = when {
+/** «+4», «0», «−6»: a shift from the standard value (spacing, tone, contrast). */
+internal fun signed(value: Int): String = when {
     value > 0 -> "+$value"
     value < 0 -> "−${-value}"
     else -> "0"
