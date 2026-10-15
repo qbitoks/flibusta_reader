@@ -37,7 +37,8 @@
 - Use page-tinted backdrop glass and semantic interface colours; keep buttons accessible at low reading contrast.
   Everything opened from a book (buttons, search, position, contents, notes, menus) takes the page tone via
   `ReaderPalette.uiColors()` (`core/designsystem/ReaderUiColors.kt`); no fixed white/black fills in reader UI.
-- Top: 48 dp down-chevron closes the book; centred title/author shares it. Keep the right slot empty.
+- Top: 48 dp X closes the book; centred title/author shares it. Keep the right slot empty.
+- Panel rows (title, chapter, «N% от всей книги») have no fill; clip them to `CircleShape` so the press ripple is rounded.
 - Bottom: whole chapter/remainder row opens contents; omit unknown remainder and use TOC ranges for titles/counts.
 - Keep a local progress-slider draft: preview chapter/page while dragging; record one jump only on release.
   Clear drafts on cancellation; reuse the position resolver for preview/navigation and show unknown counts honestly.

@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Redo
@@ -14,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -26,9 +28,9 @@ import app.folio.core.designsystem.FolioType
 
 /** Equal reserved side slots keep progress centred even as history arrows expire. */
 @Composable
-internal fun ReaderHistoryProgress(vm: ReaderViewModel, percent: String, onPosition: () -> Unit) {
+internal fun ReaderHistoryProgress(vm: ReaderViewModel, percent: String, modifier: Modifier, onPosition: () -> Unit) {
     val c = Folio.colors
-    BoxWithConstraints(Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+    BoxWithConstraints(modifier.fillMaxWidth().heightIn(min = 48.dp)) {
         val side = (maxWidth * 0.24f).coerceIn(48.dp, 88.dp)
         val visible = vm.historyVisibility.visible
         vm.history.back.lastOrNull()?.let { target ->
@@ -36,8 +38,9 @@ internal fun ReaderHistoryProgress(vm: ReaderViewModel, percent: String, onPosit
                 HistoryArrow(vm.pageNumberOf(target), true, vm::historyBack)
             }
         }
-        Row(Modifier.align(Alignment.Center).padding(horizontal = side).heightIn(min = 48.dp)
-            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.reader_position_title), onClick = onPosition),
+        Row(Modifier.align(Alignment.Center).padding(horizontal = side).heightIn(min = 36.dp).clip(CircleShape)
+            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.reader_position_title), onClick = onPosition)
+            .padding(start = 14.dp, end = 10.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             Text(percent, style = FolioType.footnote, color = c.secondaryLabel, maxLines = 2,
                 overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.weight(1f, fill = false))

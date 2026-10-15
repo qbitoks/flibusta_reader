@@ -64,10 +64,10 @@ internal fun ReaderNavigationPanel(
     Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).glass(RectangleShape, tint = palette.background.copy(alpha = 0.94f))
         .readerPanelInput().padding(bottom = bottomInset)) {
         HorizontalDivider(color = palette.text.copy(alpha = 0.12f), thickness = 0.5.dp)
-        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState(), overscrollEffect = null).padding(horizontal = 24.dp)) {
-            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState(), overscrollEffect = null).padding(horizontal = 16.dp)) {
+            Row(Modifier.padding(top = 8.dp).fillMaxWidth().heightIn(min = 48.dp).clip(CircleShape)
                 .clickable(role = Role.Button) { controls.sheet = ReaderSheet.Contents }
-                .padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
+                .padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Icon(Icons.AutoMirrored.Rounded.List, stringResource(R.string.reader_contents), tint = c.label, modifier = Modifier.size(24.dp))
                 Text(if (draft != null) preview?.chapter ?: stringResource(R.string.reader_untitled)
@@ -90,8 +90,8 @@ internal fun ReaderNavigationPanel(
                     draft = null
                     if (target != null) vm.goToProgress(target)
                 }, onValueChangeCancelled = { draft = null }, enabled = state.page != null && vm.book?.totalChars != 0L,
-                contentDescription = progressDescription)
-            ReaderHistoryProgress(vm, percent, onPosition = { controls.sheet = ReaderSheet.Position })
+                contentDescription = progressDescription, modifier = Modifier.padding(horizontal = 8.dp))
+            ReaderHistoryProgress(vm, percent, Modifier.padding(horizontal = 8.dp), onPosition = { controls.sheet = ReaderSheet.Position })
         }
             Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = if (compact) 0.dp else 4.dp, bottom = if (compact) 0.dp else 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween) {
