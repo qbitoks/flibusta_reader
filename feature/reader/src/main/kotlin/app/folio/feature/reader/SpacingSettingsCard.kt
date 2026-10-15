@@ -55,7 +55,7 @@ internal fun SpacingSettingsCard(text: TextSet, own: Boolean, update: (TextSet) 
         }
         SettingsDivider()
         SettingsDetailsRow(expanded) { expanded = !expanded }
-        if (expanded) { SettingsDivider(); details() }
+        SettingsDetails(expanded) { details() }
     }
     }
 }

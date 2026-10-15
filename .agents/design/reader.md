@@ -86,7 +86,7 @@
 - Under the title, «Для всех книг ⌄ / Только для этой книги ⌄» opens a pull-down menu: the edit target,
   a summary of what the book changes, «Сделать общими для всех книг» and «Вернуть общие настройки»
   (both confirmed). The panel opens on the book's own settings when it has any, else on shared ones.
-  In the book scope a dot marks groups the book sets itself. Library → «…» → «Настройки чтения» opens
+  In the book scope an accent «Книга» badge after the heading marks groups the book sets itself. Library → «…» → «Настройки чтения» opens
   the same panel for all books over a sample page, without brightness.
 - Use semantic interface colors, shared grouped cards with 16 dp insets, adaptive rows and labelled controls.
   Keep the reading palette inside theme tiles and previews; keep selected states accessible.
@@ -105,11 +105,17 @@
 - Show two cyclic spacing cards above their «Подробнее»: line spacing 1.0/1.2/1.4, side margins 3/5/8% of viewport width.
   Start at the middle values. Derive each card from the current value; custom values show a fourth sliders glyph without emphasis.
   Keep custom cards tappable: restart at the minimum. Details edit the same values; opening or collapsing changes no settings.
-  Title it with `SettingsGroupHeader` (own dot) like the line cards; share `SettingsDetailsRow`, no expand animation.
+  Title it with `SettingsGroupHeader` (own badge) like the line cards; share `SettingsDetailsRow` + `SettingsDetails`.
   Draw them as two equal `SpacingTile` buttons (fill, 14 dp corners, no raised selection): 24 dp icon and the current step
   («Своё» for custom); the title is only spoken. Not a segmented control: nothing is "selected", a tap advances the step.
   `ReaderSpacingIcons`: 24-unit grid, 1.7-unit stroke, whole-unit coordinates, glyphs centred on y = 12; one property
   changes per state (line step 4/6/8, page inset 3/5/6); custom is a two-slider glyph.
+- Palette, font and tone tiles are one `ChoiceTile`: hairline swatch, `selectionRing` (accent ring with a gap), caption name below, haptic tick.
+  «Подробнее» expands with `SettingsDetails` (~220 ms) and a rotating chevron. Spacing details are split by
+  `SettingsSubheader`: lines and paragraphs, letters and words, page (margins, justify); line spacing and margins sliders
+  carry `ReaderSpacingIcons` at their ends. Header segments have icons; hidden-line hints are tertiary with an eye-off icon.
+  The reset row is centred destructive red text, grey when nothing differs.
+  Brightness repeats the text-size layout: title row with the Auto capsule at the trailing edge, then the slider between icons.
 - Put one «Сбросить дополнительные настройки» action at the end of Advanced; confirm its book/shared scope.
   Use `withAdvancedDefaults` to reset only Advanced; preserve Basic values, window controls, guide and annotation state.
   In book scope store factory values as differences from current shared settings; keep the scope-menu action for inheriting shared settings.

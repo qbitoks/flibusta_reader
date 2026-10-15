@@ -118,30 +118,14 @@ internal fun themeName(theme: ReaderTheme) = stringResource(when (theme) {
     ReaderTheme.Focus -> R.string.theme_focus
 })
 
-/** Identical typography in every palette; the selection is an accent ring set off from the tile, Books-style. */
+/** Identical typography in every palette; the name is spoken and shown under the swatch. */
 @Composable
-private fun ThemeSwatch(name: String, selected: Boolean, palette: ReaderPalette, modifier: Modifier, onClick: () -> Unit) {
-    val c = Folio.colors
-    val haptic = LocalHapticFeedback.current
-    val ring by animateColorAsState(if (selected) c.accent else Color.Transparent, label = "swatchRing")
-    Column(modifier.clip(RoundedCornerShape(16.dp))
-        .selectable(selected, role = Role.RadioButton) { if (!selected) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onClick() }
-        .semantics(mergeDescendants = true) { contentDescription = name }
-        .padding(vertical = 2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.fillMaxWidth().border(2.dp, ring, RoundedCornerShape(16.dp)).padding(4.dp)) {
-            val shape = RoundedCornerShape(12.dp)
-            Box(Modifier.fillMaxWidth().aspectRatio(0.82f).clip(shape).background(palette.background)
-                .border(0.5.dp, c.separator, shape), contentAlignment = Alignment.Center) {
-                Text("Aa", fontFamily = ReaderFont.of("literata").composeFamily, fontSize = 20.sp, color = palette.text, maxLines = 1)
-            }
-        }
-        Text(name, style = FolioType.caption, color = if (selected) c.label else c.secondaryLabel,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1,
-            overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp).clearAndSetSemantics { })
+private fun ThemeSwatch(name: String, selected: Boolean, palette: ReaderPalette, modifier: Modifier, onClick: () -> Unit) =
+    ChoiceTile(name, selected, palette.background, modifier, onClick = onClick) {
+        Text("Aa", fontFamily = ReaderFont.of("literata").composeFamily, fontSize = 20.sp, color = palette.text, maxLines = 1)
     }
-}
 
-/** Auto follows the device; switching it off starts at the currently shown device brightness. */
+/** Auto follows the device; switching it off starts at the currently shown device brightness. Laid out like text size. */
 @Composable
 internal fun BrightnessSlider(brightness: Float, onChange: (Float) -> Unit) {
     val auto = brightness < 0
@@ -149,22 +133,26 @@ internal fun BrightnessSlider(brightness: Float, onChange: (Float) -> Unit) {
     val title = stringResource(R.string.settings_brightness)
     val deviceBrightness = rememberDeviceBrightness()
     val shown = if (auto) deviceBrightness else brightness
-    Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Box(Modifier.clip(CircleShape).background(if (auto) c.accent.copy(alpha = 0.16f) else c.fill)
-            .toggleable(auto, role = Role.Switch) { onChange(if (it) -1f else deviceBrightness) }
-            .heightIn(min = 36.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
-            Text(stringResource(R.string.settings_brightness_auto), style = FolioType.subheadline,
-                fontWeight = FontWeight.SemiBold, color = if (auto) c.accent else c.secondaryLabel)
+    Column(Modifier.padding(horizontal = 18.dp, vertical = 8.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(title, style = FolioType.body, color = c.label, modifier = Modifier.weight(1f))
+            Box(Modifier.clip(CircleShape).background(if (auto) c.accent.copy(alpha = 0.16f) else c.fill)
+                .toggleable(auto, role = Role.Switch) { onChange(if (it) -1f else deviceBrightness) }
+                .heightIn(min = 30.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.settings_brightness_auto), style = FolioType.subheadline,
+                    fontWeight = FontWeight.SemiBold, color = if (auto) c.accent else c.secondaryLabel)
+            }
         }
-        Icon(Icons.Rounded.BrightnessLow, null, tint = c.secondaryLabel, modifier = Modifier.size(20.dp))
-        IosSlider(value = shown, onValueChange = { onChange(it.coerceIn(0.02f, 1f)) },
-            valueRange = 0.02f..1f, enabled = !auto,
-            contentDescription = title,
-            modifier = Modifier.weight(1f).heightIn(min = 48.dp).semantics {
-                progressBarRangeInfo = ProgressBarRangeInfo(shown, 0.02f..1f)
-                if (!auto) setProgress { onChange(it.coerceIn(0.02f, 1f)); true }
-            })
-        Icon(Icons.Rounded.BrightnessHigh, null, tint = c.secondaryLabel, modifier = Modifier.size(24.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(Icons.Rounded.BrightnessLow, null, tint = c.secondaryLabel, modifier = Modifier.size(18.dp))
+            IosSlider(value = shown, onValueChange = { onChange(it.coerceIn(0.02f, 1f)) },
+                valueRange = 0.02f..1f, enabled = !auto,
+                contentDescription = title,
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp).semantics {
+                    progressBarRangeInfo = ProgressBarRangeInfo(shown, 0.02f..1f)
+                    if (!auto) setProgress { onChange(it.coerceIn(0.02f, 1f)); true }
+                })
+            Icon(Icons.Rounded.BrightnessHigh, null, tint = c.secondaryLabel, modifier = Modifier.size(26.dp))
+        }
     }
 }

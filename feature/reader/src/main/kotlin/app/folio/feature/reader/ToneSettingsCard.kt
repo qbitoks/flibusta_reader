@@ -63,28 +63,16 @@ internal fun ToneSettingsCard(colors: CustomColors, dark: Boolean, own: Boolean,
             }
             SettingsDivider()
             SettingsDetailsRow(expanded) { expanded = !expanded }
-            if (expanded) { SettingsDivider(); details() }
+            SettingsDetails(expanded) { details() }
         }
     }
 }
 
-/** A swatch of the page with this adjustment over the current theme; the selected one gets an outline. */
+/** A swatch of the page with this adjustment over the current theme, as the shared choice tile. */
 @Composable
 private fun ToneTile(colors: CustomColors, dark: Boolean, name: String, values: String?, selected: Boolean, onClick: () -> Unit) {
-    val c = Folio.colors
     val page = ReaderPalettes.custom(colors, dark)
-    val shape = RoundedCornerShape(14.dp)
-    Column(Modifier.width(84.dp).clip(shape).background(c.fill)
-        .border(2.dp, if (selected) c.accent else c.fill, shape)
-        .selectable(selected, role = Role.RadioButton, onClick = onClick)
-        .semantics(mergeDescendants = true) { contentDescription = listOfNotNull(name, values).joinToString(", ") }
-        .padding(horizontal = 6.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.size(width = 64.dp, height = 40.dp).clip(RoundedCornerShape(8.dp)).background(page.background)
-            .border(0.5.dp, c.separator, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-            Text("Аа", color = page.text, maxLines = 1, style = FolioType.body.copy(fontSize = 20.sp))
-        }
-        Spacer(Modifier.height(6.dp))
-        Text(name, style = FolioType.footnote, color = if (selected) c.label else c.secondaryLabel, maxLines = 1)
-        if (values != null) Text(values, style = FolioType.caption, color = c.secondaryLabel, maxLines = 1)
+    ChoiceTile(name, selected, page.background, Modifier.width(84.dp), values, onClick) {
+        Text("Аа", color = page.text, maxLines = 1, style = FolioType.body.copy(fontSize = 20.sp))
     }
 }

@@ -257,4 +257,8 @@
     <string name="settings_basic_theme">Theme</string>
     <string name="settings_basic_text">Text</string>
     <string name="settings_basic_screen">Screen</string>
+    <string name="settings_own_badge">Book</string>
+    <string name="spacing_sub_lines">Lines and paragraphs</string>
+    <string name="spacing_sub_letters">Letters and words</string>
+    <string name="spacing_sub_page">Page</string>
 </resources>

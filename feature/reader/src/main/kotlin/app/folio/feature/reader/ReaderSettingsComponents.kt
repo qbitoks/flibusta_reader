@@ -1,6 +1,22 @@
 package app.folio.feature.reader
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
@@ -139,9 +155,13 @@ internal fun SettingsGroupHeader(title: String, value: String? = null, own: Bool
     val ownLabel = stringResource(R.string.settings_own_mark)
     Row(Modifier.fillMaxWidth().padding(start = 36.dp, end = 36.dp, top = 20.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        if (own) Box(Modifier.padding(end = 8.dp).size(7.dp).clip(CircleShape).background(c.accent)
-            .semantics { contentDescription = ownLabel })
-        Text(title, style = FolioType.title3, color = c.label, modifier = Modifier.weight(1f))
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+        Text(title, style = FolioType.title3, color = c.label, modifier = Modifier.weight(1f, fill = false))
+        if (own) Text(stringResource(R.string.settings_own_badge), style = FolioType.caption, fontWeight = FontWeight.SemiBold,
+            color = c.accent, maxLines = 1, modifier = Modifier.padding(start = 8.dp).clip(CircleShape)
+                .background(c.accent.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 2.dp)
+                .clearAndSetSemantics { contentDescription = ownLabel })
+        }
         if (value != null) Text(value, style = FolioType.subheadline, color = c.secondaryLabel,
             maxLines = 1, modifier = Modifier.padding(start = 12.dp))
         trailing?.invoke()
@@ -159,9 +179,64 @@ internal fun SettingsDetailsRow(expanded: Boolean, onToggle: () -> Unit) {
         .semantics { stateDescription = state }
         .heightIn(min = 54.dp).padding(horizontal = 18.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(stringResource(R.string.line_details), style = FolioType.body, color = Folio.colors.label, modifier = Modifier.weight(1f))
-        Icon(if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-            null, tint = Folio.colors.secondaryLabel, modifier = Modifier.size(22.dp))
+        val turn by animateFloatAsState(if (expanded) 180f else 0f, tween(220), label = "chevron")
+        Icon(Icons.Rounded.KeyboardArrowDown, null, tint = Folio.colors.secondaryLabel,
+            modifier = Modifier.size(22.dp).rotate(turn))
     }
+}
+
+/** Disclosed details slide open below their «Подробнее» row; the content stays composed only while shown. */
+@Composable
+internal fun SettingsDetails(expanded: Boolean, content: @Composable ColumnScope.() -> Unit) {
+    AnimatedVisibility(expanded, enter = expandVertically(tween(220)) + fadeIn(tween(220)),
+        exit = shrinkVertically(tween(200)) + fadeOut(tween(150))) {
+        Column { SettingsDivider(); content() }
+    }
+}
+
+/** Small caption that splits a long card into named runs of rows. */
+@Composable
+internal fun SettingsSubheader(text: String) = Text(text, style = FolioType.footnote, color = Folio.colors.secondaryLabel,
+    modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 2.dp).semantics { heading() })
+
+/** Books-style choice outline: an accent ring set off from the tile by a small gap; draw the tile inside. */
+@Composable
+internal fun Modifier.selectionRing(selected: Boolean, corner: Dp): Modifier {
+    val ring by animateColorAsState(if (selected) Folio.colors.accent else Color.Transparent, tween(180), label = "ring")
+    return border(2.dp, ring, RoundedCornerShape(corner + 4.dp)).padding(4.dp)
+}
+
+/**
+ * The one choice tile of the settings panel (palettes, fonts, tones): a hairline swatch with the
+ * accent ring when selected and its name under it. [swatch] paints the swatch's inside.
+ */
+@Composable
+internal fun ChoiceTile(name: String, selected: Boolean, background: Color, modifier: Modifier = Modifier,
+    detail: String? = null, onClick: () -> Unit, swatch: @Composable BoxScope.() -> Unit) {
+    val c = Folio.colors
+    val tick = rememberSelectionTick()
+    val shape = RoundedCornerShape(12.dp)
+    Column(modifier.clip(RoundedCornerShape(16.dp))
+        .selectable(selected, role = Role.RadioButton) { if (!selected) tick(); onClick() }
+        .semantics(mergeDescendants = true) { contentDescription = listOfNotNull(name, detail).joinToString(", ") },
+        horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(Modifier.fillMaxWidth().selectionRing(selected, 12.dp)) {
+            Box(Modifier.fillMaxWidth().height(64.dp).clip(shape).background(background).border(0.5.dp, c.separator, shape),
+                contentAlignment = Alignment.Center, content = swatch)
+        }
+        Text(name, style = FolioType.caption, color = if (selected) c.label else c.secondaryLabel,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1,
+            overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp).clearAndSetSemantics { })
+        if (detail != null) Text(detail, style = FolioType.caption, color = c.secondaryLabel, maxLines = 1,
+            modifier = Modifier.clearAndSetSemantics { })
+    }
+}
+
+/** A light tick when a tile choice changes; reselecting the current one stays silent. */
+@Composable
+internal fun rememberSelectionTick(): () -> Unit {
+    val haptic = LocalHapticFeedback.current
+    return remember(haptic) { { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) } }
 }
 
 @Composable
@@ -169,7 +244,8 @@ internal fun SettingsDivider() = HorizontalDivider(color = Folio.colors.separato
 
 /** Shared labelled slider with native adjustable accessibility semantics. */
 @Composable
-internal fun SettingsSlider(title: String, value: Float, range: ClosedFloatingPointRange<Float>, step: Float, shown: String, onChange: (Float) -> Unit) {
+internal fun SettingsSlider(title: String, value: Float, range: ClosedFloatingPointRange<Float>, step: Float, shown: String,
+    low: ImageVector? = null, high: ImageVector? = null, onChange: (Float) -> Unit) {
     val c = Folio.colors
     Column(Modifier.padding(horizontal = 18.dp, vertical = 8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -178,9 +254,11 @@ internal fun SettingsSlider(title: String, value: Float, range: ClosedFloatingPo
         }
         val change by rememberUpdatedState(onChange)
         val steps = ((range.endInclusive - range.start) / step).roundToInt().minus(1).coerceAtLeast(0)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (low != null) Icon(low, null, tint = c.secondaryLabel, modifier = Modifier.size(20.dp))
         IosSlider(value = value, onValueChange = { change(it) }, valueRange = range, steps = step,
             contentDescription = title,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).semantics {
+            modifier = Modifier.weight(1f).heightIn(min = 48.dp).semantics {
                 progressBarRangeInfo = ProgressBarRangeInfo(value, range, steps)
                 setProgress { target ->
                     val snapped = range.start + ((target.coerceIn(range) - range.start) / step).roundToInt() * step
@@ -188,6 +266,8 @@ internal fun SettingsSlider(title: String, value: Float, range: ClosedFloatingPo
                     true
                 }
             })
+        if (high != null) Icon(high, null, tint = c.secondaryLabel, modifier = Modifier.size(20.dp))
+        }
     }
 }
 

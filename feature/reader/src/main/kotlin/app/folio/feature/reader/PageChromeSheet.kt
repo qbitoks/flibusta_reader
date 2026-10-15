@@ -1,5 +1,9 @@
 package app.folio.feature.reader
 
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.VisibilityOff
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -42,16 +46,14 @@ internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource) {
     SettingsGroupHeader(stringResource(R.string.header_group), own = editor.isOwn(BookOverrides.HEADER_KEYS))
     GroupedCard {
         SettingsSegments(settings.header, listOf(
-            SegmentOption(PageHeader.None, stringResource(R.string.header_none)),
-            SegmentOption(PageHeader.Book, stringResource(R.string.header_book_short), stringResource(R.string.header_book)),
-            SegmentOption(PageHeader.Chapter, stringResource(R.string.header_chapter_short), stringResource(R.string.header_chapter)),
+            SegmentOption(PageHeader.None, stringResource(R.string.header_none), icon = Icons.Rounded.VisibilityOff),
+            SegmentOption(PageHeader.Book, stringResource(R.string.header_book_short), stringResource(R.string.header_book), Icons.AutoMirrored.Rounded.MenuBook),
+            SegmentOption(PageHeader.Chapter, stringResource(R.string.header_chapter_short), stringResource(R.string.header_chapter), Icons.Rounded.Bookmark),
         )) { v -> editor.edit { it.copy(header = v) } }
         if (settings.header != PageHeader.None) {
             LineSettings(settings.shownHeaderLayout, top = true, editor, gap = true) { change -> editor.edit { it.editHeaderLine(change) } }
         } else {
-            Text(stringResource(R.string.header_hidden), style = FolioType.footnote,
-                color = Folio.colors.secondaryLabel,
-                modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 12.dp))
+            HiddenLineHint(stringResource(R.string.header_hidden))
         }
     }
     }
@@ -61,9 +63,7 @@ internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource) {
     GroupedCard {
         FooterContentCapsules(editor, source)
         if (footer.isEmpty) {
-            Text(stringResource(R.string.footer_hidden), style = FolioType.footnote,
-                color = Folio.colors.secondaryLabel,
-                modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 12.dp))
+            HiddenLineHint(stringResource(R.string.footer_hidden))
         } else {
             LineSettings(settings.shownFooterLayout, top = false, editor, gap = true) { change ->
                 editor.edit { it.editFooterLine(change) }
@@ -82,9 +82,8 @@ private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEdito
     var expanded by rememberSaveable { mutableStateOf(false) }
     SettingsDivider()
     SettingsDetailsRow(expanded) { expanded = !expanded }
-    if (!expanded) return
+    SettingsDetails(expanded) {
     if (top) {
-        SettingsDivider()
         SettingsToggle(stringResource(R.string.line_uppercase), layout.uppercase) { on -> change { it.copy(uppercase = on) } }
         SettingsDivider()
         SettingsToggle(stringResource(R.string.line_hide_chapter_start), layout.hideOnChapterStart) { on -> change { it.copy(hideOnChapterStart = on) } }
@@ -152,6 +151,7 @@ private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEdito
             }
         }
     }
+    }
 }
 
 @Composable
@@ -165,4 +165,14 @@ internal fun signed(value: Int): String = when {
     value > 0 -> "+$value"
     value < 0 -> "−${-value}"
     else -> "0"
+}
+
+/** Quiet note in place of hidden line details; saved formatting returns when the line is shown again. */
+@Composable
+private fun HiddenLineHint(text: String) {
+    Row(Modifier.padding(horizontal = 18.dp).padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(Icons.Rounded.VisibilityOff, null, tint = Folio.colors.tertiaryLabel, modifier = Modifier.size(16.dp))
+        Text(text, style = FolioType.footnote, color = Folio.colors.tertiaryLabel)
+    }
 }

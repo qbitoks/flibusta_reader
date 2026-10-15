@@ -265,4 +265,8 @@
     <string name="settings_basic_theme">Тема</string>
     <string name="settings_basic_text">Текст</string>
     <string name="settings_basic_screen">Экран</string>
+    <string name="settings_own_badge">Книга</string>
+    <string name="spacing_sub_lines">Строки и абзацы</string>
+    <string name="spacing_sub_letters">Буквы и слова</string>
+    <string name="spacing_sub_page">Страница</string>
 </resources>

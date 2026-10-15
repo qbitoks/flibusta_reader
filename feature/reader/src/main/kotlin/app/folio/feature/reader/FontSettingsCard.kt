@@ -47,22 +47,13 @@ internal fun FontSettingsCard(text: TextSet, own: Boolean, update: (TextSet) -> 
     }
 }
 
-/** A choice, unlike the cyclic spacing tiles: the selected font gets an outline. */
+/** A choice, unlike the cyclic spacing tiles: the shared tile with «Аа» drawn in the font. */
 @Composable
-private fun FontTile(font: ReaderFont, bold: Boolean, selected: Boolean, onClick: () -> Unit) {
-    val c = Folio.colors
-    val shape = RoundedCornerShape(14.dp)
-    Column(Modifier.width(84.dp).clip(shape).background(c.fill)
-        .border(2.dp, if (selected) c.accent else c.fill, shape)
-        .selectable(selected, role = Role.RadioButton, onClick = onClick)
-        .semantics(mergeDescendants = true) { contentDescription = font.displayName }
-        .padding(horizontal = 6.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Аа", color = c.label, maxLines = 1, style = FolioType.body.copy(fontFamily = font.composeFamily,
-            fontSize = 26.sp, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal))
-        Spacer(Modifier.height(4.dp))
-        Text(font.displayName, style = FolioType.footnote, color = if (selected) c.label else c.secondaryLabel, maxLines = 1)
+private fun FontTile(font: ReaderFont, bold: Boolean, selected: Boolean, onClick: () -> Unit) =
+    ChoiceTile(font.displayName, selected, Folio.colors.card, Modifier.width(84.dp), onClick = onClick) {
+        Text("Аа", color = Folio.colors.label, maxLines = 1, style = FolioType.body.copy(fontFamily = font.composeFamily,
+            fontSize = 24.sp, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal))
     }
-}
 
 /** Compact bold toggle; 44 dp touch target around a smaller filled/outlined glyph. */
 @Composable
