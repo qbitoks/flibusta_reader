@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.folio.core.designsystem.BookCover
 import app.folio.core.designsystem.ReaderPalette
+import app.folio.core.designsystem.labelColor
 import app.folio.core.designsystem.UiSans
 import app.folio.core.designsystem.components.CircleButton
 import app.folio.core.designsystem.components.CircleButtonStyle
@@ -61,9 +62,11 @@ import java.text.DateFormat
 import java.util.Date
 import androidx.compose.ui.text.font.FontFamily
 import app.folio.core.data.db.HighlightEntity
+import app.folio.core.designsystem.selectedRowColor
+import app.folio.core.designsystem.sheetColor
 
-internal fun ReaderPalette.sheet(): Color = if (isDark) Color(0xFF242424) else Color(0xFFF4F4F4)
-private fun ReaderPalette.selectedRow(): Color = if (isDark) Color(0xFF414143) else Color(0xFFE3E3E6)
+internal fun ReaderPalette.sheet(): Color = sheetColor()
+private fun ReaderPalette.selectedRow(): Color = selectedRowColor()
 private fun ReaderPalette.rule(): Color = secondary.copy(alpha = 0.25f)
 
 /**
@@ -77,14 +80,14 @@ internal fun ContentsSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismis
         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 16.dp, top = 18.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             BookCover(state.title, null, vm.coverFile, Modifier.width(46.dp), elevation = 3.dp, titleSize = 6.sp)
             Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                Text(state.title, color = palette.text, fontFamily = UiSans, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(state.title, color = palette.labelColor(), fontFamily = UiSans, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 if (state.globalPage != null && state.totalPages != null) {
                     Text(
                         buildAnnotatedString {
                             withStyle(SpanStyle(color = palette.secondary)) { append(stringResource(R.string.reader_page_word) + " ") }
                             append(stringResource(R.string.reader_page_of, state.globalPage, state.totalPages))
                         },
-                        color = palette.text.copy(alpha = 0.85f), fontFamily = UiSans, fontSize = 15.sp,
+                        color = palette.labelColor().copy(alpha = 0.85f), fontFamily = UiSans, fontSize = 15.sp,
                     )
                 }
             }
@@ -114,7 +117,7 @@ internal fun ContentsSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismis
                 ) {
                     Text(
                         row.entry.title,
-                        color = palette.text.copy(alpha = 0.85f),
+                        color = palette.labelColor().copy(alpha = 0.85f),
                         fontFamily = UiSans,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -201,7 +204,7 @@ internal fun FragmentsSheet(vm: ReaderViewModel, palette: ReaderPalette, bookFon
                         )
                     }
                     Column(Modifier.weight(1f)) {
-                        Text(bm.chapterTitle ?: stringResource(R.string.reader_untitled), color = palette.text, fontFamily = UiSans, fontSize = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(bm.chapterTitle ?: stringResource(R.string.reader_untitled), color = palette.labelColor(), fontFamily = UiSans, fontSize = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Text(relativeDate(bm.createdAt), color = palette.secondary, fontFamily = UiSans, fontSize = 15.sp)
                     }
                     Position.decode(bm.position)?.let(vm::pageNumberOf)?.let {
@@ -251,9 +254,9 @@ private fun HighlightRow(
             )
         }
         Column(Modifier.weight(1f)) {
-            Text(passage, color = palette.text, fontFamily = bookFont, fontSize = 18.sp, lineHeight = 25.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(passage, color = palette.labelColor(), fontFamily = bookFont, fontSize = 18.sp, lineHeight = 25.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             h.note?.let {
-                Text(it, color = palette.text, fontFamily = UiSans, fontSize = 15.sp, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp))
+                Text(it, color = palette.labelColor(), fontFamily = UiSans, fontSize = 15.sp, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp))
             }
             Text(relativeDate(h.createdAt), color = palette.secondary, fontFamily = UiSans, fontSize = 15.sp, modifier = Modifier.padding(top = 8.dp))
         }

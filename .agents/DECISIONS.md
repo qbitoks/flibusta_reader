@@ -63,3 +63,4 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-15 | reader settings | Move turning to Basic with no group headings; Advanced starts with unchanged lines, then collapsible font/spacing/tone | user-approved layout
 2026-10-15 | reader spacing | Use two cyclic cards with custom glyphs; sliders share values; custom taps restart at minimum | user correction
 2026-10-15 | storage | Remove old settings and Room v1 migrations; keep current books and fail unsupported schemas without data reset | user request
+2026-10-15 | reader theme | Reader UI uses `FolioTheme(palette.uiColors())`: roles mixed from page and text | user request; sepia got white sheets

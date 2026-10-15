@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.folio.core.designsystem.ReaderPalette
 import app.folio.core.designsystem.UiSans
+import app.folio.core.designsystem.labelColor
 import app.folio.core.layout.TextSpan
 import kotlin.math.pow
 
@@ -104,13 +105,13 @@ internal fun HighlightPalette(palette: ReaderPalette, onPick: (HighlightColor) -
         verticalAlignment = Alignment.CenterVertically,
     ) {
         HighlightColor.entries.forEachIndexed { i, color ->
-            if (i > 0) Box(Modifier.width(0.5.dp).height(22.dp).background(palette.text.copy(alpha = 0.15f)))
+            if (i > 0) Box(Modifier.width(0.5.dp).height(22.dp).background(palette.labelColor().copy(alpha = 0.15f)))
             Box(
                 Modifier.width(48.dp).fillMaxHeight().clickable { onPick(color) },
                 contentAlignment = Alignment.Center,
             ) {
                 if (color == HighlightColor.Underline) {
-                    Text("U", color = palette.text, fontFamily = UiSans, fontSize = 17.sp, textDecoration = TextDecoration.Underline)
+                    Text("U", color = palette.labelColor(), fontFamily = UiSans, fontSize = 17.sp, textDecoration = TextDecoration.Underline)
                 } else {
                     Box(Modifier.size(16.dp).background(color.dot, CircleShape))
                 }
@@ -159,25 +160,25 @@ internal fun NoteSheet(
         val flags = if (DateUtils.isToday(target.createdAt)) DateUtils.FORMAT_SHOW_TIME else DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME
         DateUtils.formatDateTime(context, target.createdAt, flags)
     }
-    val sheet = if (palette.isDark) palette.sheet() else Color.White
+    val sheet = palette.sheet()
     ModalBottomSheet(
         onDismissRequest = { onDone(text) },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = sheet,
-        contentColor = palette.text,
+        contentColor = palette.labelColor(),
         dragHandle = null,
     ) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.93f).imePadding().padding(start = 28.dp, end = 16.dp, top = 16.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.note_title), color = palette.text, fontFamily = UiSans, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
+                Text(stringResource(R.string.note_title), color = palette.labelColor(), fontFamily = UiSans, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
                 Text(" $time", color = palette.secondary, fontFamily = UiSans, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, modifier = Modifier.weight(1f))
-                RoundButton(Icons.Rounded.Check, stringResource(R.string.note_done), Color(0xFF1C1C1E), Color.White, Modifier, size = 44.dp) { onDone(text) }
+                RoundButton(Icons.Rounded.Check, stringResource(R.string.note_done), palette.labelColor(), palette.background, Modifier, size = 44.dp) { onDone(text) }
             }
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(top = 24.dp, bottom = 18.dp, end = 12.dp)) {
                 Box(Modifier.width(3.dp).fillMaxHeight().background(target.color.dot, RoundedCornerShape(1.5.dp)))
                 Text(
                     quote,
-                    color = palette.text,
+                    color = palette.labelColor(),
                     fontFamily = bookFont,
                     fontSize = 15.sp,
                     lineHeight = 21.sp,
@@ -187,7 +188,7 @@ internal fun NoteSheet(
             BasicTextField(
                 value = text,
                 onValueChange = { text = it },
-                textStyle = TextStyle(color = palette.text, fontSize = 17.sp, lineHeight = 23.sp, fontFamily = UiSans, fontWeight = FontWeight.SemiBold),
+                textStyle = TextStyle(color = palette.labelColor(), fontSize = 17.sp, lineHeight = 23.sp, fontFamily = UiSans, fontWeight = FontWeight.SemiBold),
                 cursorBrush = SolidColor(SelectionBlue),
                 modifier = Modifier.fillMaxWidth().weight(1f).padding(end = 12.dp).focusRequester(focus),
                 decorationBox = { field ->

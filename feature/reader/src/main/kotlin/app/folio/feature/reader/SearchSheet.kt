@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.folio.core.designsystem.ReaderPalette
+import app.folio.core.designsystem.labelColor
 import app.folio.core.designsystem.UiSans
 import app.folio.core.designsystem.components.FolioSheet
 import kotlinx.coroutines.delay
@@ -75,14 +76,14 @@ internal fun SearchSheet(vm: ReaderViewModel, palette: ReaderPalette, bookFont: 
             vm.search(query)
         }
     }
-    val background = if (palette.isDark) Color(0xFF1C1C1E) else Color.White
+    val background = palette.sheet()
     val rule = palette.secondary.copy(alpha = 0.25f)
 
     FolioSheet(onDismiss = onDismiss, containerColor = background) {
         Column(Modifier.fillMaxHeight().imePadding()) {
             Text(
                 stringResource(R.string.reader_search),
-                color = palette.text, fontFamily = UiSans, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
+                color = palette.labelColor(), fontFamily = UiSans, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(vertical = 22.dp),
             )
@@ -101,7 +102,7 @@ internal fun SearchSheet(vm: ReaderViewModel, palette: ReaderPalette, bookFont: 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 hit.chapterTitle.orEmpty(),
-                                color = palette.text, fontFamily = UiSans, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                                color = palette.labelColor(), fontFamily = UiSans, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                             )
                             vm.pageNumberOf(hit.position)?.let {
@@ -116,7 +117,7 @@ internal fun SearchSheet(vm: ReaderViewModel, palette: ReaderPalette, bookFont: 
                                 }
                                 append(hit.snippet.substring(hit.matchStart + hit.matchLength))
                             },
-                            color = palette.text, fontFamily = bookFont, fontSize = 17.sp, lineHeight = 23.sp,
+                            color = palette.labelColor(), fontFamily = bookFont, fontSize = 17.sp, lineHeight = 23.sp,
                             maxLines = 3, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(top = 6.dp),
                         )
@@ -128,10 +129,10 @@ internal fun SearchSheet(vm: ReaderViewModel, palette: ReaderPalette, bookFont: 
                         when {
                             search.searching -> CircularProgressIndicator(color = palette.secondary, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
                             search.query.length >= 2 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(stringResource(R.string.search_done), color = palette.text, fontFamily = UiSans, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.search_done), color = palette.labelColor(), fontFamily = UiSans, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                                 Text(
                                     pluralStringResource(R.plurals.search_found, search.results.size, search.results.size),
-                                    color = palette.text, fontFamily = UiSans, fontSize = 15.sp,
+                                    color = palette.labelColor(), fontFamily = UiSans, fontSize = 15.sp,
                                 )
                             }
                         }
@@ -143,7 +144,7 @@ internal fun SearchSheet(vm: ReaderViewModel, palette: ReaderPalette, bookFont: 
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                val field = if (palette.isDark) Color(0xFF2C2C2E) else Color.White
+                val field = palette.control()
                 Row(
                     Modifier
                         .weight(1f)
@@ -153,18 +154,18 @@ internal fun SearchSheet(vm: ReaderViewModel, palette: ReaderPalette, bookFont: 
                         .padding(horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Rounded.Search, null, tint = palette.text, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.Search, null, tint = palette.labelColor(), modifier = Modifier.size(22.dp))
                     BasicTextField(
                         value = query,
                         onValueChange = { query = it },
                         singleLine = true,
-                        textStyle = TextStyle(color = palette.text, fontFamily = UiSans, fontSize = 17.sp),
+                        textStyle = TextStyle(color = palette.labelColor(), fontFamily = UiSans, fontSize = 17.sp),
                         cursorBrush = SolidColor(palette.link),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { vm.search(query) }),
                         modifier = Modifier.weight(1f).padding(horizontal = 10.dp).focusRequester(focus),
                         decorationBox = { inner ->
-                            if (query.isEmpty()) Text(stringResource(R.string.search_hint), color = palette.secondary, fontFamily = UiSans, fontSize = 17.sp)
+                            if (query.isEmpty()) Text(stringResource(R.string.reader_search_hint), color = palette.secondary, fontFamily = UiSans, fontSize = 17.sp)
                             inner()
                         },
                     )
@@ -172,7 +173,7 @@ internal fun SearchSheet(vm: ReaderViewModel, palette: ReaderPalette, bookFont: 
                         Icon(Icons.Rounded.Cancel, null, tint = palette.secondary, modifier = Modifier.size(20.dp).clickable { query = ""; vm.search("") })
                     }
                 }
-                RoundButton(Icons.Rounded.Close, stringResource(R.string.reader_close), field, palette.text, size = 48.dp, onClick = onDismiss)
+                RoundButton(Icons.Rounded.Close, stringResource(R.string.reader_close), field, palette.labelColor(), size = 48.dp, onClick = onDismiss)
             }
         }
     }

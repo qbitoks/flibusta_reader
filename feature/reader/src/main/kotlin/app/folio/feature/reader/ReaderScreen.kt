@@ -15,6 +15,7 @@ import app.folio.core.data.settings.ReaderSettings
 import app.folio.core.designsystem.ReaderPalette
 import app.folio.core.designsystem.ReaderPalettes
 import app.folio.core.designsystem.FolioTheme
+import app.folio.core.designsystem.uiColors
 
 @Composable
 fun ReaderRoute(onClose: () -> Unit, viewModel: ReaderViewModel = hiltViewModel()) {
@@ -30,7 +31,7 @@ fun ReaderRoute(onClose: () -> Unit, viewModel: ReaderViewModel = hiltViewModel(
 fun ReaderScreen(vm: ReaderViewModel, onClose: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     val palette = readerPalette(settings)
-    FolioTheme(dark = palette.isDark) { ReaderContent(vm, onClose) }
+    FolioTheme(palette.uiColors()) { ReaderContent(vm, onClose) }
 }
 
 @Composable

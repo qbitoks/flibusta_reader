@@ -14,6 +14,7 @@
 ## Invariants
 - Reuse semantic `Folio.colors` and `FolioType` in feature UI; add shared visual roles here.
 - Keep app theme colours separate from `ReaderPalettes`; book appearance can differ from the app.
+- Reader UI colours derive from the page in `ReaderUiColors.kt`; `ReaderUiColorsTest` (feature/reader) guards 4.5:1 label contrast.
 - Keep reader font keys stable; coordinate new families with settings and both Compose previews and Android typefaces.
 - Supply local cover files to `BookCover`; catalog network loading belongs to `core/data/`.
 - Provide `GlassScope` and its source modifier for backdrop blur; preserve fallback fills for separate popup windows.

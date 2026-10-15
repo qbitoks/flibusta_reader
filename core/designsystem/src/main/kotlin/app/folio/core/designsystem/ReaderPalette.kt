@@ -20,6 +20,9 @@ data class ReaderPalette(
 )
 
 object ReaderPalettes {
+    /** Chrome follows the page tone (see ReaderUiColors.kt). */
+    private fun ReaderPalette.withChrome() = copy(chrome = sheetColor())
+
     /** Measured from Apple Books theme tiles (guideline § 6.7); chrome/secondary follow the reader screenshots. */
     private fun p(bg: Long, text: Long, dark: Boolean) = ReaderPalette(
         background = Color(bg),
@@ -28,9 +31,9 @@ object ReaderPalettes {
         link = if (dark) Color(0xFF5AA7FF) else Color(0xFF1A73E8),
         // Search hits and the active selection are blue in Apple Books.
         highlight = if (dark) Color(0x993A7BDF) else Color(0xCCA9C6F4),
-        chrome = if (dark) Color(0xFF1C1C1E) else Color(0xFFFAFAFA),
+        chrome = Color.Unspecified,
         isDark = dark,
-    )
+    ).withChrome()
 
     private val light = mapOf(
         ReaderTheme.Original to p(0xFFFFFFFF, 0xFF000000, false),
@@ -69,7 +72,7 @@ object ReaderPalettes {
         val tinted = lerp(base.text, tint, w * 0.08f)
         val text = if (colors.contrast >= 0) lerp(tinted, if (darkPage) Color.White else Color.Black, colors.contrast / 10f)
             else lerp(tinted, bg, -colors.contrast / 10f * 0.5f)
-        return base.copy(background = bg, text = text, secondary = lerp(bg, text, 0.55f))
+        return base.copy(background = bg, text = text, secondary = lerp(bg, text, 0.55f)).withChrome()
     }
 
     fun isDark(appearance: Appearance, systemDark: Boolean) = when (appearance) {

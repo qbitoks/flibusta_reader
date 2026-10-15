@@ -36,9 +36,11 @@ import app.folio.core.data.settings.PageTurn
 import app.folio.core.data.settings.ReaderSettings
 import app.folio.core.designsystem.ReaderPalette
 import app.folio.core.designsystem.readerChromeSeparator
+import app.folio.core.designsystem.capsuleColor
+import app.folio.core.designsystem.controlColor
 
-internal fun ReaderPalette.control(): Color = if (isDark) Color(0xFF2C2C2E) else Color(0xFFF7F7F7)
-internal fun ReaderPalette.menuCapsule(): Color = if (isDark) Color(0xFF3A3A3C) else androidx.compose.ui.graphics.lerp(background, Color.White, 0.6f)
+internal fun ReaderPalette.control(): Color = controlColor()
+internal fun ReaderPalette.menuCapsule(): Color = capsuleColor()
 internal val BookmarkRed = Color(0xFFFF3B30)
 
 @Composable

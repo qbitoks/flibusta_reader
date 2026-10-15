@@ -33,7 +33,7 @@
     <string name="reader_no_bookmarks">No Bookmarks</string>
     <string name="reader_no_bookmarks_hint">Tap the bookmark button while reading to add one.</string>
     <string name="reader_delete">Delete</string>
-    <string name="search_hint">In This Book</string>
+    <string name="reader_search_hint">In This Book</string>
     <string name="search_cancel">Cancel</string>
     <string name="search_no_results">No Results</string>
     <plurals name="search_results">

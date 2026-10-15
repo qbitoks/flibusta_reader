@@ -35,7 +35,7 @@
     <string name="reader_no_bookmarks">Нет закладок</string>
     <string name="reader_no_bookmarks_hint">Нажмите на значок закладки во время чтения, чтобы добавить её.</string>
     <string name="reader_delete">Удалить</string>
-    <string name="search_hint">В этой книге</string>
+    <string name="reader_search_hint">В этой книге</string>
     <string name="search_cancel">Отменить</string>
     <string name="search_no_results">Ничего не найдено</string>
     <plurals name="search_results">

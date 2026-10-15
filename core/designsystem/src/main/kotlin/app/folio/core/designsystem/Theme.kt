@@ -155,13 +155,21 @@ object FolioType {
 
 val LocalFolioColors = staticCompositionLocalOf { Light }
 
+/** The app's own light or dark colours. */
+fun folioColors(dark: Boolean): FolioColors = if (dark) Dark else Light
+
 object Folio {
     val colors: FolioColors @Composable get() = LocalFolioColors.current
 }
 
 @Composable
-fun FolioTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val c = if (dark) Dark else Light
+fun FolioTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) =
+    FolioTheme(folioColors(dark), content)
+
+/** Theme with explicit [c], e.g. the reader's colours derived from the page ([uiColors]). */
+@Composable
+fun FolioTheme(c: FolioColors, content: @Composable () -> Unit) {
+    val dark = c.isDark
     val scheme = if (dark) {
         darkColorScheme(
             primary = c.label, onPrimary = c.background,

@@ -18,6 +18,7 @@ import app.folio.core.data.settings.ReaderSettings
 import app.folio.core.data.settings.SettingsRepository
 import app.folio.core.designsystem.Folio
 import app.folio.core.designsystem.FolioTheme
+import app.folio.core.designsystem.uiColors
 import app.folio.core.designsystem.FolioType
 import javax.inject.Inject
 
@@ -38,7 +39,7 @@ fun ReadingDefaultsSheet(onDismiss: () -> Unit, vm: ReadingDefaultsViewModel = h
     val saved by vm.settings.collectAsStateWithLifecycle()
     val editor = rememberSettingsEditor(saved, BookOverrides(), bookScope = false,
         save = { change -> vm.save(change).join() })
-    FolioTheme(dark = readerPalette(editor.settings).isDark) {
+    FolioTheme(readerPalette(editor.settings).uiColors()) {
         ReadingSettingsSheet(
             editor = editor,
             title = stringResource(R.string.reading_defaults_title),
