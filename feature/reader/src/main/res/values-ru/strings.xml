@@ -89,7 +89,8 @@
     <string name="guide_dim_medium">Средняя</string>
     <string name="guide_dim_low">Низкая</string>
     <string name="guide_dim_none">Нет</string>
-    <string name="guide_off">Выключить направляющую линию</string>
+    <string name="guide_hold_tip">Удерживайте, чтобы настроить затемнение</string>
+    <string name="guide_panel_tip">Совет: удерживайте иконку линии на панели, чтобы быстро сменить затемнение.</string>
     <string name="guide_scroll_hint">Недоступна при перелистывании «Прокрутка».</string>
     <string name="selection_highlight">Выделить</string>
     <string name="selection_remove">Убрать</string>

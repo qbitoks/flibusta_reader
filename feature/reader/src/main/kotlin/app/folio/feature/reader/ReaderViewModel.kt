@@ -589,6 +589,20 @@ class ReaderViewModel @Inject constructor(
     fun setGuideLine(on: Boolean) = viewModelScope.launch { settingsRepository.setGuideLine(on) }
     fun setGuideDim(value: GuideDim) = viewModelScope.launch { settingsRepository.setGuideDim(value) }
 
+    /** Show the «hold for settings» tip once, the first time the panel opens with the line already on. */
+    var guideTipDue by mutableStateOf(false)
+        private set
+
+    init {
+        viewModelScope.launch { guideTipDue = !settingsRepository.guideTipShown() }
+    }
+
+    fun guideTipSeen() {
+        if (!guideTipDue) return
+        guideTipDue = false
+        viewModelScope.launch { settingsRepository.setGuideTipShown() }
+    }
+
     // --- Reading sessions (kept for Reading Goals) ---
 
     fun onResume() {

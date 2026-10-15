@@ -85,7 +85,8 @@
     <string name="guide_dim_medium">Medium</string>
     <string name="guide_dim_low">Low</string>
     <string name="guide_dim_none">None</string>
-    <string name="guide_off">Turn Off Guide Line</string>
+    <string name="guide_hold_tip">Hold to adjust dimming</string>
+    <string name="guide_panel_tip">Tip: hold the line icon in the panel to change dimming quickly.</string>
     <string name="guide_scroll_hint">Not available with Scroll page turning.</string>
     <string name="selection_highlight">Highlight</string>
     <string name="selection_remove">Remove</string>

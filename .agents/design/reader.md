@@ -176,6 +176,7 @@
 - Put a 22 dp highlight-color note circle at highlight top-left, outlined in page color, with small
   page-color square inside. Use haptics for selection start, moving handles and bookmarking.
 - For «Направляющая линия», brighten a rounded line, dim other text, move line by taps, and offer
-  «Затемнение фона: Высокая / Средняя / Низкая / Нет» and disable from the bottom-left circle.
+  «Затемнение фона: Высокая / Средняя / Низкая / Нет». Panel button: tap toggles, hold opens the dim menu (no off item);
+  a one-time tip (`guide_tip_shown`) explains the hold, and «Аа» repeats it under the guide card.
 - Open tapped images full-screen as «Изображение», with dark round ✓, gesture zoom and background
   tap cycling white/black; hide navbar on black. Omit Live Text.

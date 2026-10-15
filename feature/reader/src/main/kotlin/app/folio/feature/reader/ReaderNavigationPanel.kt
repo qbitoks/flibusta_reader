@@ -4,6 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.foundation.shape.RoundedCornerShape
+import kotlinx.coroutines.delay
 import app.folio.core.data.settings.GuideDim
 import app.folio.core.designsystem.FolioTheme
 import app.folio.core.designsystem.components.PullDownMenu
@@ -108,21 +118,30 @@ internal fun ReaderNavigationPanel(
                 }
                 // Tap toggles; long press opens dimming (the full block lives in «Аа»).
                 var guideMenu by remember { mutableStateOf(false) }
+                val guideTip = vm.guideTipDue && settings.guideLine && guideAvailable && !guideMenu
+                LaunchedEffect(guideTip) {
+                    if (guideTip) {
+                        delay(4_000)
+                        vm.guideTipSeen()
+                    }
+                }
                 Box(Modifier.weight(1f)) {
                     NavigationAction(Icons.Rounded.CalendarViewDay, stringResource(R.string.reader_guide_line),
                         active = settings.guideLine && guideAvailable, enabled = guideAvailable,
                         modifier = Modifier.fillMaxWidth(), onLongClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            vm.guideTipSeen()
                             guideMenu = true
                         }) {
                         val enable = !settings.guideLine
                         vm.setGuideLine(enable)
                         if (enable) controls.chromeVisible = false
                     }
+                    if (guideTip) GuideTip(palette)
                     GuideDimMenu(guideMenu, settings, palette, onDismiss = { guideMenu = false }, onDim = { dim ->
                         vm.setGuideDim(dim)
                         if (!settings.guideLine) vm.setGuideLine(true)
-                    }, onTurnOff = { vm.setGuideLine(false) })
+                    })
                 }
                 NavigationAction(Icons.Rounded.Search, stringResource(R.string.reader_search), modifier = Modifier.weight(1f)) {
                     controls.sheet = ReaderSheet.Search
@@ -154,7 +173,7 @@ private fun NavigationAction(
 @Composable
 private fun GuideDimMenu(
     expanded: Boolean, settings: ReaderSettings, palette: ReaderPalette,
-    onDismiss: () -> Unit, onDim: (GuideDim) -> Unit, onTurnOff: () -> Unit,
+    onDismiss: () -> Unit, onDim: (GuideDim) -> Unit,
 ) {
     FolioTheme(dark = palette.isDark) {
         PullDownMenu(expanded = expanded, onDismiss = onDismiss, width = 230.dp, offset = DpOffset(0.dp, (-8).dp), checkColumn = true) {
@@ -162,10 +181,29 @@ private fun GuideDimMenu(
             guideDimOptions().asReversed().forEach { option ->
                 Item(option.label, { onDim(option.value) }, checked = settings.guideLine && settings.guideDim == option.value)
             }
-            if (settings.guideLine) {
-                Divider()
-                Item(stringResource(R.string.guide_off), onTurnOff)
+        }
+    }
+}
+
+/** One-time bubble above the guide button: the long press is otherwise invisible. Taps pass through. */
+@Composable
+private fun GuideTip(palette: ReaderPalette) {
+    val gap = with(LocalDensity.current) { 8.dp.roundToPx() }
+    val provider = remember(gap) {
+        object : PopupPositionProvider {
+            override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection,
+                popupContentSize: IntSize): IntOffset {
+                val x = (anchorBounds.center.x - popupContentSize.width / 2).coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+                return IntOffset(x, anchorBounds.top - popupContentSize.height - gap)
             }
+        }
+    }
+    FolioTheme(dark = palette.isDark) {
+        Popup(popupPositionProvider = provider, properties = PopupProperties()) {
+            val c = Folio.colors
+            Text(stringResource(R.string.guide_hold_tip), style = FolioType.footnote, color = c.label,
+                modifier = Modifier.widthIn(max = 240.dp).clip(RoundedCornerShape(12.dp))
+                    .background(c.glassFallback.copy(alpha = 0.98f)).padding(horizontal = 12.dp, vertical = 8.dp))
         }
     }
 }

@@ -62,6 +62,10 @@ internal fun ReaderGuideSettings(editor: SettingsEditor) {
             SettingsSegments(settings.guideDim, guideDimOptions()) { v -> editor.edit { it.copy(guideDim = v) } }
         }
     }
+    if (settings.pageTurn != PageTurn.Scroll) {
+        Text(stringResource(R.string.guide_panel_tip), style = FolioType.footnote, color = Folio.colors.secondaryLabel,
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp))
+    }
 }
 
 @Composable

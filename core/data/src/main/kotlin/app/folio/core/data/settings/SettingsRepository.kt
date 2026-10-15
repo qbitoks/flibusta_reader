@@ -3,6 +3,7 @@ package app.folio.core.data.settings
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -147,6 +148,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val librarySort = stringPreferencesKey("library_sort")
         val watchedFolder = stringPreferencesKey("watched_folder")
         val hiddenSystem = stringSetPreferencesKey("hidden_system_collections")
+        val guideTipShown = booleanPreferencesKey("guide_tip_shown")
     }
 
     /** Settings shared by all books. */
@@ -205,6 +207,13 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     suspend fun setGuideLine(on: Boolean) = updateReader { it.copy(guideLine = on) }
 
     suspend fun setGuideDim(value: GuideDim) = updateReader { it.copy(guideDim = value) }
+
+    /** The one-time «hold for settings» tip at the panel's guide button. */
+    suspend fun guideTipShown(): Boolean = store.data.first()[Keys.guideTipShown] ?: false
+
+    suspend fun setGuideTipShown() {
+        store.edit { it[Keys.guideTipShown] = true }
+    }
 
     suspend fun setHighlightColor(value: String) = updateReader { it.copy(highlightColor = value) }
 
