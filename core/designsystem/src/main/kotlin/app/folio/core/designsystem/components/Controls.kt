@@ -128,7 +128,20 @@ fun IosSlider(
             .pointerInput(valueRange, trackPx) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
-                    down.consume()
+                    // Decide by direction past touch slop: vertical moves stay with the scrolling parent,
+                    // and a plain tap changes nothing, so scrolling across the track never moves the value.
+                    val slop = viewConfiguration.touchSlop
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture
+                        if (change.isConsumed || !change.pressed) return@awaitEachGesture
+                        val d = change.position - down.position
+                        if (kotlin.math.abs(d.x) > slop || kotlin.math.abs(d.y) > slop) {
+                            if (kotlin.math.abs(d.x) <= kotlin.math.abs(d.y)) return@awaitEachGesture
+                            change.consume()
+                            break
+                        }
+                    }
                     val halfThumb = thumbW.toPx() / 2
                     val thumbCenter = halfThumb + ((latestValue - valueRange.start) / span) * trackPx
                     // Keep the grab offset on the thumb; a track press chooses its own position.
@@ -145,7 +158,7 @@ fun IosSlider(
                     var released = false
                     try {
                         update(down.position.x)
-                        // Own both axes until release, including movement outside the track.
+                        // Once horizontal, own both axes until release, including movement outside the track.
                         while (true) {
                             val event = awaitPointerEvent()
                             val change = event.changes.firstOrNull { it.id == down.id } ?: break

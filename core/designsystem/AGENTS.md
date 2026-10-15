@@ -20,4 +20,5 @@
 - Keep navigation actions and repository mutations in callers; shared components expose callbacks.
 - Use `IosSlider(enabled = false)` for inactive controls; omit adjustable accessibility actions at the caller.
 - Slider gestures use current callbacks, clamp values to the range and omit repeated unchanged values at endpoints.
-- Own slider touches through release on both axes; retain grab offset and report cancellation separately from release.
+- Sliders ignore taps and yield vertical moves to the scrolling parent; past touch slop a horizontal drag owns both axes
+  through release, retains the thumb grab offset and reports cancellation separately from release.
