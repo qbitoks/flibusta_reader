@@ -10,5 +10,5 @@ if (!(Test-Path -LiteralPath 'local.properties')) {
 & ./gradlew.bat :core:opds:test :core:format:test :feature:reader:testDebugUnitTest :app:assembleRelease :app:lintDebug --console=plain
 if ($LASTEXITCODE -ne 0) { throw "Сборка завершилась с кодом $LASTEXITCODE" }
 New-Item -ItemType Directory -Force artifacts | Out-Null
-Copy-Item -LiteralPath 'app/build/outputs/apk/release/app-release.apk' -Destination 'artifacts/Folio-0.3.12-release.apk' -Force
-Get-Item -LiteralPath 'artifacts/Folio-0.3.12-release.apk' | Select-Object FullName,Length
+Copy-Item -LiteralPath 'app/build/outputs/apk/release/app-release.apk' -Destination 'artifacts/Folio-0.3.13-release.apk' -Force
+Get-Item -LiteralPath 'artifacts/Folio-0.3.13-release.apk' | Select-Object FullName,Length

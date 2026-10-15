@@ -36,6 +36,6 @@ class PageLineEditsTest {
         assertEquals(100, settings.shownHeaderLayout.sizePct)
         assertFalse(settings.shownHeaderLayout.uppercase)
         assertEquals(4, settings.shownHeaderLayout.edge)
-        assertEquals(FooterStyle.None, settings.shownHeaderUnder)
+        assertEquals(FooterStyle.Clip, settings.shownHeaderUnder)
     }
 }

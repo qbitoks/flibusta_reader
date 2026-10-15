@@ -26,7 +26,7 @@ data class TextSet(
 
     companion object {
         const val DEFAULT_LINE_SPACING = 1.2f
-        val DEFAULT = ReaderStyle().let { TextSet(font = it.font, justify = it.justify, firstLineIndent = it.firstLineIndent) }
+        val DEFAULT = ReaderStyle().let { TextSet(font = it.font, justify = true, firstLineIndent = it.firstLineIndent) }
 
         fun decode(value: String?, default: TextSet): TextSet {
             val p = value?.split('|')?.takeIf { it.size == 9 } ?: return default

@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.setProgress
@@ -147,6 +148,19 @@ internal fun SettingsGroupHeader(title: String, value: String? = null, own: Bool
 
 @Composable
 internal fun SettingsCheck() = Icon(Icons.Rounded.Check, null, tint = Folio.colors.label, modifier = Modifier.size(20.dp))
+
+/** «Подробнее» row of a settings card; [expanded] is UI state only, never a saved setting. */
+@Composable
+internal fun SettingsDetailsRow(expanded: Boolean, onToggle: () -> Unit) {
+    val state = stringResource(if (expanded) R.string.line_details_expanded else R.string.line_details_collapsed)
+    Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onToggle)
+        .semantics { stateDescription = state }
+        .heightIn(min = 54.dp).padding(horizontal = 18.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.line_details), style = FolioType.body, color = Folio.colors.label, modifier = Modifier.weight(1f))
+        Icon(if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+            null, tint = Folio.colors.secondaryLabel, modifier = Modifier.size(22.dp))
+    }
+}
 
 @Composable
 internal fun SettingsDivider() = HorizontalDivider(color = Folio.colors.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 18.dp))

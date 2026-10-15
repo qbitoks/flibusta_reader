@@ -6,10 +6,10 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ScrollBoundaryTest {
-    @Test fun legacyNoneUsesProtectedSmoothBoundary() {
+    @Test fun defaultBoundaryIsClip() {
         val settings = ReaderSettings(pageTurn = PageTurn.Scroll)
-        assertEquals(FooterStyle.Fade, settings.scrollHeaderBoundary)
-        assertEquals(FooterStyle.Fade, settings.scrollFooterBoundary)
+        assertEquals(FooterStyle.Clip, settings.scrollHeaderBoundary)
+        assertEquals(FooterStyle.Clip, settings.scrollFooterBoundary)
     }
 
     @Test fun negativeLegacyGapsCannotShrinkProtectedZones() {
@@ -28,7 +28,7 @@ class ScrollBoundaryTest {
             footerLayout = LineLayout.FOOTER.copy(customize = true, sizePct = 140, edge = 24))
             .editLineBoundary(false, FooterStyle.Clip)
         assertEquals(FooterStyle.Clip, settings.scrollFooterBoundary)
-        assertEquals(FooterStyle.None, settings.headerUnder)
+        assertEquals(FooterStyle.Clip, settings.headerUnder)
         assertEquals(FooterStyle.Clip, settings.footer.style)
         assertTrue(settings.shownFooter.clock)
         assertEquals(FooterPage.None, settings.shownFooter.page)

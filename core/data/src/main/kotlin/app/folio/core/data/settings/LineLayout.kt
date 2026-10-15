@@ -15,7 +15,7 @@ data class LineLayout(
     /** Percent of the visual preset's text size. */
     val sizePct: Int = 100,
     /** Percent of the preset's text opacity. */
-    val opacityPct: Int = 100,
+    val opacityPct: Int = 70,
     val align: LineAlign = LineAlign.Center,
     /** Extra dp between the screen edge and the line. */
     val edge: Int = 0,

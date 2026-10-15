@@ -50,12 +50,12 @@ class LineBlockGeometryTest {
         assertEquals(layout, restored.headerLayout)
     }
 
-    @Test fun boundariesAreIndependentAndKeepLegacyNoneSafe() {
-        val settings = ReaderSettings(pageTurn = PageTurn.Scroll).editLineBoundary(true, FooterStyle.Clip)
-        assertEquals(FooterStyle.Clip, settings.scrollHeaderBoundary)
-        assertEquals(FooterStyle.Fade, settings.scrollFooterBoundary)
+    @Test fun boundariesAreIndependentAndDefaultToClip() {
+        val settings = ReaderSettings(pageTurn = PageTurn.Scroll).editLineBoundary(true, FooterStyle.Fade)
+        assertEquals(FooterStyle.Fade, settings.scrollHeaderBoundary)
+        assertEquals(FooterStyle.Clip, settings.scrollFooterBoundary)
         val edited = settings.editLineBoundary(false, FooterStyle.Fade)
-        assertEquals(FooterStyle.Clip, edited.scrollHeaderBoundary)
+        assertEquals(FooterStyle.Fade, edited.scrollHeaderBoundary)
         assertEquals(FooterStyle.Fade, edited.scrollFooterBoundary)
     }
 

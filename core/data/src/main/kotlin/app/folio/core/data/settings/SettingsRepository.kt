@@ -35,7 +35,7 @@ enum class PageHeader { None, Book, Chapter }
 enum class FooterPage { None, Number, NumberOfTotal, Percent }
 
 /**
- * Persisted scrolling boundary. None is retained for compatibility and resolves to a safe fade.
+ * Persisted scrolling boundary. None is retained for compatibility and resolves to a clean clip.
  */
 enum class FooterStyle { None, Clip, Fade }
 
@@ -46,7 +46,7 @@ data class PageFooter(
     val pagesLeft: Boolean = false,
     val clock: Boolean = false,
     val battery: Boolean = false,
-    val style: FooterStyle = FooterStyle.None,
+    val style: FooterStyle = FooterStyle.Clip,
 ) {
     /** Nothing to show: the text runs to the bottom of the screen. */
     val isEmpty: Boolean get() = page == FooterPage.None && !pagesLeft && !clock && !battery
@@ -85,7 +85,7 @@ data class ReaderSettings(
     val headerLayout: LineLayout = LineLayout.HEADER,
     val footerLayout: LineLayout = LineLayout.FOOTER,
     /** Persisted top scrolling boundary; the bottom line has its own choice. */
-    val headerUnder: FooterStyle = FooterStyle.None,
+    val headerUnder: FooterStyle = FooterStyle.Clip,
 ) {
     val textSet: TextSet get() = readingText
     val style: ReaderStyle get() = textSet.toReaderStyle(fontSize)
@@ -115,10 +115,10 @@ data class ReaderSettings(
     /** Line parameters as drawn: the stored ones only while «Свои параметры» is on. */
     val shownHeaderLayout: LineLayout get() = if (headerLayout.customize) headerLayout else LineLayout.HEADER
     val shownFooterLayout: LineLayout get() = if (footerLayout.customize) footerLayout else LineLayout.FOOTER
-    val shownHeaderUnder: FooterStyle get() = if (headerLayout.customize) headerUnder else FooterStyle.None
+    val shownHeaderUnder: FooterStyle get() = if (headerLayout.customize) headerUnder else FooterStyle.Clip
 
-    val scrollHeaderBoundary: FooterStyle get() = if (shownHeaderUnder == FooterStyle.Clip) FooterStyle.Clip else FooterStyle.Fade
-    val scrollFooterBoundary: FooterStyle get() = if (shownFooter.style == FooterStyle.Clip) FooterStyle.Clip else FooterStyle.Fade
+    val scrollHeaderBoundary: FooterStyle get() = if (shownHeaderUnder == FooterStyle.Fade) FooterStyle.Fade else FooterStyle.Clip
+    val scrollFooterBoundary: FooterStyle get() = if (shownFooter.style == FooterStyle.Fade) FooterStyle.Fade else FooterStyle.Clip
 
     /**
      * «Нет» drops only the page number. Time, battery and pages left are «Свои параметры»; with it off

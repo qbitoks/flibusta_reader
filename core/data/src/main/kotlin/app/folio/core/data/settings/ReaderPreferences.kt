@@ -55,7 +55,7 @@ internal object ReaderPreferences {
             chromeStyles = ChromeStylePreferences.readDefaults(p),
             headerLayout = LineLayout.decode(p[headerLayout], LineLayout.HEADER),
             footerLayout = LineLayout.decode(p[footerLayout], LineLayout.FOOTER),
-            headerUnder = enumOr(p[headerUnder], FooterStyle.None),
+            headerUnder = enumOr(p[headerUnder], FooterStyle.Clip),
         )
     }
 

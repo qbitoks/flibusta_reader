@@ -52,7 +52,7 @@ internal fun ReadingTextSettings(editor: SettingsEditor) {
     SettingsDivider()
     SettingsToggle(stringResource(R.string.settings_bold_text), style.boldText) { update(style.copy(boldText = it)) }
     }
-    SpacingSettingsCard(style, ::update) {
+    SpacingSettingsCard(style, editor.isOwn(listOf(BookOverrides.LINE_SPACING, BookOverrides.MARGINS)), ::update) {
     SettingsSlider(stringResource(R.string.settings_line_spacing), style.lineSpacing, 0.8f..2.5f, 0.05f,
         String.format(Locale.getDefault(), "%.2f", style.lineSpacing)) { update(style.copy(lineSpacing = it)) }
     SettingsDivider()

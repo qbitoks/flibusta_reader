@@ -102,8 +102,11 @@
 - Show two cyclic spacing cards above their «Подробнее»: line spacing 1.0/1.2/1.4, side margins 3/5/8% of viewport width.
   Start at the middle values. Derive each card from the current value; custom values show a fourth sliders glyph without emphasis.
   Keep custom cards tappable: restart at the minimum. Details edit the same values; opening or collapsing changes no settings.
-  Reuse stacked `SegmentedControl` as for page turning: 58 dp track, 22 dp vector icons and one caption underneath.
-  Use `ReaderSpacingIcons` on the same 24-unit grid and 1.7-unit rounded stroke as `PageTurnIcons`; omit extra value rows.
+  Title it with `SettingsGroupHeader` (own dot) like the line cards; share `SettingsDetailsRow`, no expand animation.
+  Draw them as two equal `SpacingTile` buttons (fill, 14 dp corners, no raised selection): 24 dp icon and the current step
+  («Своё» for custom); the title is only spoken. Not a segmented control: nothing is "selected", a tap advances the step.
+  `ReaderSpacingIcons`: 24-unit grid, 1.7-unit stroke, whole-unit coordinates, glyphs centred on y = 12; one property
+  changes per state (line step 4/6/8, page inset 3/5/6); custom is a two-slider glyph.
 - Put one «Сбросить дополнительные настройки» action at the end of Advanced; confirm its book/shared scope.
   Use `withAdvancedDefaults` to reset only Advanced; preserve Basic values, window controls, guide and annotation state.
   In book scope store factory values as differences from current shared settings; keep the scope-menu action for inheriting shared settings.

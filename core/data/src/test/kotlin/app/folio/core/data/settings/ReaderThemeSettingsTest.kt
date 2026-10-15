@@ -24,7 +24,7 @@ class ReaderThemeSettingsTest {
         assertEquals(1.2f, settings.style.lineSpacing, 0f)
         assertEquals(5f, settings.style.marginPercent, 0f)
         assertEquals(1.5f, settings.style.firstLineIndent, 0f)
-        assertFalse(settings.style.justify)
+        assertTrue(settings.style.justify)
         for (theme in ReaderTheme.entries) assertEquals(settings.style, settings.withTheme(theme).style)
     }
 

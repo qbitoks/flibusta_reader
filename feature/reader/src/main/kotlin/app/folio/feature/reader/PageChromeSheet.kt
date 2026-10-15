@@ -80,15 +80,8 @@ internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource) {
 @Composable
 private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEditor, gap: Boolean, change: ((LineLayout) -> LineLayout) -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val state = stringResource(if (expanded) R.string.line_details_expanded else R.string.line_details_collapsed)
     SettingsDivider()
-    Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { expanded = !expanded }
-        .semantics { stateDescription = state }
-        .heightIn(min = 54.dp).padding(horizontal = 18.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.line_details), style = FolioType.body, color = Folio.colors.label, modifier = Modifier.weight(1f))
-        Icon(if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
-            null, tint = Folio.colors.secondaryLabel, modifier = Modifier.size(22.dp))
-    }
+    SettingsDetailsRow(expanded) { expanded = !expanded }
     if (!expanded) return
     if (top) {
         SettingsDivider()
