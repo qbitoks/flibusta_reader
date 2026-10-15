@@ -56,3 +56,8 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-15 | reader settings | Remove deletion Undo and bottom scope explanation from Appearance | user correction
 2026-10-15 | reader | Replace floating menu with top/bottom overlay panels and release-only scrubber; visible-control taps only dismiss | user-approved design; supersedes edge-tap dismissal+turn
 2026-10-15 | reader history | Keep arrows beside tappable percent for five reading pages; remove floating return, retain history in position sheet | user correction
+
+2026-10-15 | reader settings | Supersede linked text/custom themes: five palettes, independent text, details disclosure and scoped factory reset | user-approved design
+
+2026-10-15 | reader settings | Basic: window, palette, size; Advanced: text, colour, page; reset affects Advanced only | user correction; replaces general disclosure/reset
+2026-10-15 | reader settings | Move turning to Basic with no group headings; Advanced starts with unchanged lines, then collapsible font/spacing/tone | user-approved layout

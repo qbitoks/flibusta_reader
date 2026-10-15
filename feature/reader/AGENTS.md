@@ -37,7 +37,7 @@
 
 - Auto brightness disables touch/accessibility adjustment; observe the device setting and use it on manual takeover.
 - Ignore unchanged settings edits, including repeated slider endpoint events.
-- Copy preset text when creating «Моя» with +; see `.agents/design/reader.md` for its saved swatch and deletion lifecycle.
+- Keep palette/size/window/turning on Basic; start Advanced with line cards, then collapsible text/colour. Reset only Advanced. See `.agents/design/reader.md`.
 - Disable overscroll stretch in the settings panel; horizontal slider drags at either edge must not deform the panel.
 - Use `FooterContentCapsules`; cycle progress on tap. Show only geometry in «Подробнее», or a hidden-line hint when empty; retain saved settings.
 - Order line details: size/opacity, placement, separator/gap/boundary; default Scroll blocks to 36 dp.

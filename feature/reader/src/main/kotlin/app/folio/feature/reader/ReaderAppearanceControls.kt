@@ -6,10 +6,11 @@ import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.BrightnessHigh
 import androidx.compose.material.icons.rounded.BrightnessLow
 import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.ScreenLockRotation
+import androidx.compose.material.icons.rounded.ScreenRotation
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,7 +22,6 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -37,68 +37,58 @@ import androidx.compose.ui.unit.sp
 import app.folio.core.data.settings.Appearance
 import app.folio.core.data.settings.BookOverrides
 import app.folio.core.data.settings.CustomColors
-import app.folio.core.data.settings.TextSet
 import app.folio.core.data.settings.ReaderTheme
-import app.folio.core.data.settings.textPreset
 import app.folio.core.designsystem.components.GroupedCard
 import app.folio.core.designsystem.*
 import app.folio.core.designsystem.components.IosSlider
 import kotlin.math.roundToInt
 
-/**
- * «Оформление»: brightness with «Авто», then one card of size, Light/Dark and themes (add/«Моя» last);
- * «Моя» opens its colour and text cards below.
- */
+/** Basic settings: window controls, palette-only cards and the independent text size. */
 @Composable
-internal fun ReaderAppearanceSettings(editor: SettingsEditor, brightness: SheetBrightness?) {
+internal fun ReaderAppearanceSettings(editor: SettingsEditor, brightness: SheetBrightness?, rotation: SheetRotation?) {
     val settings = editor.settings
-    // Resolve swatches from appearance, not from the low-contrast Quiet palette.
     val dark = ReaderPalettes.isDark(settings.appearance, androidInDarkTheme())
-    if (brightness != null) {
-        SettingsGroupHeader(stringResource(R.string.settings_brightness))
-        GroupedCard { BrightnessSlider(brightness.value, brightness.onChange) }
-    }
-    SettingsGroupHeader(stringResource(R.string.settings_themes),
-        if (settings.custom) stringResource(R.string.theme_mine) else themeName(settings.theme),
-        own = editor.isOwn(listOf(BookOverrides.THEME, BookOverrides.APPEARANCE, BookOverrides.FONT_SIZE) + BookOverrides.TEXT))
+    Spacer(Modifier.height(8.dp))
     GroupedCard {
-        SettingsSlider(stringResource(R.string.settings_font_size), settings.fontSize, 13f..42f, 1f, "${settings.fontSize.roundToInt()}") { size ->
-            editor.edit { it.copy(fontSize = size) }
+        if (brightness != null) {
+            BrightnessSlider(brightness.value, brightness.onChange)
+            SettingsDivider()
         }
-        SettingsDivider()
+        Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.weight(1f)) {
         SettingsSegments(settings.appearance, listOf(
             SegmentOption(Appearance.Auto, stringResource(R.string.appearance_app_short), stringResource(R.string.appearance_app), Icons.Rounded.BrightnessAuto),
             SegmentOption(Appearance.Light, stringResource(R.string.appearance_light), icon = Icons.Rounded.LightMode),
             SegmentOption(Appearance.Dark, stringResource(R.string.appearance_dark), icon = Icons.Rounded.DarkMode),
         )) { value -> editor.edit { it.copy(appearance = value) } }
-        Row(Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            ReaderTheme.entries.forEach { theme ->
-                ThemeSwatch(themeName(theme), !settings.custom && settings.theme == theme, theme.textPreset.text!!,
-                    ReaderPalettes.of(theme, dark), Modifier.weight(1f)) { editor.edit { it.withTheme(theme) } }
+        }
+        if (rotation != null) {
+            IconToggleButton(checked = rotation.locked, onCheckedChange = rotation.onChange,
+                modifier = Modifier.padding(end = 8.dp).background(
+                    if (rotation.locked) Folio.colors.fill else androidx.compose.ui.graphics.Color.Transparent, CircleShape)) {
+                Icon(if (rotation.locked) Icons.Rounded.ScreenLockRotation else Icons.Rounded.ScreenRotation,
+                    stringResource(R.string.reader_rotation_lock), tint = Folio.colors.label)
             }
-            val colors = settings.customColors
-            if (colors == null) {
-                AddThemeButton(Modifier.weight(1f)) { editor.edit { it.withCustom(true) } }
-            } else {
-                ThemeSwatch(stringResource(R.string.theme_mine), settings.custom, settings.customText,
-                    ReaderPalettes.custom(colors, dark), Modifier.weight(1f), editable = true) {
-                    editor.edit { it.withCustom(true) }
+        }
+        }
+    }
+    Spacer(Modifier.height(12.dp))
+    GroupedCard {
+        Row(Modifier.padding(12.dp).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            CustomColors.BASES.forEach { theme ->
+                ThemeSwatch(themeName(theme), settings.theme == theme, ReaderPalettes.of(theme, dark), Modifier.weight(1f)) {
+                    editor.edit { it.withTheme(theme) }
                 }
             }
         }
-        Spacer(Modifier.height(12.dp))
+        SettingsDivider()
+        SettingsSlider(stringResource(R.string.settings_font_size), settings.fontSize, 13f..42f, 1f, "${settings.fontSize.roundToInt()}") { size ->
+            editor.edit { it.copy(fontSize = size) }
+        }
     }
-    if (settings.custom) {
-        CustomThemeSettings(editor, dark)
-        Spacer(Modifier.height(16.dp))
-        ResetButton(stringResource(R.string.settings_delete_mine), true) { editor.edit { it.withoutCustomTheme() } }
-    }
-    if (editor.bookScope) {
-        Spacer(Modifier.height(16.dp))
-        ResetButton(stringResource(R.string.settings_reset_book_text), editor.isOwn(BookOverrides.TEXT), editor::resetText)
-    }
+    Spacer(Modifier.height(12.dp))
+    ReaderPageTurnSettings(editor)
 }
-
 @Composable
 internal fun themeName(theme: ReaderTheme) = stringResource(when (theme) {
     ReaderTheme.Original -> R.string.theme_original
@@ -109,33 +99,17 @@ internal fun themeName(theme: ReaderTheme) = stringResource(when (theme) {
     ReaderTheme.Focus -> R.string.theme_focus
 })
 
-/** A compact «Aa» sample in the theme's palette and font; the name is spoken and shown in the header. */
+/** Identical typography in every palette; the name is spoken and shown in the header. */
 @Composable
-private fun ThemeSwatch(name: String, selected: Boolean, style: TextSet, palette: ReaderPalette, modifier: Modifier,
-                        editable: Boolean = false, onClick: () -> Unit) {
+private fun ThemeSwatch(name: String, selected: Boolean, palette: ReaderPalette, modifier: Modifier, onClick: () -> Unit) {
     val shape = RoundedCornerShape(12.dp)
     Box(modifier.clip(shape).background(palette.background)
         .border(if (selected) 2.dp else 0.5.dp, if (selected) Folio.colors.label else Folio.colors.separator, shape)
         .selectable(selected, role = Role.RadioButton, onClick = onClick)
         .semantics { contentDescription = name }
         .heightIn(min = 52.dp), contentAlignment = Alignment.Center) {
-        Text("Aa", fontFamily = ReaderFont.of(style.font).composeFamily, fontSize = 18.sp, color = palette.text, maxLines = 1,
-            fontWeight = if (style.boldText) FontWeight.Bold else FontWeight.Normal, modifier = Modifier.clearAndSetSemantics { })
-        if (editable) Icon(Icons.Rounded.Edit, null, tint = palette.text,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(3.dp)
-                .background(palette.background, CircleShape).padding(2.dp).size(12.dp))
-    }
-}
-
-@Composable
-private fun AddThemeButton(modifier: Modifier, onClick: () -> Unit) {
-    val c = Folio.colors
-    val name = stringResource(R.string.theme_add)
-    val shape = RoundedCornerShape(12.dp)
-    Box(modifier.clip(shape).background(c.fill).border(0.5.dp, c.separator, shape)
-        .clickable(role = Role.Button, onClickLabel = name, onClick = onClick)
-        .semantics { contentDescription = name }.heightIn(min = 52.dp), contentAlignment = Alignment.Center) {
-        Icon(Icons.Rounded.Add, null, tint = c.label, modifier = Modifier.size(24.dp))
+        Text("Aa", fontFamily = ReaderFont.of("literata").composeFamily, fontSize = 18.sp, color = palette.text, maxLines = 1,
+            modifier = Modifier.clearAndSetSemantics { })
     }
 }
 

@@ -13,7 +13,7 @@ class SettingsEditorTest {
         val job = Job()
         val scope = CoroutineScope(job + Dispatchers.Unconfined)
         try {
-            val editor = SettingsEditor(ReaderSettings(), false, scope, {}, { it }, { it })
+            val editor = SettingsEditor(ReaderSettings(), false, scope, {})
             editor.edit { it.copy(fontSize = it.fontSize) }
             assertFalse(job.children.any())
         } finally {

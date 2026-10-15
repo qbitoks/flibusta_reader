@@ -26,7 +26,11 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   are read as part of it and dropped on the next write of that book. Unknown fields are ignored.
 - Keep legacy 8-field `custom_text` readable; append paragraph spacing and first-line indent as fields 9–10.
   Missing fields retain 0 gap and 1.6 em indent; book overrides use `paragraph_spacing` and `first_line_indent`.
-- Preserve inactive book custom text in optional `custom_text`; apply it after legacy individual text fields.
+- Read legacy `custom_text` after individual text fields; preserve its active typography when upgrading.
+- Store independent shared typography in `reading_text`; append base margin as TextSet field 11; old 8/10-field text keeps 30 dp.
+- Mark new book overrides with `settings_version=2`; migrate legacy book text before changing shared settings in the same DataStore edit.
+- Keep removed Bold identifiers readable as Original while preserving their legacy typography.
+- Store book warmth/contrast as separate `warmth`/`contrast` fields; retain legacy `custom_colors` decoding and inherit untouched controls.
 - A missing `footer_layout` starts customised when the old footer content differs from the standard one.
 - `shared_prefs/catalog.xml`: `catalog`, `downloads` HTTPS origins; `recent` — catalog searches, newline-joined.
 

@@ -79,6 +79,7 @@ internal fun <T> SettingsOptions(
     current: T,
     options: List<Pair<T, String>>,
     onSelect: (T) -> Unit,
+    optionStyle: @Composable (T) -> TextStyle = { FolioType.body },
     sample: (@Composable (T) -> Unit)? = null,
 ) {
     val c = Folio.colors
@@ -90,7 +91,7 @@ internal fun <T> SettingsOptions(
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Box(Modifier.size(22.dp), contentAlignment = Alignment.Center) { if (value == current) SettingsCheck() }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(label, style = FolioType.body, color = c.label)
+                    Text(label, style = optionStyle(value), color = c.label)
                     sample?.invoke(value)
                 }
             }

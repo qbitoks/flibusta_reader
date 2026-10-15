@@ -31,90 +31,23 @@ class BookOverridesTest {
         assertEquals(PageTurn.Scroll, book.pageTurn)
     }
 
-    @Test fun bookTextEditsGoToItsOwnCustomSet() {
+    @Test fun bookTextEditsAreIndependentAndKeepOnlyChangedFields() {
         val edited = shared.withTheme(ReaderTheme.Focus).let { it.withText(it.textSet.copy(font = "lora", boldText = true)) }
         val own = BookOverrides.between(shared, edited)
-
-        assertEquals(setOf(BookOverrides.THEME, BookOverrides.TEXT_PRESET, BookOverrides.CUSTOM_COLORS,
-            BookOverrides.FONT, BookOverrides.BOLD, BookOverrides.PARAGRAPH_SPACING,
-            BookOverrides.FIRST_LINE_INDENT, BookOverrides.JUSTIFY), own.values.keys)
-        val book = own.applyTo(shared)
-        assertEquals(TextPreset.Custom, book.textPreset)
-        assertEquals("lora", book.textSet.font)
-        assertEquals(TextPreset.Clear.text!!.copy(font = "lora", boldText = true), book.textSet)
+        assertEquals(setOf(BookOverrides.THEME, BookOverrides.FONT, BookOverrides.BOLD), own.values.keys)
+        assertEquals(edited, own.applyTo(shared))
+        assertEquals(edited, BookOverrides.decode(own.encode()).applyTo(shared))
     }
 
-    @Test fun customStartsFromThemeAndIsRemembered() {
-        val calm = shared.withTheme(ReaderTheme.Calm)
-        val on = calm.withCustom(true)
-        assertEquals(calm.textSet, on.textSet)
-        assertEquals(CustomColors(ReaderTheme.Calm), on.customColors)
-        val edited = on.withColors(CustomColors(ReaderTheme.Quiet, warmth = 4)).withCustom(false).withTheme(ReaderTheme.Focus)
-        assertEquals(false, edited.custom)
-        assertEquals(CustomColors(ReaderTheme.Quiet, warmth = 4), edited.withCustom(true).customColors)
-        assertEquals(edited.customColors, CustomColors.decode(edited.customColors!!.encode()))
+    @Test fun laterSharedTextChangesReachUntouchedBookFields() {
+        val edited = shared.withText(shared.textSet.copy(font = "inter"))
+        val own = BookOverrides.between(shared, edited)
+        val changed = shared.withText(shared.textSet.copy(lineSpacing = 1.8f, firstLineIndent = 2f))
+        val reopened = BookOverrides.decode(own.encode()).applyTo(changed)
+        assertEquals("inter", reopened.textSet.font)
+        assertEquals(1.8f, reopened.textSet.lineSpacing, 0f)
+        assertEquals(2f, reopened.textSet.firstLineIndent, 0f)
     }
-
-    @Test fun deletingMineReturnsToTheLastStandardTheme() {
-        val mine = shared.withTheme(ReaderTheme.Calm).withCustom(true)
-            .withColors(CustomColors(ReaderTheme.Quiet, warmth = 5)).let { it.withText(it.textSet.copy(font = "inter")) }
-        val reset = mine.withoutCustomTheme()
-        assertEquals(false, reset.custom)
-        assertNull(reset.customColors)
-        assertEquals(TextPreset.Soft.text, reset.textSet)
-    }
-
-    @Test fun bookRemembersInactiveCustomTextAfterReopening() {
-        val mine = shared.withTheme(ReaderTheme.Paper).withCustom(true)
-            .let { it.withText(it.textSet.copy(font = "inter", paragraphSpacing = 1.3f)) }
-        val standard = mine.withTheme(ReaderTheme.Calm)
-        val reopened = BookOverrides.decode(BookOverrides.between(shared, standard).encode()).applyTo(shared)
-
-        assertFalse(reopened.custom)
-        assertEquals(standard.theme, reopened.theme)
-        assertEquals(mine.textSet, reopened.withCustom(true).textSet)
-        assertEquals(mine.customColors, reopened.customColors)
-    }
-
-    @Test fun deletingSharedMineForOneBookSurvivesReopening() {
-        val all = shared.withTheme(ReaderTheme.Paper).withCustom(true)
-            .let { it.withText(it.textSet.copy(font = "inter")) }
-        val deleted = all.withTheme(ReaderTheme.Calm).withCustom(true).withoutCustomTheme()
-        val reopened = BookOverrides.decode(BookOverrides.between(all, deleted).encode()).applyTo(all)
-
-        assertFalse(reopened.custom)
-        assertNull(reopened.customColors)
-        assertEquals(ReaderTheme.Calm, reopened.theme)
-        assertEquals(TextPreset.Soft.text, reopened.withCustom(true).textSet)
-        assertEquals(CustomColors.of(ReaderTheme.Calm), reopened.withCustom(true).customColors)
-        assertTrue(all.custom)
-    }
-
-    @Test fun creatingAgainCopiesCurrentThemeAndKeepsUnrelatedSettings() {
-        val mine = shared.copy(fontSize = 31f, appearance = Appearance.Dark, pageTurn = PageTurn.Scroll)
-            .withTheme(ReaderTheme.Paper).withCustom(true)
-            .let { it.withText(it.textSet.copy(font = "inter")) }
-        val deleted = mine.withTheme(ReaderTheme.Focus).withCustom(true).withoutCustomTheme()
-        val recreated = deleted.withTheme(ReaderTheme.Calm).withCustom(true)
-
-        assertEquals(TextPreset.Soft.text, recreated.textSet)
-        assertEquals(CustomColors.of(ReaderTheme.Calm), recreated.customColors)
-        assertEquals(31f, recreated.fontSize)
-        assertEquals(Appearance.Dark, recreated.appearance)
-        assertEquals(PageTurn.Scroll, recreated.pageTurn)
-        val preferences = mutablePreferencesOf()
-        ReaderPreferences.write(preferences, deleted)
-        assertNull(ReaderPreferences.read(preferences).customColors)
-        assertFalse(ReaderPreferences.read(preferences).custom)
-    }
-
-    @Test fun themeBringsItsCardButKeepsCustom() {
-        assertEquals(TextPreset.Soft, shared.withTheme(ReaderTheme.Calm).textPreset)
-        val custom = shared.withText(shared.textSet.copy(boldText = true))
-        assertEquals(TextPreset.Soft, custom.withTheme(ReaderTheme.Calm).textPreset)
-        assertEquals(shared, shared.withText(shared.textSet))
-    }
-
     @Test fun encodingRoundTripsAndIgnoresUnknownFields() {
         val own = BookOverrides.between(shared, shared.copy(
             appearance = Appearance.Dark,
@@ -157,9 +90,9 @@ class BookOverridesTest {
     @Test fun sharedSettingsRoundTrip() {
         val p = mutablePreferencesOf()
         val settings = shared.copy(
-            theme = ReaderTheme.Bold, appearance = Appearance.Light, header = PageHeader.Chapter,
+            theme = ReaderTheme.Original, appearance = Appearance.Light, header = PageHeader.Chapter,
             footerLayout = LineLayout.FOOTER.copy(customize = true, gap = -6, rule = true),
-        ).let { it.withText(it.textSet.copy(customize = true, marginsPct = 5)) }.copy(textPreset = TextPreset.Quiet)
+        ).let { it.withText(it.textSet.copy(customize = true, marginsPct = 5)) }
         ReaderPreferences.write(p, settings)
         assertEquals(settings, ReaderPreferences.read(p))
     }

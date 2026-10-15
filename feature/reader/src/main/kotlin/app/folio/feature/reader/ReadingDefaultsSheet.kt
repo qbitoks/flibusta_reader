@@ -37,8 +37,7 @@ class ReadingDefaultsViewModel @Inject constructor(private val settingsRepositor
 fun ReadingDefaultsSheet(onDismiss: () -> Unit, vm: ReadingDefaultsViewModel = hiltViewModel()) {
     val saved by vm.settings.collectAsStateWithLifecycle()
     val editor = rememberSettingsEditor(saved, BookOverrides(), bookScope = false,
-        save = { change -> vm.save(change).join() }, textReset = { it.withCustom(false) },
-        pageReset = { it.withLinesOf(ReaderSettings()) })
+        save = { change -> vm.save(change).join() })
     FolioTheme(dark = readerPalette(editor.settings).isDark) {
         ReadingSettingsSheet(
             editor = editor,

@@ -11,7 +11,7 @@
 - Apple reference: horizontal margins 39 dp, column about 314 dp, line pitch 23.5 dp;
   «Оригинал» dark uses black/white. Adapt measurements to current font and user settings.
 - Preserve the user decisions from 2026-10-13:
-  - Configure lines in «Темы и настройки» → «На странице»: header none, book or chapter title (default);
+  - Configure lines in «Темы и настройки» → «Дополнительно»: header none, book or chapter title (default);
     footer «42» (page only), clock/battery off; Slide.
   - With no header, start text below the status-bar inset; when controls are shown, put a page-color
     strip behind the top buttons. With no footer content, let text extend to the bottom.
@@ -76,7 +76,7 @@
 
 ## Themes and customization
 - Use a fixed dialog for «Темы и настройки», with X/Back dismissal and no drag or outside dismissal.
-  Keep the header and «Оформление / На странице» tabs fixed; scroll each tab independently.
+  Keep the header and «Основные / Дополнительно» tabs fixed; scroll each tab independently.
 - Pin a fixed sample text above controls (beside them in landscape), the same in every book; reuse `Paginator`
   and `PageView`. Keep it short (heading, dialogue, long words, digits) so it re-paginates at once off-thread.
   Edits show instantly; saves are debounced (`SettingsEditor`) so the book behind doesn't re-paginate per tick.
@@ -90,24 +90,22 @@
   the same panel for all books over a sample page, without brightness.
 - Use semantic interface colors, shared grouped cards with 16 dp insets, adaptive rows and labelled controls.
   Keep the reading palette inside theme tiles and previews; keep selected states accessible.
-- «Оформление» groups: «Яркость», «Тема и размер» (selected name in the header), and for «Моя» «Цвет» and
-  «Текст». Brightness is one row: an «Авто» pill (device brightness, slider dimmed)
-  and a disabled slider following the device setting; switching Auto off starts at that value.
-  Then one card: the size slider, an «Авто / Светлое / Тёмное» segment, then six «Aa» swatches and a seventh add/custom slot
-  (neutral + until created; saved «Моя» shows «Aa» with a pencil, including while unselected).
-  «Авто» follows Android's dark theme (`androidInDarkTheme`), not the app's appearance.
-  Resolve tile palettes from appearance, not from the current theme darkness; Quiet stays low contrast.
-- «Моя» (`TextPreset.Custom`) replaces the theme: below the card a colour card («Фон»: five theme palettes,
-  Bold = Original; «Тон» ±10; «Контраст» ±10) and a text card (font, bold, spacing, margins, justify).
-  Create from the current theme without changing the preview; retain custom text and colours across standard picks and restarts.
-  Keep ranges: size 13–42, line spacing 0.80–2.50, letter spacing ±10%, word spacing ±20%, margins ±10%.
-  Add paragraph spacing 0–2 body line heights and first-line indent 0–3 em; both inherit the selected preset.
-  Keep justification in the spacing group and hyphenation enabled without a toggle.
-- «Удалить свою тему» clears «Моя», restores the last standard theme and returns the + button immediately, without an Undo message.
-  A book also shows «Вернуть общее оформление» for its own theme fields; size stays.
-- Omit the scope explanation at the bottom of «Оформление»; show the scope only under the sheet title.
-- «На странице» ends with «Сбросить настройки страницы» (for a book: «Вернуть общие настройки страницы»): restore both lines; page turn stays.
-- In «На странице», use three cards: page turning (`PageTurnIcons` above captions), upper line and lower line.
+- Show five palette-only cards in fixed order: Original («Классика»), Focus («Уют»), Calm («Тепло»), Paper, Quiet.
+  Use identical Literata samples and accessible palette names. Resolve light/dark variants from appearance, including Android Auto.
+  Keep typography unchanged when selecting a palette; preserve independent tone/contrast and inheritance of untouched controls. Omit custom/add/edit tiles and background circles.
+- Keep two tabs: Basic («Основные») and Advanced («Дополнительно»), with independent scrolling and a pinned preview.
+  In Basic, omit group headings: brightness, appearance with rotation icon, palettes/size, then turning.
+  Brightness Auto follows the device and disables its slider; manual takeover starts at the current device value.
+- Start Advanced with the existing upper/lower line cards; follow with collapsed font, spacing and tone/contrast cards.
+  Preserve local line disclosures; keep Advanced card expansion across tab changes. Collapsing never changes settings.
+- Use `ReaderStyle` for factory typography and `TextSet.DEFAULT` for settings; retain legacy preset values only for upgrade decoding.
+  Apply new defaults only to fresh installs or explicit resets; preserve actual legacy text and palette for shared and unopened books.
+- Put one «Сбросить дополнительные настройки» action at the end of Advanced; confirm its book/shared scope.
+  Use `withAdvancedDefaults` to reset only Advanced; preserve Basic values, window controls, guide and annotation state.
+  In book scope store factory values as differences from current shared settings; keep the scope-menu action for inheriting shared settings.
+  Preserve books, reading position and annotations; shared reset leaves other books' own fields intact.
+- Show scope only under the sheet title; omit the bottom scope explanation and separate line-only reset.
+- Keep page turning on Basic (`PageTurnIcons` above captions); keep upper and lower line cards on Advanced.
   Top: content segment («Нет» hides the line), then «Подробнее». Bottom: four labelled content capsules, then «Подробнее».
   Cycle progress on tap; keep chapter/time/battery independent. Use the settings segment track and raised selections.
   Show fixed progress button examples (42/300, 7%, 42, None); keep book values in the page preview.

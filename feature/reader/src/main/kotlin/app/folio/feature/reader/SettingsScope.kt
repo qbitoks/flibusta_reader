@@ -93,6 +93,7 @@ private fun ownSummary(own: BookOverrides): String? {
         listOf(BookOverrides.APPEARANCE) to R.string.settings_own_appearance,
         listOf(BookOverrides.FONT_SIZE) to R.string.settings_own_size,
         BookOverrides.TEXT to R.string.settings_own_text,
+        BookOverrides.COLOR_KEYS to R.string.settings_color,
         listOf(BookOverrides.PAGE_TURN) to R.string.settings_own_turn,
         BookOverrides.HEADER_KEYS to R.string.settings_own_header,
         BookOverrides.FOOTER_KEYS to R.string.settings_own_footer,

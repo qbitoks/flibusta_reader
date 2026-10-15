@@ -59,7 +59,7 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
 internal fun readerPalette(settings: ReaderSettings): ReaderPalette {
     val dark = ReaderPalettes.isDark(settings.appearance, androidInDarkTheme())
     val colors = settings.customColors
-    return if (settings.custom && colors != null) ReaderPalettes.custom(colors, dark) else ReaderPalettes.of(settings.theme, dark)
+    return if (colors != null) ReaderPalettes.custom(colors.copy(base = settings.theme), dark) else ReaderPalettes.of(settings.theme, dark)
 }
 
 /**

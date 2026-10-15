@@ -28,8 +28,6 @@ internal class SettingsEditor(
     val bookScope: Boolean,
     private val scope: CoroutineScope,
     private val save: suspend ((ReaderSettings) -> ReaderSettings) -> Unit,
-    private val textReset: (ReaderSettings) -> ReaderSettings,
-    private val pageReset: (ReaderSettings) -> ReaderSettings,
 ) {
     var settings by mutableStateOf(initial)
         private set
@@ -66,14 +64,6 @@ internal class SettingsEditor(
         }
     }
 
-    fun resetText() = edit(textReset)
-
-    fun resetPage() = edit(pageReset)
-
-    /** «Сбросить настройки страницы» has something to do. */
-    val canResetPage: Boolean get() = if (bookScope) isOwn(BookOverrides.HEADER_KEYS + BookOverrides.FOOTER_KEYS)
-        else settings.withLinesOf(ReaderSettings()) != settings
-
     fun isOwn(keys: Collection<String>): Boolean = bookScope && own.has(keys)
 
     fun isOwn(key: String): Boolean = isOwn(listOf(key))
@@ -94,11 +84,9 @@ internal fun rememberSettingsEditor(
     own: BookOverrides,
     bookScope: Boolean,
     save: suspend ((ReaderSettings) -> ReaderSettings) -> Unit,
-    textReset: (ReaderSettings) -> ReaderSettings,
-    pageReset: (ReaderSettings) -> ReaderSettings,
 ): SettingsEditor {
     val scope = rememberCoroutineScope()
-    val editor = remember(bookScope) { SettingsEditor(saved, bookScope, scope, save, textReset, pageReset) }
+    val editor = remember(bookScope) { SettingsEditor(saved, bookScope, scope, save) }
     LaunchedEffect(editor, saved, own) { editor.sync(saved, own) }
     DisposableEffect(editor) { onDispose { editor.flush() } }
     return editor

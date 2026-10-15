@@ -8,7 +8,7 @@ class ParagraphSettingsTest {
     @Test fun extendedTextSetSurvivesSharedAndBookPersistence() {
         val encoded = "lora|false|true|1.35|0|0|0|true|0.5|1.2"
         val text = TextSet.decode(encoded, TextPreset.Classic.text!!)
-        assertEquals(encoded, text.encode())
+        assertEquals(text, TextSet.decode(text.encode(), TextSet.DEFAULT))
         val shared = ReaderSettings()
         val edited = shared.withText(text)
         val preferences = mutablePreferencesOf()
@@ -26,15 +26,15 @@ class ParagraphSettingsTest {
         assertEquals(1.6f, text.firstLineIndent, 0f)
     }
 
-    @Test fun themesSupplyParagraphSettingsToLayoutAndMine() {
+    @Test fun themesPreserveIndependentParagraphSettings() {
         for (theme in ReaderTheme.entries) {
             val settings = ReaderSettings().withTheme(theme)
             assertEquals(settings.textSet.paragraphSpacing, settings.style.paragraphSpacing, 0f)
             assertEquals(settings.textSet.firstLineIndent, settings.style.firstLineIndent, 0f)
-            assertEquals(settings.textSet, settings.withCustom(true).textSet)
+            assertEquals(ReaderSettings().textSet, settings.textSet)
         }
         assertEquals(0f, ReaderSettings().style.paragraphSpacing, 0f)
-        assertEquals(0f, ReaderSettings().withTheme(ReaderTheme.Focus).style.firstLineIndent, 0f)
+        assertEquals(1.5f, ReaderSettings().withTheme(ReaderTheme.Focus).style.firstLineIndent, 0f)
     }
 
     @Test fun invalidParagraphSettingsAreRejectedAndRangesAreClamped() {

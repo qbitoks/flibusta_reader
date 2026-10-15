@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Apple Books' six themes; each has a light and a dark palette. */
+/** Stable saved identifiers; Bold is a legacy alias of Original. */
 enum class ReaderTheme { Original, Quiet, Paper, Bold, Calm, Focus }
 
 /** «Как на устройстве / Светлое / Тёмное». */
@@ -66,12 +66,13 @@ data class ReaderSettings(
     /** Shared by all themes, changed with the A │ A buttons. */
     val fontSize: Float = ReaderStyle().fontSize,
     val theme: ReaderTheme = ReaderTheme.Original,
-    /** [TextPreset.Custom] means «Свои параметры» are on; otherwise the theme's own preset. */
+    /** Legacy fields read only during upgrade; new edits use [readingText]. */
     val textPreset: TextPreset = TextPreset.Classic,
-    /** Text of «Свои параметры»: kept while they are off. */
     val customText: TextSet = TextPreset.Classic.text!!,
-    /** Colours of «Свои параметры»; null until they are first turned on. */
+    /** Optional tone/contrast adjustments to [theme], independent of typography. */
     val customColors: CustomColors? = null,
+    /** Null only while decoding legacy theme-linked typography. */
+    val readingText: TextSet? = TextSet.DEFAULT,
     val pageTurn: PageTurn = PageTurn.Slide,
     /** «Направляющая линия» (guide line) is on. */
     val guideLine: Boolean = false,
@@ -82,38 +83,44 @@ data class ReaderSettings(
     val footer: PageFooter = PageFooter(),
     /** Visual presets of the lines. */
     val chromeStyles: ChromeStyles = ChromeStyles(),
-    /** Light/Dark of the reading page; Auto follows the app. */
+    /** Light/Dark of the reading page; Auto follows Android. */
     val appearance: Appearance = Appearance.Auto,
     val headerLayout: LineLayout = LineLayout.HEADER,
     val footerLayout: LineLayout = LineLayout.FOOTER,
     /** Persisted top scrolling boundary; the bottom line has its own choice. */
     val headerUnder: FooterStyle = FooterStyle.None,
 ) {
-    /** «Свои параметры» replace the theme's colours and text. */
-    val custom: Boolean get() = textPreset == TextPreset.Custom
-    val textSet: TextSet get() = if (custom) customText else theme.textPreset.text!!
+    val textSet: TextSet get() = readingText ?: if (textPreset == TextPreset.Custom) customText else theme.textPreset.text!!
     val style: ReaderStyle get() = textSet.toReaderStyle(fontSize)
 
-    /** The first time they start from the theme in effect; later the remembered values come back. */
-    fun withCustom(on: Boolean): ReaderSettings = when {
-        !on -> copy(textPreset = theme.textPreset)
-        custom -> this
-        customColors == null -> copy(textPreset = TextPreset.Custom, customText = textSet, customColors = CustomColors.of(theme))
-        else -> copy(textPreset = TextPreset.Custom)
+    /** Legacy book fields still decode into their old custom set before migration. */
+    fun withText(value: TextSet): ReaderSettings =
+        if (value == textSet) this else if (readingText == null) copy(textPreset = TextPreset.Custom, customText = value)
+        else copy(readingText = value)
+
+    fun withColors(value: CustomColors): ReaderSettings = copy(theme = CustomColors.of(value.base).base,
+        customColors = value.takeUnless { it.warmth == 0 && it.contrast == 0 })
+
+    /** Materialize the old visible typography and palette once; ignore an inactive saved «Моя». */
+    internal fun independent(): ReaderSettings {
+        val colors = customColors.takeIf { readingText != null || textPreset == TextPreset.Custom }
+        val base = CustomColors.of(if (readingText == null) colors?.base ?: theme else theme).base
+        return copy(theme = base, readingText = textSet,
+            customColors = colors?.copy(base = base)?.takeUnless { it.warmth == 0 && it.contrast == 0 },
+            textPreset = TextPreset.Classic, customText = TextPreset.Classic.text!!)
     }
 
-    /** Any edit of the text turns «Свои параметры» on. */
-    fun withText(value: TextSet): ReaderSettings =
-        if (value == textSet) this else withCustom(true).copy(customText = value)
+    /** A palette changes ink only; text and tone/contrast remain unchanged. */
+    fun withTheme(value: ReaderTheme): ReaderSettings {
+        val base = CustomColors.of(value).base
+        return copy(theme = base, readingText = textSet, customColors = customColors?.copy(base = base))
+    }
 
-    fun withColors(value: CustomColors): ReaderSettings = withCustom(true).copy(customColors = value)
-
-    /** Delete «Моя» and return to the last standard theme, keeping size and page settings. */
-    fun withoutCustomTheme(): ReaderSettings =
-        copy(textPreset = theme.textPreset, customText = TextPreset.Classic.text!!, customColors = null)
-
-    /** Picking a theme also turns «Свои параметры» off; their values are kept. */
-    fun withTheme(value: ReaderTheme): ReaderSettings = copy(theme = value, textPreset = value.textPreset)
+    /** Reset only the Advanced tab: typography, tone/contrast and page chrome. */
+    fun withAdvancedDefaults(): ReaderSettings = withLinesOf(ReaderSettings()).copy(
+        readingText = TextSet.DEFAULT, customColors = null,
+        textPreset = TextPreset.Classic, customText = TextPreset.Classic.text!!,
+    )
 
     /** Both lines as in [source], «Свои параметры» included: what «Сбросить настройки страницы» restores. */
     fun withLinesOf(source: ReaderSettings): ReaderSettings = copy(

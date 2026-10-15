@@ -15,6 +15,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,8 +48,7 @@ internal fun ThemesSheet(vm: ReaderViewModel, brightness: SheetBrightness, rotat
     // A book with its own settings opens on them; otherwise edits go to all books.
     var bookScope by rememberSaveable { mutableStateOf(!vm.ownSettings.value.isEmpty) }
     val editor = rememberSettingsEditor(if (bookScope) effective else shared, own, bookScope,
-        save = { change -> vm.saveSettings(bookScope, change).join() }, textReset = vm.textReset(bookScope),
-        pageReset = vm.pageReset(bookScope))
+        save = { change -> vm.saveSettings(bookScope, change).join() })
     ReadingSettingsSheet(
         editor = editor,
         title = stringResource(R.string.themes_title),
@@ -59,10 +59,7 @@ internal fun ThemesSheet(vm: ReaderViewModel, brightness: SheetBrightness, rotat
         },
         preview = bookPreviewSource(vm),
         brightness = brightness,
-        pageExtra = {
-            SettingsGroupHeader(stringResource(R.string.reader_screen))
-            GroupedCard { SettingsToggle(stringResource(R.string.reader_rotation_lock), rotation.locked, rotation.onChange) }
-        },
+        rotation = rotation,
         onDismiss = onDismiss,
     )
 }
@@ -76,9 +73,10 @@ internal fun ReadingSettingsSheet(
     preview: PreviewSource,
     brightness: SheetBrightness?,
     onDismiss: () -> Unit,
-    pageExtra: @Composable () -> Unit = {},
+    rotation: SheetRotation? = null,
 ) {
     var section by rememberSaveable { mutableIntStateOf(0) }
+    val tabStates = rememberSaveableStateHolder()
     val scrollStates = List(2) { rememberScrollState() }
     val c = Folio.colors
     val settings = editor.settings
@@ -110,11 +108,10 @@ internal fun ReadingSettingsSheet(
                     Column(modifier) {
                         SettingsTabs(section) { section = it }
                         Column(Modifier.weight(1f).verticalScroll(scrollStates[section], overscrollEffect = null).padding(bottom = 24.dp)) {
-                            when (section) {
-                                0 -> ReaderAppearanceSettings(editor, brightness)
-                                1 -> {
-                                    ReaderPageSettings(editor, preview)
-                                    pageExtra()
+                            tabStates.SaveableStateProvider(section) {
+                                when (section) {
+                                    0 -> ReaderAppearanceSettings(editor, brightness, rotation)
+                                    1 -> ReaderAdvancedSettings(editor, preview)
                                 }
                             }
                         }

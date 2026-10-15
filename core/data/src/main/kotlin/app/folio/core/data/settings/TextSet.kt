@@ -3,7 +3,7 @@ package app.folio.core.data.settings
 import app.folio.core.layout.ReaderStyle
 
 /**
- * A text style card: font, weight, spacing and margins. The size is shared by all styles.
+ * Typography independent of the reading palette. Legacy spacing switches remain decodable.
  * Spacing overrides take effect while [customize] is on.
  *
  * Percent ranges follow Apple Books: letter spacing −10…+10 %, word spacing −20…+20 %,
@@ -20,8 +20,9 @@ data class TextSet(
     val justify: Boolean = true,
     val paragraphSpacing: Float = 0f,
     val firstLineIndent: Float = 1.6f,
+    val baseMarginDp: Float = BASE_MARGIN,
 ) {
-    fun encode(): String = listOf(font, boldText, customize, lineSpacing, letterSpacingPct, wordSpacingPct, marginsPct, justify, paragraphSpacing, firstLineIndent).joinToString("|")
+    fun encode(): String = listOf(font, boldText, customize, lineSpacing, letterSpacingPct, wordSpacingPct, marginsPct, justify, paragraphSpacing, firstLineIndent, baseMarginDp).joinToString("|")
 
     /** Typography the paginator uses for this style at the global [fontSize]. */
     fun toReaderStyle(fontSize: Float): ReaderStyle = ReaderStyle(
@@ -31,7 +32,7 @@ data class TextSet(
         // 10 % of tracking ≈ 0.05 em; 20 % of word spacing ≈ a whole space (0.25 em).
         letterSpacing = if (customize) letterSpacingPct * 0.005f else 0f,
         wordSpacing = if (customize) wordSpacingPct * 0.0125f else 0f,
-        margin = BASE_MARGIN * (1f + (if (customize) marginsPct else 0) * 0.07f),
+        margin = baseMarginDp * (1f + (if (customize) marginsPct else 0) * 0.07f),
         justify = justify,
         hyphenate = true,
         boldText = boldText,
@@ -42,17 +43,22 @@ data class TextSet(
     companion object {
         const val DEFAULT_LINE_SPACING = 1.25f
         const val BASE_MARGIN = 30f
+        val DEFAULT = ReaderStyle().let {
+            TextSet(font = it.font, customize = true, lineSpacing = it.lineSpacing,
+                justify = it.justify, firstLineIndent = it.firstLineIndent, baseMarginDp = it.margin)
+        }
 
         fun decode(value: String?, d: TextSet): TextSet {
             val p = value?.split('|') ?: return d
-            if (p.size != 8 && p.size != 10) return d
+            if (p.size !in listOf(8, 10, 11)) return d
             return runCatching {
                 TextSet(
                     font = p[0], boldText = p[1].toBoolean(), customize = p[2].toBoolean(),
                     lineSpacing = p[3].toFloat(), letterSpacingPct = p[4].toInt(), wordSpacingPct = p[5].toInt(),
                     marginsPct = p[6].toInt(), justify = p[7].toBoolean(),
-                    paragraphSpacing = if (p.size == 10) p[8].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 2f) else 0f,
-                    firstLineIndent = if (p.size == 10) p[9].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 3f) else 1.6f,
+                    paragraphSpacing = if (p.size >= 10) p[8].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 2f) else 0f,
+                    firstLineIndent = if (p.size >= 10) p[9].toFloat().also { require(it.isFinite()) }.coerceIn(0f, 3f) else 1.6f,
+                    baseMarginDp = if (p.size == 11) p[10].toFloat().also { require(it.isFinite() && it > 0f) } else BASE_MARGIN,
                 )
             }.getOrDefault(d)
         }
@@ -60,8 +66,7 @@ data class TextSet(
 }
 
 /**
- * «Стиль текста» cards; [Custom] («Мой») is the user's own set. Choosing a theme selects its
- * [ReaderTheme.textPreset] unless «Мой» is chosen.
+ * Frozen pre-independent-text presets, used only when decoding saved settings from older releases.
  */
 enum class TextPreset(val text: TextSet?) {
     Classic(TextSet(font = "literata")),
@@ -74,7 +79,7 @@ enum class TextPreset(val text: TextSet?) {
     Custom(null),
 }
 
-/** Each Apple Books theme had its own typeface; its card keeps that pairing. */
+/** Legacy theme-to-text pairing for upgrades only. */
 val ReaderTheme.textPreset: TextPreset get() = when (this) {
     ReaderTheme.Original -> TextPreset.Classic
     ReaderTheme.Quiet -> TextPreset.Quiet
@@ -99,8 +104,7 @@ data class CustomColors(val base: ReaderTheme = ReaderTheme.Original, val warmth
             }.getOrNull()
         }
 
-        /** Bold shares Original's colours, so «Фон» offers only Original. */
-        val BASES: List<ReaderTheme> = ReaderTheme.entries - ReaderTheme.Bold
+        val BASES: List<ReaderTheme> = listOf(ReaderTheme.Original, ReaderTheme.Focus, ReaderTheme.Calm, ReaderTheme.Paper, ReaderTheme.Quiet)
 
         /** Starts from [theme]'s colours, so turning «Свои параметры» on does not change the page. */
         fun of(theme: ReaderTheme): CustomColors = CustomColors(if (theme == ReaderTheme.Bold) ReaderTheme.Original else theme)

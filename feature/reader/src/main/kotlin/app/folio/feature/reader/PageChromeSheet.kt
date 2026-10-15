@@ -23,18 +23,21 @@ import kotlin.math.roundToInt
 
 /** Page controls are content of the shared settings sheet, never a nested modal. Both lines share one layout. */
 @Composable
-internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource) {
+internal fun ReaderPageTurnSettings(editor: SettingsEditor) {
     val settings = editor.settings
-    val footer = settings.shownFooter
     val turns = buildList {
         add(SegmentOption(PageTurn.Slide, stringResource(R.string.page_turn_slide), icon = PageTurnIcons.Slide))
         if (PageCurl.supported) add(SegmentOption(PageTurn.Curl, stringResource(R.string.page_turn_curl), icon = PageTurnIcons.Curl))
         add(SegmentOption(PageTurn.Fade, stringResource(R.string.page_turn_fade_short), stringResource(R.string.page_turn_fade), PageTurnIcons.Fade))
         add(SegmentOption(PageTurn.Scroll, stringResource(R.string.page_turn_scroll), icon = PageTurnIcons.Scroll))
     }
-    SettingsGroupHeader(stringResource(R.string.settings_page_turn), own = editor.isOwn(BookOverrides.PAGE_TURN))
     GroupedCard { SettingsSegments(settings.pageTurn, turns, stacked = true) { v -> editor.edit { it.copy(pageTurn = v) } } }
+}
 
+@Composable
+internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource) {
+    val settings = editor.settings
+    val footer = settings.shownFooter
     Column {
     SettingsGroupHeader(stringResource(R.string.header_group), own = editor.isOwn(BookOverrides.HEADER_KEYS))
     GroupedCard {
@@ -68,9 +71,6 @@ internal fun ReaderPageSettings(editor: SettingsEditor, source: PreviewSource) {
         }
     }
     }
-    Spacer(Modifier.height(16.dp))
-    ResetButton(stringResource(if (editor.bookScope) R.string.settings_reset_book_page else R.string.settings_reset_page),
-        editor.canResetPage, editor::resetPage)
 }
 
 /**
