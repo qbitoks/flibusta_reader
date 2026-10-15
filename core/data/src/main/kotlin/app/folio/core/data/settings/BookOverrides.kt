@@ -45,11 +45,15 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
         const val HEADER_UNDER = "header_under"
         const val FOOTER_STYLE = "footer_style"
         const val FOOTER_LAYOUT = "footer_layout"
+        const val GUIDE_LINE = "guide_line"
+        const val GUIDE_DIM = "guide_dim"
+        const val GUIDE_WINDOW = "guide_window"
 
         /** Independent text fields, also used for book-scope indicators. */
         val TEXT = listOf(FONT, BOLD, LINE_SPACING, LETTER_SPACING, WORD_SPACING, PARAGRAPH_SPACING, FIRST_LINE_INDENT, MARGINS, JUSTIFY)
         val HEADER_KEYS = listOf(HEADER, HEADER_STYLE, HEADER_LAYOUT, HEADER_UNDER)
         val COLOR_KEYS = listOf(CUSTOM_COLORS, WARMTH, CONTRAST)
+        val GUIDE_KEYS = listOf(GUIDE_LINE, GUIDE_DIM, GUIDE_WINDOW)
         val FOOTER_KEYS = listOf(FOOTER_PAGE, FOOTER_LEFT, FOOTER_CLOCK, FOOTER_BATTERY, FOOTER_UNDER, FOOTER_STYLE, FOOTER_LAYOUT)
 
         private inline fun <reified E : Enum<E>> enumField(key: String, crossinline get: (ReaderSettings) -> E, crossinline set: (ReaderSettings, E) -> ReaderSettings) =
@@ -100,6 +104,9 @@ data class BookOverrides(val values: Map<String, String> = emptyMap()) {
             enumField(FOOTER_STYLE, { it.chromeStyles.footer }) { s, v -> s.copy(chromeStyles = s.chromeStyles.copy(footer = v)) },
             Field(FOOTER_LAYOUT, { it.footerLayout.encode() }) { s, v -> s.copy(footerLayout = LineLayout.decode(v, s.footerLayout)) },
             enumField(HEADER_UNDER, { it.headerUnder }) { s, v -> s.copy(headerUnder = v) },
+            boolField(GUIDE_LINE, { it.guideLine }) { s, v -> s.copy(guideLine = v) },
+            enumField(GUIDE_DIM, { it.guideDim }) { s, v -> s.copy(guideDim = v) },
+            Field(GUIDE_WINDOW, { it.guideWindow.encode() }) { s, v -> s.copy(guideWindow = GuideWindow.decode(v)) },
         )
 
         /** What [edited] changes against [shared]; a field equal to the shared value is not kept. */

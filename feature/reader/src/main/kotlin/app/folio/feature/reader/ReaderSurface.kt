@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import app.folio.core.data.db.HighlightEntity
+import app.folio.core.data.settings.GuideFalloff
 import app.folio.core.data.settings.PageTurn
 import app.folio.core.designsystem.ReaderPalette
 import app.folio.core.designsystem.components.GlassScope
@@ -107,10 +108,15 @@ internal fun ReaderSurface(
             controls.guideMoving = false
             controls.guide = controls.guide.landed(state.current, state.layoutGeneration, guideLines.size, reset = true, jumpId = jumpId)
         }
+        // The tap target is the whole drawn plate: every fully lit line of the window, as `GuidePage` frames it.
         val guidePlate: Rect? = if (!guideOn) null else guideLines.getOrNull(guide.index)?.let { line ->
+            val window = settings.guideWindow
+            val full = window.falloff == GuideFalloff.None
+            val first = guideLines[(guide.index - if (full) window.above else 0).coerceAtLeast(0)]
+            val last = guideLines[(guide.index + if (full) window.below else 0).coerceAtMost(guideLines.size - 1)]
             val padX = with(density) { 14.dp.toPx() }
             val padY = with(density) { 3.dp.toPx() }
-            Rect(contentLeft + line.left - padX, contentTop + line.top - padY, contentLeft + line.right + padX, contentTop + line.bottom + padY)
+            Rect(contentLeft + line.left - padX, contentTop + first.top - padY, contentLeft + line.right + padX, contentTop + last.bottom + padY)
         }
         // Saved highlights (yellow) and the live selection (blue) drawn under the text.
         val cornerPx = with(density) { 4.dp.toPx() }

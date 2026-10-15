@@ -235,7 +235,7 @@ internal fun ChoiceTile(name: String, selected: Boolean, background: Color, modi
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp).clearAndSetSemantics { })
         if (detail != null) Text(detail, style = FolioType.caption, color = c.secondaryLabel, maxLines = 1,
-            modifier = Modifier.clearAndSetSemantics { })
+            overflow = TextOverflow.Ellipsis, modifier = Modifier.clearAndSetSemantics { })
     }
 }
 

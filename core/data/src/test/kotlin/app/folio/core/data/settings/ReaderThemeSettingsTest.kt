@@ -52,8 +52,9 @@ class ReaderThemeSettingsTest {
         assertEquals(shared.theme, reset.theme)
         assertEquals(shared.fontSize, reset.fontSize, 0f)
         assertEquals(shared.appearance, reset.appearance)
-        assertEquals(shared.guideLine, reset.guideLine)
-        assertEquals(shared.guideDim, reset.guideDim)
+        // The guide moved to Advanced, so its reset clears it too.
+        assertEquals(false, reset.guideLine)
+        assertEquals(GuideDim.Low, reset.guideDim)
         assertEquals(shared.highlightColor, reset.highlightColor)
         assertEquals(TextSet.DEFAULT, reset.textSet)
         assertNull(reset.customColors)

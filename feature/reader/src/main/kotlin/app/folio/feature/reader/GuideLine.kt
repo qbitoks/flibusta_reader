@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -24,19 +25,24 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.dp
+import app.folio.core.data.settings.GuideFalloff
+import app.folio.core.data.settings.GuideWindow
 import app.folio.core.designsystem.ReaderPalette
+import kotlin.math.ceil
+import kotlin.math.floor
 
 /**
  * «Направляющая линия» drawn as part of one page, so dimming and plate slide, curl and fade with it and
  * never flash off during a turn (white spot 3, screenshot #21).
  *
- * The plate spans the whole text column (stable width on short lines) and reaches at most half the
- * margin past it. Dimming covers only the text area between the page labels; the shadow may leave it.
+ * The plate frames the fully lit lines of [window] across the whole text column (stable width on short
+ * lines) and reaches at most half the margin past it. Every other line of the text area dims by [fade]
+ * times what [GuideWindow.light] leaves unlit; the shadow may leave the text area.
  *
  * @param lines the page's lines in content coordinates ([PageRenderer.lines]).
- * @param index the guided line; [animate] glides the plate when it changes.
+ * @param index the guided line; [animate] glides the window when it changes.
  * @param padding the text column's insets in this composable, as given to `PageView`.
- * @param fade dimming of everything outside the plate, 0 = none.
+ * @param fade dimming of unlit text, 0 = none.
  */
 @Composable
 internal fun GuidePage(
@@ -46,29 +52,47 @@ internal fun GuidePage(
     fade: Float,
     palette: ReaderPalette,
     modifier: Modifier = Modifier,
+    window: GuideWindow = GuideWindow(),
     animate: Boolean = true,
 ) {
-    val line = lines.getOrNull(index.coerceIn(0, (lines.size - 1).coerceAtLeast(0))) ?: return
-    val spec = tween<Float>(if (animate) 180 else 0)
-    val top by animateFloatAsState(line.top, spec, label = "guideTop")
-    val bottom by animateFloatAsState(line.bottom, spec, label = "guideBottom")
+    if (lines.isEmpty()) return
+    val last = lines.size - 1
+    val pos by animateFloatAsState(index.coerceIn(0, last).toFloat(), tween(if (animate) 180 else 0), label = "guideLine")
     val shown by animateFloatAsState(fade, tween(220), label = "guideFade")
     Canvas(modifier.fillMaxSize()) {
         val column = Rect(padding.calculateLeftPadding(LayoutDirection.Ltr).toPx(), padding.calculateTopPadding().toPx(),
             size.width - padding.calculateRightPadding(LayoutDirection.Ltr).toPx(), size.height - padding.calculateBottomPadding().toPx())
         val padX = minOf(12.dp.toPx(), column.left / 2)
         val padY = 3.dp.toPx()
-        val plate = Rect(column.left - padX, column.top + top - padY, column.right + padX, column.top + bottom + padY)
+        // Edges of a fractional line, so the window glides between rows.
+        fun edge(at: Float, top: Boolean): Float {
+            val f = at.coerceIn(0f, last.toFloat())
+            val lo = lines[floor(f).toInt()]
+            val hi = lines[ceil(f).toInt()]
+            val t = f - floor(f)
+            return column.top + if (top) lo.top + (hi.top - lo.top) * t else lo.bottom + (hi.bottom - lo.bottom) * t
+        }
+        val full = window.falloff == GuideFalloff.None
+        val plate = Rect(column.left - padX, edge(pos - if (full) window.above else 0, top = true) - padY,
+            column.right + padX, edge(pos + if (full) window.below else 0, top = false) + padY)
         val radius = CornerRadius(9.dp.toPx())
         val round = RoundRect(plate, radius)
-        val text = Rect(0f, column.top - padY, size.width, column.bottom + padY)
         if (shown > 0f) {
             val outside = Path().apply {
                 fillType = PathFillType.EvenOdd
-                addRect(text)
+                addRect(Rect(Offset.Zero, size))
                 addRoundRect(round)
             }
-            drawPath(outside, palette.background.copy(alpha = shown))
+            // Each line owns the band up to the middle of its gaps; the first and last reach the text area's edges.
+            clipPath(outside) {
+                lines.forEachIndexed { i, line ->
+                    val dim = shown * (1f - window.light(i - pos))
+                    if (dim <= 0f) return@forEachIndexed
+                    val top = if (i == 0) -padY else (lines[i - 1].bottom + line.top) / 2
+                    val bottom = if (i == last) column.height + padY else (line.bottom + lines[i + 1].top) / 2
+                    drawRect(palette.background.copy(alpha = dim), Offset(0f, column.top + top), Size(size.width, bottom - top))
+                }
+            }
         }
         // One soft blurred shadow outside the plate; on dark pages a shadow is invisible, so none.
         if (!palette.isDark) {

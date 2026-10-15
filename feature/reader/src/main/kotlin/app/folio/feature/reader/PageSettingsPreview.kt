@@ -184,7 +184,7 @@ internal fun PageSettingsPreview(
                         shown - 1 -> lines.size - 1
                         else -> 0
                     }
-                    GuidePage(lines, row, padding, settings.guideDim.fade, palette)
+                    GuidePage(lines, row, padding, settings.guideDim.fade, palette, window = settings.guideWindow)
                 }
                 Column(Modifier.align(Alignment.TopCenter).fillMaxWidth()
                     .onSizeChanged { headerHeight = with(density) { it.height.toDp() } }) {

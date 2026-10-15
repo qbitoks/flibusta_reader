@@ -75,6 +75,8 @@ data class ReaderSettings(
     /** «Направляющая линия» (guide line) is on. */
     val guideLine: Boolean = false,
     val guideDim: GuideDim = GuideDim.Low,
+    /** Lines lit around the guided one and how they fade. */
+    val guideWindow: GuideWindow = GuideWindow(),
     /** Colour of the last highlight; new highlights use it, as in Apple Books. */
     val highlightColor: String = "yellow",
     val header: PageHeader = PageHeader.Chapter,
@@ -102,9 +104,10 @@ data class ReaderSettings(
         return copy(theme = base, readingText = textSet, customColors = customColors?.copy(base = base))
     }
 
-    /** Reset only the Advanced tab: typography, tone/contrast and page chrome. */
+    /** Reset only the Advanced tab: typography, tone/contrast, page chrome and the guide line. */
     fun withAdvancedDefaults(): ReaderSettings = withLinesOf(ReaderSettings()).copy(
         readingText = TextSet.DEFAULT, customColors = null,
+        guideLine = false, guideDim = GuideDim.Low, guideWindow = GuideWindow(),
     )
 
     /** Both lines as in [source], «Свои параметры» included: what «Сбросить настройки страницы» restores. */
@@ -148,7 +151,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val librarySort = stringPreferencesKey("library_sort")
         val watchedFolder = stringPreferencesKey("watched_folder")
         val hiddenSystem = stringSetPreferencesKey("hidden_system_collections")
-        val guideTipShown = booleanPreferencesKey("guide_tip_shown")
     }
 
     /** Settings shared by all books. */
@@ -202,17 +204,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     suspend fun setAppAppearance(value: Appearance) {
         store.edit { it[Keys.appAppearance] = value.name }
-    }
-
-    suspend fun setGuideLine(on: Boolean) = updateReader { it.copy(guideLine = on) }
-
-    suspend fun setGuideDim(value: GuideDim) = updateReader { it.copy(guideDim = value) }
-
-    /** The one-time «hold for settings» tip at the panel's guide button. */
-    suspend fun guideTipShown(): Boolean = store.data.first()[Keys.guideTipShown] ?: false
-
-    suspend fun setGuideTipShown() {
-        store.edit { it[Keys.guideTipShown] = true }
     }
 
     suspend fun setHighlightColor(value: String) = updateReader { it.copy(highlightColor = value) }

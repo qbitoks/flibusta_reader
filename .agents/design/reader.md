@@ -50,7 +50,7 @@
   Reuse `SettingsSegments`, `GroupedCard`, `CapsuleButton` and grouped history rows; omit Material outlined fields.
 - Cap the lower panel below the measured top panel; scroll navigation details when needed and pin the tool row.
 - Show five fixed tools: bookmarks/fragments even when empty, bookmark, themes/settings, guide, search.
-  Mark an active bookmark red; disable guide in Scroll. Enabling guide hides the panels immediately.
+  Mark an active bookmark red; disable guide in Scroll. Guide: tap only toggles (no long press); the panels stay open.
 - Put rotation lock in the reader settings Page tab; keep it a saveable window preference, outside book/shared settings.
 - Show a small red bookmark at the upper-right corner while controls are hidden; tapping removes it directly.
 - Use `ReaderProgressSlider`: thin themed track, round thumb, 48 dp touch target, ink contrast at least 3:1.
@@ -122,7 +122,7 @@
   The reset row is centred destructive red text, grey when nothing differs.
   Brightness repeats the text-size layout: title row with the Auto capsule at the trailing edge, then the slider between icons.
 - Put one «Сбросить дополнительные настройки» action at the end of Advanced; confirm its book/shared scope.
-  Use `withAdvancedDefaults` to reset only Advanced; preserve Basic values, window controls, guide and annotation state.
+  Use `withAdvancedDefaults` to reset only Advanced; preserve Basic values, window controls and annotation state; the guide resets with Advanced.
   In book scope store factory values as differences from current shared settings; keep the scope-menu action for inheriting shared settings.
   Preserve books, reading position and annotations; shared reset leaves other books' own fields intact.
 - Show scope only under the sheet title; omit the bottom scope explanation and separate line-only reset.
@@ -141,16 +141,16 @@
   Align labels at the screen edge, block centre or text edge; enlarge blocks to fit measured labels with 8 dp padding.
 - Default blocks to 36 dp without overriding explicit heights; order details by look, position, separation (text boundary), behaviour.
   Name the rule «Разделительная линия» and the absolute Scroll gap «Зазор до текста».
-- Everything in the panel except brightness can be set per book; guide line and highlight colour stay shared.
+- Everything in the panel except brightness can be set per book, the guide included; highlight colour stays shared.
 - Use licensed Cyrillic fonts from `ReaderFonts`; EPUB publisher `@font-face` remains unsupported.
 
 ## Turning and scroll reference
-- Step the guide by visual row with left/right-half taps; a tap on its row toggles controls.
+- Step the guide by one visual row with left/right-half taps, even with a multi-line plate; a tap on the plate toggles controls.
 - Land on the first row forward and the last row backward, for taps and swipes; no-op/canceled turns retain the row.
 - Draw the guide inside each page (`GuidePage`): dimming and plate turn with the page and never vanish;
   an arriving page shows its landing row. Plate = text column + ≤ half margin; dim only the text area,
-  the shadow may leave it. Controls visible → half dimming. Settings: «Аа» Basic block + long press on
-  the panel's guide action (no floating button, no footer inset).
+  the shadow may leave it. Controls visible → dimming stays whole. The window (`GuideWindow`) lights extra lines
+  around/below/above with even or fading light; the plate frames only fully lit lines, and the whole plate is the tap target that toggles controls. Settings: Advanced only; the panel just toggles.
 - Reset the guide after jumps or pagination changes; keep links, selection dismissal and footer taps ahead of row stepping.
 - For «Скольжение», slide the current page left over a stationary next page; reverse by bringing the
   previous page from the left. Use overlapping pages without gaps or gray background between them.
@@ -175,8 +175,8 @@
   show the excerpt in book font with highlight-color left bar, then 17 sp Semibold note text.
 - Put a 22 dp highlight-color note circle at highlight top-left, outlined in page color, with small
   page-color square inside. Use haptics for selection start, moving handles and bookmarking.
-- For «Направляющая линия», brighten a rounded line, dim other text, move line by taps, and offer
-  «Затемнение фона: Высокая / Средняя / Низкая / Нет». Panel button: tap toggles, hold opens the dim menu (no off item);
-  a one-time tip (`guide_tip_shown`) explains the hold, and «Аа» repeats it under the guide card.
+- «Направляющая линия» is the last Advanced card (`GuideSettingsCard`): no toggle (the panel button turns it on), scrolling ready cards
+  «Строка / Луч / С переходом / Абзац / Полоса» (attention, deep focus, line return, calm context, skimming; «Луч» also sets High dimming) and «Своя»
+  for other windows; «Подробнее» holds direction, extra lines, fading and «Затемнение фона». No tips, no long-press menu.
 - Open tapped images full-screen as «Изображение», with dark round ✓, gesture zoom and background
   tap cycling white/black; hide navbar on black. Omit Live Text.

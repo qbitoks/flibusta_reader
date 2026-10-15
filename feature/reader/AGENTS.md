@@ -37,7 +37,7 @@
 - Auto brightness disables touch/accessibility adjustment; observe the device setting and use it on manual takeover.
 - Ignore unchanged settings edits, including repeated slider endpoint events.
 - Use `SpacingSettingsCard` for cyclic interval/margin controls and shared-value sliders; follow `.agents/design/reader.md` for custom states.
-- Keep palette/size/window/turning on Basic; start Advanced with lines, then font/spacing/colour. Reset only Advanced. See `.agents/design/reader.md`.
+- Keep palette/size/window/turning on Basic; start Advanced with lines, then font/spacing/colour, guide last. Reset only Advanced. See `.agents/design/reader.md`.
 - Disable overscroll stretch in the settings panel; horizontal slider drags at either edge must not deform the panel.
 - Use `FooterContentCapsules`; cycle progress on tap. Show only geometry in «Подробнее», or a hidden-line hint when empty; retain saved settings.
 - Order line details in `SettingsSubheader` groups: look (size, opacity, capitals), position, separation (rule, gap, boundary), behaviour (chapter start); default Scroll blocks to 36 dp.

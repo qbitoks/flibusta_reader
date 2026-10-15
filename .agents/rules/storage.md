@@ -15,7 +15,7 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
 - DataStore `settings`: reader/library prefs; `app_appearance` (app-wide), `book_appearance_<book id>`
   (absent = follow the app; removed on delete). Old `appearance` key is no longer read (no migration).
 - Shared reader settings: `ReaderPreferences` (existing keys plus `reader_appearance`, `header_layout`,
-  `footer_layout`); visual presets stay in `ChromeStylePreferences` keys;
+  `footer_layout`, `guide_window` = `spread;extra;falloff`, junk → single line); visual presets stay in `ChromeStylePreferences` keys;
   `footer_under` and `header_under` (None/Clip/Fade) = what scrolling text does
   under each line independently; resolve None to Fade in Scroll without rewriting saved values.
 - Decode only current twelve-field line layouts; obsolete nine-field layouts fall back to factory defaults.

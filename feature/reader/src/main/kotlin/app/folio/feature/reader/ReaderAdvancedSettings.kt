@@ -19,6 +19,7 @@ internal fun ReaderAdvancedSettings(editor: SettingsEditor, preview: PreviewSour
     ReaderPageSettings(editor, preview)
     ReadingTextSettings(editor)
     ReadingColorSettings(editor)
+    GuideSettingsCard(editor)
     Spacer(Modifier.height(16.dp))
     ResetButton(stringResource(R.string.settings_reset_reading),
         editor.settings != editor.settings.withAdvancedDefaults()) { confirmReset = true }

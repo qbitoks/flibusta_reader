@@ -66,8 +66,8 @@ internal fun BoxScope.ReaderPages(
     val footerLook = footerLook(settings, palette)
     val guideOn = settings.guideLine && !scroll
     val bookmarks by vm.bookmarks.collectAsStateWithLifecycle()
-    // Dimming stays while controls show, only lighter, so opening them never flashes the page.
-    val guideFade = settings.guideDim.fade * if (controls.chromeVisible) 0.5f else 1f
+    // Dimming stays whole while controls show, so opening them never flashes the page.
+    val guideFade = settings.guideDim.fade
     val headerAlpha by animateFloatAsState(if (marks) 0f else 1f, tween(150), label = "pageHeader")
     val footerAlpha by animateFloatAsState(if (controls.chromeVisible) 0f else 1f, tween(150), label = "pageFooter")
     when {
@@ -154,7 +154,7 @@ internal fun BoxScope.ReaderPages(
                             state.prev?.let { PageRef(it.chapter, it.index) } -> lines.size - 1
                             else -> 0
                         }
-                        GuidePage(lines, index, padding, guideFade, palette)
+                        GuidePage(lines, index, padding, guideFade, palette, window = settings.guideWindow)
                     }
                     // Like a printed book, a chapter's opening page may go without its running title.
                     val chapterStart = page != null && page.index == 0 && headerLook.layout.hideOnChapterStart

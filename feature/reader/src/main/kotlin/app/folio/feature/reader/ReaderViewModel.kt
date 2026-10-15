@@ -13,7 +13,6 @@ import app.folio.core.data.db.HighlightEntity
 import app.folio.core.data.library.BookResources
 import app.folio.core.data.library.LibraryRepository
 import app.folio.core.data.settings.BookOverrides
-import app.folio.core.data.settings.GuideDim
 import app.folio.core.data.settings.ReaderSettings
 import app.folio.core.data.settings.SettingsRepository
 import app.folio.core.designsystem.ResourceTypefaceProvider
@@ -587,28 +586,16 @@ class ReaderViewModel @Inject constructor(
         if (book) settingsRepository.updateBookReader(bookId, change) else settingsRepository.updateReader(change)
     }
 
+    /** The panel's guide toggle edits where the line is set: this book if it keeps its own, else shared. */
+    fun setGuideLine(on: Boolean) =
+        saveSettings(BookOverrides.GUIDE_LINE in ownSettings.value.values) { it.copy(guideLine = on) }
+
     fun shareOwnSettings() = viewModelScope.launch { settingsRepository.shareBookReader(bookId) }
     fun resetOwnSettings() = viewModelScope.launch { settingsRepository.resetBookReader(bookId) }
 
     /** Original book file, for «Поделиться». */
     fun bookFile(context: Context): File? =
         File(context.filesDir, "books").listFiles { f -> f.name.startsWith("$bookId.") }?.firstOrNull()
-    fun setGuideLine(on: Boolean) = viewModelScope.launch { settingsRepository.setGuideLine(on) }
-    fun setGuideDim(value: GuideDim) = viewModelScope.launch { settingsRepository.setGuideDim(value) }
-
-    /** Show the «hold for settings» tip once, the first time the panel opens with the line already on. */
-    var guideTipDue by mutableStateOf(false)
-        private set
-
-    init {
-        viewModelScope.launch { guideTipDue = !settingsRepository.guideTipShown() }
-    }
-
-    fun guideTipSeen() {
-        if (!guideTipDue) return
-        guideTipDue = false
-        viewModelScope.launch { settingsRepository.setGuideTipShown() }
-    }
 
     // --- Reading sessions (kept for Reading Goals) ---
 

@@ -15,6 +15,7 @@ internal object ReaderPreferences {
     private val pageTurn = stringPreferencesKey("page_turn")
     private val guideLine = booleanPreferencesKey("guide_line")
     private val guideDim = stringPreferencesKey("guide_dim")
+    private val guideWindow = stringPreferencesKey("guide_window")
     private val highlightColor = stringPreferencesKey("highlight_color")
     private val pageHeader = stringPreferencesKey("page_header")
     private val footerPage = stringPreferencesKey("footer_page")
@@ -49,6 +50,7 @@ internal object ReaderPreferences {
             pageTurn = enumOr(p[pageTurn], PageTurn.Slide),
             guideLine = p[guideLine] ?: false,
             guideDim = enumOr(p[guideDim], GuideDim.Low),
+            guideWindow = GuideWindow.decode(p[guideWindow]),
             highlightColor = p[highlightColor] ?: "yellow",
             header = enumOr(p[pageHeader], PageHeader.Chapter),
             footer = footer,
@@ -68,6 +70,7 @@ internal object ReaderPreferences {
         p[pageTurn] = s.pageTurn.name
         p[guideLine] = s.guideLine
         p[guideDim] = s.guideDim.name
+        p[guideWindow] = s.guideWindow.encode()
         p[highlightColor] = s.highlightColor
         p[pageHeader] = s.header.name
         p[footerPage] = s.footer.page.name
