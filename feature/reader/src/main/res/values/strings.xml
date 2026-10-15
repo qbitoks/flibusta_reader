@@ -261,4 +261,8 @@
     <string name="spacing_sub_lines">Lines and paragraphs</string>
     <string name="spacing_sub_letters">Letters and words</string>
     <string name="spacing_sub_page">Page</string>
+    <string name="line_group_look">Look</string>
+    <string name="line_group_place">Position</string>
+    <string name="line_group_separation">Separation from text</string>
+    <string name="line_group_behavior">Behaviour</string>
 </resources>

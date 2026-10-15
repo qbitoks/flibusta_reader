@@ -3,6 +3,14 @@ package app.folio.feature.reader
 import androidx.compose.ui.text.style.TextAlign
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.FormatIndentDecrease
+import androidx.compose.material.icons.automirrored.rounded.FormatIndentIncrease
+import androidx.compose.material.icons.rounded.AcUnit
+import androidx.compose.material.icons.rounded.BrightnessLow
+import androidx.compose.material.icons.rounded.Contrast
+import androidx.compose.material.icons.rounded.UnfoldLess
+import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.ui.semantics.Role
 import app.folio.core.designsystem.ReaderSpacingIcons
@@ -32,10 +40,9 @@ internal fun ReadingColorSettings(editor: SettingsEditor) {
     val dark = ReaderPalettes.isDark(settings.appearance, androidInDarkTheme())
     ToneSettingsCard(colors, dark, editor.isOwn(BookOverrides.COLOR_KEYS), ::paint) {
     SettingsSlider(stringResource(R.string.settings_warmth), colors.warmth.toFloat(), -10f..10f, 1f,
-        signed(colors.warmth)) { paint(colors.copy(warmth = it.roundToInt())) }
-    SettingsDivider()
+        signed(colors.warmth), Icons.Rounded.AcUnit, Icons.Rounded.WbSunny) { paint(colors.copy(warmth = it.roundToInt())) }
     SettingsSlider(stringResource(R.string.settings_contrast), colors.contrast.toFloat(), -10f..10f, 1f,
-        signed(colors.contrast)) { paint(colors.copy(contrast = it.roundToInt())) }
+        signed(colors.contrast), Icons.Rounded.BrightnessLow, Icons.Rounded.Contrast) { paint(colors.copy(contrast = it.roundToInt())) }
     }
 }
 
@@ -51,22 +58,18 @@ internal fun ReadingTextSettings(editor: SettingsEditor) {
         String.format(Locale.getDefault(), "%.2f", style.lineSpacing), ReaderSpacingIcons.Dense, ReaderSpacingIcons.Loose) {
         update(style.copy(lineSpacing = it))
     }
-    SettingsDivider()
     SettingsSlider(stringResource(R.string.settings_paragraph_spacing), style.paragraphSpacing, 0f..2f, 0.05f,
-        String.format(Locale.getDefault(), "%.2f", style.paragraphSpacing)) { update(style.copy(paragraphSpacing = it)) }
-    SettingsDivider()
+        String.format(Locale.getDefault(), "%.2f", style.paragraphSpacing), Icons.Rounded.UnfoldLess, Icons.Rounded.UnfoldMore) { update(style.copy(paragraphSpacing = it)) }
     SettingsSlider(stringResource(R.string.settings_first_line_indent), style.firstLineIndent, 0f..3f, 0.1f,
-        String.format(Locale.getDefault(), "%.1f", style.firstLineIndent)) { update(style.copy(firstLineIndent = it)) }
+        String.format(Locale.getDefault(), "%.1f", style.firstLineIndent), Icons.AutoMirrored.Rounded.FormatIndentDecrease, Icons.AutoMirrored.Rounded.FormatIndentIncrease) { update(style.copy(firstLineIndent = it)) }
     SettingsSubheader(stringResource(R.string.spacing_sub_letters))
     SettingsSlider(stringResource(R.string.settings_character_spacing), style.letterSpacingPct.toFloat(), -10f..10f, 1f,
         "${style.letterSpacingPct} %") { update(style.copy(letterSpacingPct = it.roundToInt())) }
-    SettingsDivider()
     SettingsSlider(stringResource(R.string.settings_word_spacing), style.wordSpacingPct.toFloat(), -20f..20f, 1f,
         "${style.wordSpacingPct} %") { update(style.copy(wordSpacingPct = it.roundToInt())) }
     SettingsSubheader(stringResource(R.string.spacing_sub_page))
     SettingsSlider(stringResource(R.string.settings_margins), style.marginsPct.toFloat(), 0f..15f, 1f,
         "${style.marginsPct} %", ReaderSpacingIcons.Narrow, ReaderSpacingIcons.Wide) { update(style.copy(marginsPct = it.roundToInt())) }
-    SettingsDivider()
     SettingsToggle(stringResource(R.string.settings_justify), style.justify) { update(style.copy(justify = it)) }
     }
 }

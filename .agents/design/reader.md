@@ -114,6 +114,8 @@
   «Подробнее» expands with `SettingsDetails` (~220 ms) and a rotating chevron. Spacing details are split by
   `SettingsSubheader`: lines and paragraphs, letters and words, page (margins, justify); line spacing and margins sliders
   carry `ReaderSpacingIcons` at their ends. Header segments have icons; hidden-line hints are tertiary with an eye-off icon.
+  Inside every «Подробнее»: uppercase `SettingsSubheader` groups, dividers only between groups, compact sliders with
+  icons at both ends (none where no clear glyph exists), plain numbers without «dp», `SegmentsTitle` in secondary subheadline.
   The reset row is centred destructive red text, grey when nothing differs.
   Brightness repeats the text-size layout: title row with the Auto capsule at the trailing edge, then the slider between icons.
 - Put one «Сбросить дополнительные настройки» action at the end of Advanced; confirm its book/shared scope.
@@ -134,7 +136,7 @@
   rule; top adds capitals and «Не показывать в начале главы».
 - In Scroll, keep each boundary in its line disclosure; use nonnegative absolute gaps and protected blocks.
   Align labels at the screen edge, block centre or text edge; enlarge blocks to fit measured labels with 8 dp padding.
-- Default blocks to 36 dp without overriding explicit heights; order details by content, look, placement, text boundary.
+- Default blocks to 36 dp without overriding explicit heights; order details by look, position, separation (text boundary), behaviour.
   Name the rule «Разделительная линия» and the absolute Scroll gap «Зазор до текста».
 - Everything in the panel except brightness can be set per book; guide line and highlight colour stay shared.
 - Use licensed Cyrillic fonts from `ReaderFonts`; EPUB publisher `@font-face` remains unsupported.

@@ -26,6 +26,8 @@
 - The user's phone (vivo V2514) is paired over Wi-Fi ADB; it shows in `adb devices` as `adb-...._adb-tls-connect._tcp`.
 - Standing authorization: install the release APK (`install -r`, keep app data) and launch/test on it without asking.
 - Not listed → the phone is off Wi-Fi or asleep; say so and fall back to the emulator. Never uninstall or clear data.
+- Scroll settings with `input swipe` at x≈30 (screen edge): a swipe starting on a slider track sets that setting.
+  Find tap targets with `uiautomator dump` (`MSYS_NO_PATHCONV=1` in Git Bash) instead of guessed coordinates.
 
 ## Manual device workflow
 ```powershell

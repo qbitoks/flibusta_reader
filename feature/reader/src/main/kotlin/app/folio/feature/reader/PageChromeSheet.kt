@@ -2,6 +2,12 @@ package app.folio.feature.reader
 
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.outlined.WaterDrop
+import androidx.compose.material.icons.rounded.TextDecrease
+import androidx.compose.material.icons.rounded.TextIncrease
+import androidx.compose.material.icons.rounded.UnfoldLess
+import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.VisibilityOff
 
 import androidx.compose.foundation.clickable
@@ -83,22 +89,16 @@ private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEdito
     SettingsDivider()
     SettingsDetailsRow(expanded) { expanded = !expanded }
     SettingsDetails(expanded) {
-    if (top) {
-        SettingsToggle(stringResource(R.string.line_uppercase), layout.uppercase) { on -> change { it.copy(uppercase = on) } }
-        SettingsDivider()
-        SettingsToggle(stringResource(R.string.line_hide_chapter_start), layout.hideOnChapterStart) { on -> change { it.copy(hideOnChapterStart = on) } }
-    }
+    val scroll = editor.settings.pageTurn == PageTurn.Scroll
+    SettingsSubheader(stringResource(R.string.line_group_look))
+    SettingsSlider(stringResource(R.string.line_size), layout.sizePct.toFloat(), LineLayout.SIZE.toRange(), 5f, "${layout.sizePct} %",
+        Icons.Rounded.TextDecrease, Icons.Rounded.TextIncrease) { v -> change { it.copy(sizePct = v.roundToInt()) } }
+    SettingsSlider(stringResource(R.string.line_opacity), layout.opacityPct.toFloat(), LineLayout.OPACITY.toRange(), 5f, "${layout.opacityPct} %",
+        Icons.Outlined.WaterDrop, Icons.Rounded.WaterDrop) { v -> change { it.copy(opacityPct = v.roundToInt()) } }
+    if (top) SettingsToggle(stringResource(R.string.line_uppercase), layout.uppercase) { on -> change { it.copy(uppercase = on) } }
 
     SettingsDivider()
-    SettingsSlider(stringResource(R.string.line_size), layout.sizePct.toFloat(), LineLayout.SIZE.toRange(), 5f, "${layout.sizePct} %") { v ->
-        change { it.copy(sizePct = v.roundToInt()) }
-    }
-    SettingsDivider()
-    SettingsSlider(stringResource(R.string.line_opacity), layout.opacityPct.toFloat(), LineLayout.OPACITY.toRange(), 5f, "${layout.opacityPct} %") { v ->
-        change { it.copy(opacityPct = v.roundToInt()) }
-    }
-    SettingsDivider()
-    val scroll = editor.settings.pageTurn == PageTurn.Scroll
+    SettingsSubheader(stringResource(R.string.line_group_place))
     SegmentsTitle(stringResource(if (scroll) R.string.line_horizontal else R.string.line_position))
     val aligns = if (top) listOf(
         SegmentOption(LineAlign.Start, stringResource(R.string.line_align_start)),
@@ -110,53 +110,50 @@ private fun LineSettings(layout: LineLayout, top: Boolean, editor: SettingsEdito
     )
     SettingsSegments(layout.align, aligns) { v -> change { it.copy(align = v) } }
     if (scroll && gap) {
-        SettingsDivider()
         SegmentsTitle(stringResource(R.string.line_vertical))
         SettingsSegments(layout.vertical, listOf(
             SegmentOption(LineVertical.Edge, stringResource(R.string.line_vertical_edge)),
             SegmentOption(LineVertical.Center, stringResource(R.string.line_vertical_center)),
             SegmentOption(LineVertical.Text, stringResource(R.string.line_vertical_text)),
         )) { v -> change { it.copy(vertical = v) } }
-        SettingsDivider()
         SettingsSlider(stringResource(R.string.line_block_height), layout.requestedBlockHeight.toFloat(),
-            LineLayout.BLOCK_HEIGHT.toRange(), 2f, "${layout.requestedBlockHeight} dp") { v ->
+            LineLayout.BLOCK_HEIGHT.toRange(), 2f, "${layout.requestedBlockHeight}", Icons.Rounded.UnfoldLess, Icons.Rounded.UnfoldMore) { v ->
             change { it.copy(blockHeight = v.roundToInt()) }
         }
-        Text(stringResource(R.string.line_block_minimum), style = FolioType.footnote,
-            color = Folio.colors.secondaryLabel, modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 12.dp))
-        SettingsDivider()
-        SettingsToggle(stringResource(R.string.line_rule), layout.rule) { on -> change { it.copy(rule = on) } }
-        SettingsDivider()
+        Text(stringResource(R.string.line_block_minimum), style = FolioType.caption,
+            color = Folio.colors.tertiaryLabel, modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 10.dp))
+    } else if (!scroll) {
+        SettingsSlider(stringResource(if (top) R.string.line_edge_top else R.string.line_edge_bottom), layout.edge.toFloat(), LineLayout.EDGE.toRange(), 2f,
+            signed(layout.edge), Icons.Rounded.UnfoldLess, Icons.Rounded.UnfoldMore) { v -> change { it.copy(edge = v.roundToInt()) } }
+    }
+
+    SettingsDivider()
+    SettingsSubheader(stringResource(R.string.line_group_separation))
+    SettingsToggle(stringResource(R.string.line_rule), layout.rule) { on -> change { it.copy(rule = on) } }
+    if (scroll && gap) {
         SettingsSlider(stringResource(R.string.line_text_gap), layout.distanceToText.toFloat(),
-            LineLayout.TEXT_GAP.toRange(), 2f, "${layout.distanceToText} dp") { v ->
+            LineLayout.TEXT_GAP.toRange(), 2f, "${layout.distanceToText}", Icons.Rounded.UnfoldLess, Icons.Rounded.UnfoldMore) { v ->
             change { it.copy(textGap = v.roundToInt()) }
         }
-        SettingsDivider()
         SegmentsTitle(stringResource(R.string.scroll_boundary))
         val boundary = if (top) editor.settings.scrollHeaderBoundary else editor.settings.scrollFooterBoundary
         SettingsSegments(boundary, listOf(
             SegmentOption(FooterStyle.Clip, stringResource(R.string.scroll_boundary_clear)),
             SegmentOption(FooterStyle.Fade, stringResource(R.string.scroll_boundary_smooth)),
         )) { v -> editor.edit { it.editLineBoundary(top, v) } }
-    } else if (!scroll) {
+    } else if (!scroll && gap) {
+        SettingsSlider(stringResource(R.string.line_gap), layout.gap.toFloat(), LineLayout.GAP.toRange(), 2f, signed(layout.gap),
+            Icons.Rounded.UnfoldLess, Icons.Rounded.UnfoldMore) { v -> change { it.copy(gap = v.roundToInt()) } }
+    }
+
+    if (top) {
         SettingsDivider()
-        SettingsSlider(stringResource(if (top) R.string.line_edge_top else R.string.line_edge_bottom), layout.edge.toFloat(), LineLayout.EDGE.toRange(), 2f,
-            signed(layout.edge)) { v -> change { it.copy(edge = v.roundToInt()) } }
-        SettingsDivider()
-        SettingsToggle(stringResource(R.string.line_rule), layout.rule) { on -> change { it.copy(rule = on) } }
-        if (gap) {
-            SettingsDivider()
-            SettingsSlider(stringResource(R.string.line_gap), layout.gap.toFloat(), LineLayout.GAP.toRange(), 2f, signed(layout.gap)) { v ->
-                change { it.copy(gap = v.roundToInt()) }
-            }
-        }
+        SettingsSubheader(stringResource(R.string.line_group_behavior))
+        SettingsToggle(stringResource(R.string.line_hide_chapter_start), layout.hideOnChapterStart) { on -> change { it.copy(hideOnChapterStart = on) } }
     }
     }
 }
 
-@Composable
-private fun SegmentsTitle(text: String) = Text(text, style = FolioType.body, color = Folio.colors.label,
-    modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 12.dp))
 
 private fun IntRange.toRange() = first.toFloat()..last.toFloat()
 

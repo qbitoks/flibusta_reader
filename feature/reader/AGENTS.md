@@ -40,7 +40,7 @@
 - Keep palette/size/window/turning on Basic; start Advanced with lines, then font/spacing/colour. Reset only Advanced. See `.agents/design/reader.md`.
 - Disable overscroll stretch in the settings panel; horizontal slider drags at either edge must not deform the panel.
 - Use `FooterContentCapsules`; cycle progress on tap. Show only geometry in «Подробнее», or a hidden-line hint when empty; retain saved settings.
-- Order line details: size/opacity, placement, separator/gap/boundary; default Scroll blocks to 36 dp.
+- Order line details in `SettingsSubheader` groups: look (size, opacity, capitals), position, separation (rule, gap, boundary), behaviour (chapter start); default Scroll blocks to 36 dp.
 - Keep disclosure state separate from persisted line settings; edits activate only the visible legacy values.
 - In Scroll, keep each boundary in its line disclosure; use `ReaderLineBlock` geometry in reader and preview.
 - Keep the rule on the block edge; absolute gap 0 reaches it. Preserve legacy paged gaps; resolve None to Fade.

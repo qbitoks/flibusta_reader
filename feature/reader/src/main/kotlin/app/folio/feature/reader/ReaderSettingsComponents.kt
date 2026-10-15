@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import app.folio.core.designsystem.components.SegmentedControl
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.folio.core.designsystem.Folio
 import app.folio.core.designsystem.FolioType
 import app.folio.core.designsystem.components.GroupedCard
@@ -194,10 +195,16 @@ internal fun SettingsDetails(expanded: Boolean, content: @Composable ColumnScope
     }
 }
 
+/** Quiet title above a segmented row: the segments are the control, the title only names it. */
+@Composable
+internal fun SegmentsTitle(text: String) = Text(text, style = FolioType.subheadline, color = Folio.colors.secondaryLabel,
+    modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 10.dp))
+
 /** Small caption that splits a long card into named runs of rows. */
 @Composable
-internal fun SettingsSubheader(text: String) = Text(text, style = FolioType.footnote, color = Folio.colors.secondaryLabel,
-    modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 2.dp).semantics { heading() })
+internal fun SettingsSubheader(text: String) = Text(text.uppercase(), style = FolioType.caption.copy(letterSpacing = 0.6.sp),
+    fontWeight = FontWeight.SemiBold, color = Folio.colors.secondaryLabel,
+    modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 2.dp).semantics { heading() })
 
 /** Books-style choice outline: an accent ring set off from the tile by a small gap; draw the tile inside. */
 @Composable
@@ -247,7 +254,7 @@ internal fun SettingsDivider() = HorizontalDivider(color = Folio.colors.separato
 internal fun SettingsSlider(title: String, value: Float, range: ClosedFloatingPointRange<Float>, step: Float, shown: String,
     low: ImageVector? = null, high: ImageVector? = null, onChange: (Float) -> Unit) {
     val c = Folio.colors
-    Column(Modifier.padding(horizontal = 18.dp, vertical = 8.dp)) {
+    Column(Modifier.padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 2.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(title, style = FolioType.body, color = c.label, modifier = Modifier.weight(1f))
             Text(shown, style = FolioType.subheadline, color = c.secondaryLabel, modifier = Modifier.padding(start = 12.dp))
@@ -258,7 +265,7 @@ internal fun SettingsSlider(title: String, value: Float, range: ClosedFloatingPo
         if (low != null) Icon(low, null, tint = c.secondaryLabel, modifier = Modifier.size(20.dp))
         IosSlider(value = value, onValueChange = { change(it) }, valueRange = range, steps = step,
             contentDescription = title,
-            modifier = Modifier.weight(1f).heightIn(min = 48.dp).semantics {
+            modifier = Modifier.weight(1f).heightIn(min = 44.dp).semantics {
                 progressBarRangeInfo = ProgressBarRangeInfo(value, range, steps)
                 setProgress { target ->
                     val snapped = range.start + ((target.coerceIn(range) - range.start) / step).roundToInt() * step
