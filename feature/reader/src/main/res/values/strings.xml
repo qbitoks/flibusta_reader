@@ -294,4 +294,20 @@
     <string name="speech_rate">Speed</string>
     <string name="speech_rate_value">%1$s×</string>
     <string name="speech_no_voice">No voice for the book language. Install one in the speech settings.</string>
+    <string name="speech_voice">Voice</string>
+    <string name="speech_engine">Engine</string>
+    <string name="speech_engine_system">System speech</string>
+    <string name="speech_engine_piper">Piper, offline neural voices</string>
+    <string name="speech_system_settings">Speech settings on the device</string>
+    <string name="speech_voices">Voices · %1$s</string>
+    <string name="speech_no_piper_voices">Piper has no voices for the book language yet; the system engine reads it.</string>
+    <string name="speech_piper_fallback">Until a voice is downloaded, the system engine reads.</string>
+    <string name="speech_piper_about">Voices download from GitHub (sherpa-onnx) once and then work without the internet.</string>
+    <string name="speech_voice_download">Download</string>
+    <string name="speech_voice_cancel">Cancel download</string>
+    <string name="speech_voice_delete">Delete voice</string>
+    <string name="speech_voice_failed">Failed</string>
+    <string name="speech_read_from_here">Read from here</string>
+    <string name="speech_voice_retry">Retry</string>
+    <string name="speech_voice_unpacking">Unpacking…</string>
 </resources>

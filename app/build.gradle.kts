@@ -14,8 +14,10 @@ android {
         applicationId = "app.folio"
         minSdk = 34
         targetSdk = 37
-        versionCode = 21
-        versionName = "0.4.0"
+        versionCode = 22
+        versionName = "0.5.0"
+        // sherpa-onnx ships ~25 MB of native code per ABI: phones (arm64) and the x86_64 emulator only.
+        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
 
     androidResources {
@@ -32,6 +34,9 @@ android {
             keyPassword = "android"
         }
     }
+
+    // Compressed native libs: onnxruntime makes the APK ~2× smaller this way (unpacked once on install).
+    packaging { jniLibs { useLegacyPackaging = true } }
 
     buildTypes {
         release {

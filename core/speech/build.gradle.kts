@@ -10,6 +10,7 @@ android {
 
     defaultConfig {
         minSdk = 34
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     compileOptions {
@@ -21,6 +22,9 @@ android {
 dependencies {
     api(project(":core:model"))
     implementation(project(":core:data"))
+    implementation(project(":core:opds"))
+    implementation(libs.sherpa.onnx)
+    implementation(libs.commons.compress)
     implementation(libs.androidx.core.ktx)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

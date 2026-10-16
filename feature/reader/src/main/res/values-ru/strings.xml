@@ -302,4 +302,20 @@
     <string name="speech_rate">Скорость</string>
     <string name="speech_rate_value">%1$s×</string>
     <string name="speech_no_voice">Нет голоса для языка книги. Установите его в настройках синтеза речи.</string>
+    <string name="speech_voice">Голос</string>
+    <string name="speech_engine">Движок</string>
+    <string name="speech_engine_system">Системный синтез</string>
+    <string name="speech_engine_piper">Piper — офлайн-нейроголоса</string>
+    <string name="speech_system_settings">Настройки синтеза речи на устройстве</string>
+    <string name="speech_voices">Голоса · %1$s</string>
+    <string name="speech_no_piper_voices">Для языка книги у Piper пока нет голосов, читает системный синтез.</string>
+    <string name="speech_piper_fallback">Пока голос не загружен, читает системный синтез.</string>
+    <string name="speech_piper_about">Голоса один раз скачиваются с GitHub (sherpa-onnx) и дальше работают без интернета.</string>
+    <string name="speech_voice_download">Загрузить</string>
+    <string name="speech_voice_cancel">Отменить загрузку</string>
+    <string name="speech_voice_delete">Удалить голос</string>
+    <string name="speech_voice_failed">Ошибка</string>
+    <string name="speech_read_from_here">Читать отсюда</string>
+    <string name="speech_voice_retry">Повторить</string>
+    <string name="speech_voice_unpacking">Распаковка…</string>
 </resources>

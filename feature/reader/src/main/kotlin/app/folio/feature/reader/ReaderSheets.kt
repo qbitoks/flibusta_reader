@@ -20,6 +20,7 @@ internal fun ReaderSheets(vm: ReaderViewModel, settings: ReaderSettings, palette
             SheetRotation(controls.rotationLocked) { controls.rotationLocked = it },
             onDismiss = { controls.sheet = null },
         )
+        ReaderSheet.Voice -> VoiceSheet(vm, palette, onDismiss = { controls.sheet = null })
         null -> Unit
     }
     controls.noteFor?.let { target ->

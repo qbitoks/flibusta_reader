@@ -13,7 +13,7 @@ import java.io.File
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.MutableState
 
-internal enum class ReaderSheet { Contents, Bookmarks, Search, Themes, Position }
+internal enum class ReaderSheet { Contents, Bookmarks, Search, Themes, Position, Voice }
 
 /** Screen-local overlays; window preferences are saveable. */
 @Stable
@@ -33,6 +33,10 @@ internal class ReaderControls(
     var noteFor by mutableStateOf<NoteTarget?>(null)
     var activeHighlight by mutableStateOf<Long?>(null)
     var focusPage by mutableStateOf<Page?>(null)
+    /** «Слушать» opened the speech player; it shows with the controls only. */
+    var speechPlayer by mutableStateOf(false)
+    /** Height of the bottom navigation panel while shown; the speech mini-player floats above it. */
+    var bottomPanelHeight by mutableStateOf(androidx.compose.ui.unit.Dp(0f))
 }
 
 @Composable

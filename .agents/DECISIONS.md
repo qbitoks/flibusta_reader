@@ -79,3 +79,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | reader | Settings sheet drags to close (reverses «never drag»); half detent, grabber and book strip tried and dropped | user decision
 2026-10-16 | docs | README.md is a Russian promo-style overview of what Folio does, not a feature spec; behaviour details live in area AGENTS.md | user decision; GitHub visitors want a pitch
 2026-10-16 | speech | `core/speech`: `SpeechEngine` interface, system TTS first; platform `MediaSession` + FGS, not Media3 | no new dependency; Piper/Silero become engines
+2026-10-16 | speech | Piper via sherpa-onnx AAR from JitPack; int8 voices from its GitHub `tts-models` | ~20 MB a voice, no own hosting
+2026-10-16 | speech | APK: ABIs arm64-v8a + x86_64, compressed jniLibs | onnxruntime made it 75 MB; now ~32 MB

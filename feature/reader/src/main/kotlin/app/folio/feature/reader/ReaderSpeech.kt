@@ -2,6 +2,7 @@ package app.folio.feature.reader
 
 import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.widget.Toast
@@ -12,9 +13,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.RecordVoiceOver
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material3.Icon
@@ -70,32 +71,48 @@ internal fun NoVoiceEffect(vm: ReaderViewModel, state: SpeechState) {
     LaunchedEffect(state.noVoice) {
         if (!state.noVoice) return@LaunchedEffect
         Toast.makeText(context, R.string.speech_no_voice, Toast.LENGTH_LONG).show()
-        try {
-            context.startActivity(Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        } catch (_: ActivityNotFoundException) {
-        }
+        openTtsSettings(context)
         vm.dismissNoVoice()
     }
 }
 
-/** Floating player over the page while this book is read aloud and the controls are hidden. */
+/** Player above the navigation panel; ▶ starts reading from the current page if this book isn't loaded yet. */
 @Composable
-internal fun SpeechMiniPlayer(vm: ReaderViewModel, state: SpeechState, palette: ReaderPalette, modifier: Modifier = Modifier) {
+internal fun SpeechMiniPlayer(vm: ReaderViewModel, state: SpeechState, palette: ReaderPalette, onVoice: () -> Unit, modifier: Modifier = Modifier) {
     val c = Folio.colors
+    val listen = rememberListen(vm)
+    val loaded = state.bookId == vm.bookId
+    val playing = loaded && state.playing
+    val away = loaded && state.current?.let { !vm.speechShown(it.start) } == true
     Row(modifier.clip(RoundedCornerShape(28.dp)).glass(RoundedCornerShape(28.dp), tint = palette.background.copy(alpha = 0.92f))
         .readerPanelInput().padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        PlayerButton(Icons.Rounded.SkipPrevious, stringResource(R.string.speech_previous)) { vm.skipSpeech(-1) }
-        PlayerButton(if (state.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-            stringResource(if (state.playing) R.string.speech_pause else R.string.speech_play)) { vm.toggleSpeech() }
-        PlayerButton(Icons.Rounded.SkipNext, stringResource(R.string.speech_next)) { vm.skipSpeech(1) }
-        val rate = state.rate
-        Box(Modifier.heightIn(min = 48.dp).widthIn(min = 56.dp).clip(CircleShape)
-            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.speech_rate)) { vm.setSpeechRate(nextSpeechRate(rate)) },
-            contentAlignment = Alignment.Center) {
-            Text(stringResource(R.string.speech_rate_value, formatRate(rate)), style = FolioType.subheadline, color = c.label)
+        PlayerButton(Icons.Rounded.SkipPrevious, stringResource(R.string.speech_previous)) { if (loaded) vm.skipSpeech(-1) }
+        PlayerButton(if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+            stringResource(if (playing) R.string.speech_pause else R.string.speech_play)) { if (loaded) vm.toggleSpeech() else listen() }
+        PlayerButton(Icons.Rounded.SkipNext, stringResource(R.string.speech_next)) { if (loaded) vm.skipSpeech(1) }
+        // Away from the spoken phrase the rate chip gives way to «Читать отсюда» (the row must fit a phone).
+        if (away) {
+            Box(Modifier.heightIn(min = 48.dp).clip(CircleShape).clickable(role = Role.Button) { vm.readFromHere() }
+                .padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.speech_read_from_here), style = FolioType.subheadline, color = c.accent)
+            }
+        } else {
+            val rate = state.rate
+            Box(Modifier.heightIn(min = 48.dp).widthIn(min = 56.dp).clip(CircleShape)
+                .clickable(role = Role.Button, onClickLabel = stringResource(R.string.speech_rate)) { vm.setSpeechRate(nextSpeechRate(rate)) },
+                contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.speech_rate_value, formatRate(rate)), style = FolioType.subheadline, color = c.label)
+            }
         }
-        PlayerButton(Icons.Rounded.Close, stringResource(R.string.speech_stop)) { vm.stopSpeech() }
+        PlayerButton(Icons.Rounded.RecordVoiceOver, stringResource(R.string.speech_voice), onVoice)
+    }
+}
+
+internal fun openTtsSettings(context: Context) {
+    try {
+        context.startActivity(Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: ActivityNotFoundException) {
     }
 }
 

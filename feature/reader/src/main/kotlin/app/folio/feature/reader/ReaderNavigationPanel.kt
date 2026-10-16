@@ -59,7 +59,6 @@ internal fun ReaderNavigationPanel(
     val guideAvailable = settings.pageTurn != PageTurn.Scroll
     val c = Folio.colors
     val speech by vm.speechState.collectAsStateWithLifecycle()
-    val listen = rememberListen(vm)
 
     Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).glass(RectangleShape, tint = palette.background.copy(alpha = 0.94f))
         .readerPanelInput().padding(bottom = bottomInset)) {
@@ -110,12 +109,14 @@ internal fun ReaderNavigationPanel(
                     active = settings.guideLine && guideAvailable, enabled = guideAvailable, modifier = Modifier.weight(1f)) {
                     vm.setGuideLine(!settings.guideLine)
                 }
+                val speaking = speech.bookId == vm.bookId
                 NavigationAction(Icons.Rounded.Headphones, stringResource(R.string.speech_listen),
-                    active = speech.bookId == vm.bookId && speech.playing, enabled = state.page != null, modifier = Modifier.weight(1f)) {
-                    val wasPlaying = speech.bookId == vm.bookId && speech.playing
-                    listen()
-                    // Starting closes the panel so the page and the mini-player show.
-                    if (!wasPlaying) controls.chromeVisible = false
+                    active = controls.speechPlayer || speaking, enabled = state.page != null, modifier = Modifier.weight(1f)) {
+                    // Opens the player; the second tap stops reading and closes it.
+                    if (controls.speechPlayer || speaking) {
+                        if (speaking) vm.stopSpeech()
+                        controls.speechPlayer = false
+                    } else controls.speechPlayer = true
                 }
                 NavigationAction(Icons.Rounded.Search, stringResource(R.string.reader_search), modifier = Modifier.weight(1f)) {
                     controls.sheet = ReaderSheet.Search

@@ -2,13 +2,16 @@ package app.folio.core.speech
 
 import java.util.Locale
 
-/** A text-to-speech backend. Stage 1 has only [SystemTtsEngine]; Piper and Silero plug in here later. */
+/** A text-to-speech backend: [SystemTtsEngine] or [PiperEngine], picked by [SelectedEngine]. */
 interface SpeechEngine {
     /**
      * Speaks [text] and returns when it has been spoken. Cancelling the caller stops the voice at once.
      * Throws [SpeechUnavailableException] when the engine can't speak [locale].
      */
     suspend fun speak(text: String, locale: Locale, rate: Float, pitch: Float)
+
+    /** Hint: [text] is spoken next, so an engine that synthesizes ahead can start on it now. */
+    fun prepare(text: String, locale: Locale, rate: Float) {}
 
     /** Frees the engine; the next [speak] starts it again. */
     fun release()

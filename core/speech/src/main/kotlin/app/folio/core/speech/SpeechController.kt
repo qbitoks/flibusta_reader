@@ -130,6 +130,11 @@ class SpeechController @Inject constructor(
         _state.update { SpeechState(rate = it.rate) }
     }
 
+    /** The engine or voice changed: say the current phrase again with it. */
+    fun voiceChanged() {
+        if (_state.value.playing) resume()
+    }
+
     fun dismissNoVoice() = _state.update { it.copy(noVoice = false) }
 
     private fun play(from: Position) {
@@ -141,10 +146,17 @@ class SpeechController @Inject constructor(
         job = scope.launch {
             val locale = book.speechLocale()
             try {
-                for (u in book.utterancesFrom(from, locale)) {
+                val phrases = book.utterancesFrom(from, locale).iterator()
+                var next = if (phrases.hasNext()) phrases.next() else null
+                while (next != null) {
+                    val u = next
+                    next = if (phrases.hasNext()) phrases.next() else null
                     _state.update { it.copy(current = u) }
                     savePosition(force = false)
-                    engine.speak(u.text, locale, _state.value.rate, 1f)
+                    val rate = _state.value.rate
+                    // Looking one phrase ahead lets Piper synthesize it while this one plays.
+                    next?.let { engine.prepare(it.text, locale, rate) }
+                    engine.speak(u.text, locale, rate, 1f)
                 }
                 // The end of the book.
                 stop()
@@ -190,5 +202,5 @@ internal fun previousUtterance(book: Book, current: Utterance): Utterance? {
 @InstallIn(SingletonComponent::class)
 internal abstract class SpeechModule {
     @Binds
-    abstract fun engine(engine: SystemTtsEngine): SpeechEngine
+    abstract fun engine(engine: SelectedEngine): SpeechEngine
 }

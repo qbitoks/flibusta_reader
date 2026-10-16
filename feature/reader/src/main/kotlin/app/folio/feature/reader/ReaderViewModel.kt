@@ -34,7 +34,14 @@ import app.folio.core.model.footnoteBlocks
 import app.folio.core.model.parseInternalTarget
 import app.folio.core.model.progressAt
 import app.folio.core.speech.SpeechController
+import app.folio.core.speech.PiperVoice
+import app.folio.core.speech.SpeechEngineKind
 import app.folio.core.speech.SpeechState
+import app.folio.core.speech.SpeechVoices
+import app.folio.core.speech.VoiceChoice
+import app.folio.core.speech.VoiceStatus
+import app.folio.core.speech.speechLocale
+import java.util.Locale
 import app.folio.core.data.settings.PageTurn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -100,6 +107,7 @@ class ReaderViewModel @Inject constructor(
     private val library: LibraryRepository,
     private val settingsRepository: SettingsRepository,
     private val speech: SpeechController,
+    private val voices: SpeechVoices,
     @ApplicationContext context: Context,
 ) : ViewModel() {
     val bookId: String = checkNotNull(savedState["bookId"])
@@ -198,9 +206,15 @@ class ReaderViewModel @Inject constructor(
             bookmarks.collect { refreshBookmarked() }
         }
         viewModelScope.launch {
+            var previous: Position? = null
             speech.state.map { it.current?.start.takeIf { _ -> it.bookId == bookId } }
                 .distinctUntilChanged().filterNotNull()
-                .collect(::followSpeech)
+                .collect { start ->
+                    // Turn with the voice only while the reader was on the phrase before: a reader who
+                    // paged away stays where they are (the player offers «Читать отсюда»).
+                    if (previous.let { it == null || speechShown(it) }) followSpeech(start)
+                    previous = start
+                }
         }
     }
 
@@ -216,21 +230,61 @@ class ReaderViewModel @Inject constructor(
         if (s.bookId == bookId && s.current != null) speech.toggle() else speech.start(bookId, book, readingPosition)
     }
 
-    fun toggleSpeech() = speech.toggle()
+    /** Resuming returns the page to the phrase first, so it's clear where reading goes on. */
+    fun toggleSpeech() {
+        val current = speech.state.value.current
+        if (!speech.state.value.playing && current != null && !speechShown(current.start)) goTo(current.start, record = false)
+        speech.toggle()
+    }
+
+    /** «Читать отсюда»: read from the top of the page on screen. */
+    fun readFromHere() {
+        val book = book ?: return
+        speech.start(bookId, book, readingPosition)
+    }
     fun skipSpeech(delta: Int) = speech.skip(delta)
     fun setSpeechRate(rate: Float) = speech.setRate(rate)
     fun stopSpeech() = speech.stop()
     fun dismissNoVoice() = speech.dismissNoVoice()
 
+    val voiceChoice: StateFlow<VoiceChoice> = voices.choice
+    val voiceStatus: StateFlow<Map<String, VoiceStatus>> = voices.store.status
+
+    /** The language the book is read aloud in (its metadata, else the device's). */
+    val speechLocale: Locale get() = book?.speechLocale() ?: Locale.getDefault()
+
+    fun setSpeechEngine(engine: SpeechEngineKind) {
+        voices.setEngine(engine)
+        speech.voiceChanged()
+    }
+
+    /** Picks [voice], downloading it first if needed; the system engine reads until it is installed. */
+    fun selectVoice(voice: PiperVoice) {
+        if (!voices.store.installed(voice.id)) voices.store.download(voice)
+        voices.select(voice)
+        speech.voiceChanged()
+    }
+
+    fun cancelVoice(voice: PiperVoice) = voices.store.cancel(voice.id)
+
+    fun deleteVoice(voice: PiperVoice) {
+        if (speech.state.value.playing && voices.piperVoiceFor(speechLocale)?.id == voice.id) speech.pause()
+        voices.store.delete(voice.id)
+    }
+
     /** Turns to the spoken phrase once it leaves the screen (in Scroll the next page is on screen too). */
     private fun followSpeech(start: Position) {
-        val page = state.page ?: return
+        if (state.page != null && !speechShown(start)) goTo(start, record = false)
+    }
+
+    /** Whether the phrase starting at [start] is on screen (in Scroll the next page is on screen too). */
+    fun speechShown(start: Position): Boolean {
+        val page = state.page ?: return true
         val next = state.next
         fun ends(p: Page, after: Page?) = after?.let { start < it.start } ?: (start.chapter == p.chapter)
         val afterNext = next?.let { engine?.peek(it.chapter)?.pages?.getOrNull(it.index + 1) }
-        val shown = start >= page.start && ends(page, next) ||
+        return start >= page.start && ends(page, next) ||
             settings.value.pageTurn == PageTurn.Scroll && next != null && start >= next.start && ends(next, afterNext)
-        if (!shown) goTo(start, record = false)
     }
 
     fun onViewport(v: Viewport) {

@@ -158,10 +158,11 @@ internal fun ReaderSurface(
         ReaderSelectionOverlays(vm, settings, palette, controls, layout, highlights, locator)
         ReaderChrome(vm, settings, palette, controls, layout, fragments, marks, footerWords, clock, battery, onClose, interaction.onFooterTap,
             compact = maxHeight < 500.dp, screenHeight = maxHeight)
-        androidx.compose.animation.AnimatedVisibility(speech.bookId == vm.bookId && !controls.chromeVisible,
-            Modifier.align(Alignment.BottomCenter).padding(bottom = layout.bottomInset + 28.dp),
+        // The player shows only with the controls, above the navigation panel, so it never covers the text.
+        androidx.compose.animation.AnimatedVisibility(controls.chromeVisible && (controls.speechPlayer || speech.bookId == vm.bookId),
+            Modifier.align(Alignment.BottomCenter).padding(bottom = controls.bottomPanelHeight + 12.dp),
             enter = androidx.compose.animation.fadeIn(), exit = androidx.compose.animation.fadeOut()) {
-            SpeechMiniPlayer(vm, speech, palette)
+            SpeechMiniPlayer(vm, speech, palette, onVoice = { controls.sheet = ReaderSheet.Voice })
         }
     }
     }

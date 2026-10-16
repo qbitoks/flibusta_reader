@@ -107,7 +107,8 @@ internal fun BoxScope.ReaderChrome(
         ReaderTopBar(state.title, vm.book?.metadata?.authors.orEmpty().joinToString(", "), palette, layout.topInset,
             onClose = onClose, onShare = { shareBook(context, vm) })
     }
-    AnimatedVisibility(controls.chromeVisible, Modifier.align(Alignment.BottomCenter), enter = fadeIn(tween(150)), exit = fadeOut(tween(150))) {
+    AnimatedVisibility(controls.chromeVisible, Modifier.align(Alignment.BottomCenter)
+        .onSizeChanged { controls.bottomPanelHeight = with(density) { it.height.toDp() } }, enter = fadeIn(tween(150)), exit = fadeOut(tween(150))) {
         ReaderNavigationPanel(vm, settings, palette, controls, fragments, layout.bottomInset, compact,
             maxHeight = (screenHeight - topPanelHeight - 8.dp).coerceAtLeast(48.dp))
     }
