@@ -52,7 +52,16 @@ object BookSharing {
         "fb2" -> "application/x-fictionbook+xml"
         "zip" -> "application/zip"
         "txt" -> "text/plain"
+        "html" -> "text/html"
+        "rtf" -> "application/rtf"
+        "mobi" -> "application/x-mobipocket-ebook"
+        "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         "pdf" -> "application/pdf"
+        "txt" -> "text/plain"
+        "html" -> "text/html"
+        "rtf" -> "application/rtf"
+        "mobi" -> "application/x-mobipocket-ebook"
+        "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         else -> "application/octet-stream"
     }
 }

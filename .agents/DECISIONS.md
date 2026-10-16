@@ -65,3 +65,8 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-15 | storage | Remove old settings and Room v1 migrations; keep current books and fail unsupported schemas without data reset | user request
 2026-10-15 | reader theme | Reader UI uses `FolioTheme(palette.uiColors())`: roles mixed from page and text | user request; sepia got white sheets
 2026-10-15 | reader | «Быстрое выцветание» replaced by «Без анимации» (listed first); stored value stays `PageTurn.Fade` | user decision; keeps saved settings
+2026-10-15 | format | Any non-binary file imports as `BookFormat.Text` (content sniff, not extension); regular font, Markdown as is; folder scan takes common text extensions | user decision
+2026-10-16 | format | MOBI, DOCX, RTF, HTML, zipped TXT/HTML/RTF parse into our model, no new deps | user-approved plan
+2026-10-16 | format | PDF needs its own page viewer (later); DJVU (GPL native lib) and binary DOC are out | user-approved plan
+2026-10-16 | catalog | Order FB2, EPUB, MOBI, DOCX, RTF, HTML, TXT; fold conversions into «Другие форматы» | user-approved plan
+2026-10-16 | reader | PDF via platform PdfRenderer in its own pager viewer, not reflowed; no new deps | user-approved plan

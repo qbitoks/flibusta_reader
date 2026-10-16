@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,6 +72,10 @@ internal fun BookSheet(
     val c = Folio.colors
     val formats = entry.downloads.entries.map { (format, link) -> format to downloads[link] }
     val readable = formats.firstNotNullOfOrNull { (_, item) -> item?.takeIf { it.readable } }
+    // FB2/EPUB are the real books; MOBI, DOCX, RTF, HTML, TXT and PDF (fixed pages) are kept behind «Другие форматы».
+    val main = formats.filter { it.first in mainFormats }.ifEmpty { formats }
+    val extra = formats - main.toSet()
+    var showExtra by remember(entry.id) { mutableStateOf(extra.any { it.second != null }) }
     FolioSheet(onDismiss = onDismiss) {
         Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), contentAlignment = Alignment.CenterEnd) {
             CircleButton(Icons.Rounded.Close, stringResource(R.string.catalog_close), onDismiss)
@@ -109,7 +114,8 @@ internal fun BookSheet(
                     )
                 }
                 // Once one format is in the library, «Читать» replaces the download buttons.
-                formats.filter { readable == null }.forEach { (format, item) ->
+                val shown = if (showExtra) main + extra else main
+                shown.filter { readable == null }.forEach { (format, item) ->
                     DownloadCapsule(
                         format, item,
                         primary = readable == null && format == formats.first().first,
@@ -121,11 +127,21 @@ internal fun BookSheet(
                         Text(errorText(item.entity.error), style = FolioType.footnote, color = c.destructive, modifier = Modifier.padding(horizontal = 12.dp))
                     }
                 }
+                if (readable == null && extra.isNotEmpty() && !showExtra) {
+                    Text(
+                        stringResource(R.string.catalog_other_formats, extra.joinToString(", ") { it.first }),
+                        style = FolioType.subheadline,
+                        color = c.secondaryLabel,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .clickable(role = Role.Button) { showExtra = true }.padding(vertical = 10.dp),
+                    )
+                }
                 vm.downloadError?.let { Text(errorText(it), style = FolioType.footnote, color = c.destructive, modifier = Modifier.padding(horizontal = 12.dp)) }
                 when {
                     entry.downloads.isEmpty() && entry.otherFormats.isNotEmpty() -> Note(stringResource(R.string.catalog_unreadable, entry.otherFormats.joinToString(", ")))
                     entry.downloads.isEmpty() -> Note(stringResource(R.string.catalog_no_downloads))
-                    entry.downloads.size > 1 && readable == null -> Note(stringResource(R.string.catalog_formats_hint))
+                    main.count { it.first in mainFormats } > 1 && readable == null -> Note(stringResource(R.string.catalog_formats_hint))
                 }
             }
 
@@ -237,3 +253,5 @@ private fun DownloadCapsule(
         }
     }
 }
+
+private val mainFormats = setOf("FB2", "EPUB")

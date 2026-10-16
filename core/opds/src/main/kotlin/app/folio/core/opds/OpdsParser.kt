@@ -11,7 +11,7 @@ data class CatalogEntry(
     val author: String,
     /** Plain text; paragraphs separated by newlines, the «Год издания / Формат / Размер» tail removed. */
     val summary: String,
-    /** Readable formats («EPUB», «FB2») → acquisition link. */
+    /** Readable formats («FB2», «EPUB», «MOBI», «PDF»…) → acquisition link, best format first. */
     val downloads: Map<String, String>,
     /** Feed to open for a folder entry; null for a book. */
     val navigation: String?,
@@ -23,7 +23,7 @@ data class CatalogEntry(
     val year: String? = null,
     /** File size the catalog reports, in bytes. */
     val size: Long? = null,
-    /** Offered formats this app can't open («PDF», «MOBI»). */
+    /** Offered formats this app can't open («DJVU», «DOC»). */
     val otherFormats: List<String> = emptyList(),
 ) {
     val isBook: Boolean get() = navigation == null
@@ -32,7 +32,19 @@ data class CatalogEntry(
 data class CatalogPage(val title: String, val entries: List<CatalogEntry>, val next: String?)
 
 object OpdsParser {
-    private val readable = mapOf("epub" to "EPUB", "fb2" to "FB2")
+    /** MIME fragment → format name, in order of preference: FB2 is the catalog's own format, the rest are conversions. */
+    private val readable = listOf(
+        "fb2" to "FB2",
+        "epub" to "EPUB",
+        "mobipocket" to "MOBI",
+        "wordprocessingml" to "DOCX",
+        "rtf" to "RTF",
+        "html" to "HTML",
+        "txt" to "TXT",
+        "text/plain" to "TXT",
+        "pdf" to "PDF",
+    )
+    private val preference = readable.map { it.second }.distinct()
     private val coverRels = listOf(
         "http://opds-spec.org/image/thumbnail",
         "http://opds-spec.org/thumbnail",
@@ -64,7 +76,7 @@ object OpdsParser {
             val otherFormats = linkedSetOf<String>()
             links.filter { it.getAttribute("rel").startsWith("http://opds-spec.org/acquisition") }.forEach {
                 val type = it.getAttribute("type")
-                val format = readable.entries.firstOrNull { (key, _) -> type.contains(key) }?.value
+                val format = readable.firstOrNull { (key, _) -> type.contains(key) }?.second
                 val address = resolve(it)
                 when {
                     format != null && address != null -> downloads.putIfAbsent(format, address)
@@ -87,7 +99,7 @@ object OpdsParser {
                 title = text("title"),
                 author = Xml.children(entry, "author").joinToString(", ") { Xml.children(it, "name").firstOrNull()?.textContent.orEmpty().trim() },
                 summary = content.text,
-                downloads = downloads,
+                downloads = downloads.entries.sortedBy { preference.indexOf(it.key) }.associate { it.key to it.value },
                 navigation = navigation.takeIf { downloads.isEmpty() && otherFormats.isEmpty() },
                 cover = cover,
                 related = related,

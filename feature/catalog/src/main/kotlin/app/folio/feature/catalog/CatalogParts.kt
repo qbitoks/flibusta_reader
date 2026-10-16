@@ -119,7 +119,9 @@ internal fun fileSize(bytes: Long): String = Formatter.formatShortFileSize(Local
 @Composable
 internal fun bookMeta(entry: CatalogEntry): String {
     val parts = buildList {
-        addAll(entry.downloads.keys.ifEmpty { entry.otherFormats })
+        // Conversions and PDF would crowd the line; name them only when nothing better exists.
+        val formats = entry.downloads.keys.ifEmpty { entry.otherFormats }
+        addAll(formats.filter { it == "FB2" || it == "EPUB" }.ifEmpty { formats.take(2) })
         entry.year?.let(::add)
         entry.size?.let { add(fileSize(it)) }
     }

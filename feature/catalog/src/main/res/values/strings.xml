@@ -47,6 +47,7 @@
     <string name="catalog_download_retry">%1$s · try again</string>
     <string name="catalog_formats_hint">FB2 is the catalog\'s own format and downloads faster. EPUB is built by the server on request and can take up to a minute to start.</string>
     <string name="catalog_unreadable">This book is only available as %1$s, which this app can\'t open.</string>
+    <string name="catalog_other_formats">Other formats: %1$s</string>
     <string name="catalog_no_downloads">Download is not available</string>
     <string name="catalog_no_description">No description</string>
     <string name="catalog_show_more">more</string>

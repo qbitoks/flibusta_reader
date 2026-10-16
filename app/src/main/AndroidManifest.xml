@@ -37,6 +37,12 @@
                 <data android:mimeType="application/x-fictionbook" />
                 <data android:mimeType="application/x-zip-compressed-fb2" />
                 <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="text/*" />
+                <data android:mimeType="application/x-mobipocket-ebook" />
+                <data android:mimeType="application/vnd.amazon.ebook" />
+                <data android:mimeType="application/rtf" />
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                <data android:mimeType="application/pdf" />
             </intent-filter>
             <!-- "Share" sheet. -->
             <intent-filter>
@@ -48,6 +54,12 @@
                 <data android:mimeType="application/x-fictionbook" />
                 <data android:mimeType="application/zip" />
                 <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="text/*" />
+                <data android:mimeType="application/x-mobipocket-ebook" />
+                <data android:mimeType="application/vnd.amazon.ebook" />
+                <data android:mimeType="application/rtf" />
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                <data android:mimeType="application/pdf" />
             </intent-filter>
         </activity>
 

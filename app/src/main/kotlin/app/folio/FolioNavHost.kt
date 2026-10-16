@@ -93,6 +93,8 @@ private val importMimeTypes = arrayOf(
     "application/octet-stream",
     "text/xml",
     "application/xml",
+    "text/*",
+    "*/*",
 )
 
 @OptIn(ExperimentalSharedTransitionApi::class)

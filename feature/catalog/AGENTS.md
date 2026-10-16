@@ -18,7 +18,8 @@ downloads live in `core/data/.../catalog/` (`CatalogRepository`, `DownloadManage
 - Layout follows `.agents/design/design-system.md`: `LargeTitleHeader`, `SectionBand`, `SectionTitle`
   from `core/designsystem` (shared with «Главная»); plain rows with 32 dp inset; sheets via `FolioSheet`.
 - Errors travel as `NetworkErrors` codes and become text in `errorText()`; no raw exception text for known cases.
-- Books the app can't open (PDF-only) are hidden from lists with a count note, never shown as downloadable.
+- Download formats come ordered from `OpdsParser`; the sheet shows FB2/EPUB and folds conversions into «Другие форматы».
+- PDF downloads last and sits in «Другие форматы». Books the app can't open (DJVU-only) are hidden from lists with a count note, never shown as downloadable.
 - Downloads open nothing by themselves: the book sheet and «Загрузки» show «Читать» when done.
 
 ## Gotchas

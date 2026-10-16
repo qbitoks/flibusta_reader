@@ -5,7 +5,7 @@ catalog prefs.
 Why: users upgrade with `install -r`; books, positions, highlights and collections must survive.
 
 ## Layout (app-private, see `core/data/.../library/BookFiles.kt`)
-- `files/books/<sha1>.<ext>` — original file; book id = SHA-1 of its bytes. `files/covers/<id>.jpg`.
+- `files/books/<sha1>.<ext>` — original file (PDF: `.pdf`, no `cache/books` entry; position = `Position(page)`); book id = SHA-1 of its bytes. `files/covers/<id>.jpg`.
 - `cache/books/<id>/book.bin` + `res/` — parsed model; rebuilt from the original if the cache is cleared.
 - Room `folio.db` (`FolioDatabase`, v2): books, collections, bookmarks, highlights, sessions, search
   history, `downloads`. Schemas in `core/data/schemas/`; v1 upgrades are unsupported (user decision).

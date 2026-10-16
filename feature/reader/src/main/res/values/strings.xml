@@ -283,4 +283,6 @@
     <string name="line_group_place">Position</string>
     <string name="line_group_separation">Separation from text</string>
     <string name="line_group_behavior">Behaviour</string>
+    <string name="pdf_page">%1$d of %2$d</string>
+    <string name="pdf_broken">This PDF can\'t be opened: it may be encrypted or damaged.</string>
 </resources>

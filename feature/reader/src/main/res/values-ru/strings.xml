@@ -291,4 +291,6 @@
     <string name="line_group_place">Положение</string>
     <string name="line_group_separation">Отделение от текста</string>
     <string name="line_group_behavior">Поведение</string>
+    <string name="pdf_page">%1$d из %2$d</string>
+    <string name="pdf_broken">Этот PDF не открывается: возможно, он защищён паролем или повреждён.</string>
 </resources>

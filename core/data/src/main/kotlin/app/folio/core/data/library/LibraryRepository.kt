@@ -96,6 +96,7 @@ class LibraryRepository @Inject constructor(
             if (!tmp.renameTo(original)) {
                 tmp.copyTo(original, overwrite = true)
             }
+            if (format == BookFormat.Pdf) return importPdf(id, original, uri, sourceUri)
             val book = try {
                 parseAndCache(id, original, format)
             } catch (e: Exception) {
@@ -107,7 +108,11 @@ class LibraryRepository @Inject constructor(
             books.insert(
                 BookEntity(
                     id = id,
-                    title = book.metadata.title.ifBlank { displayName(uri)?.substringBeforeLast('.') ?: "Book" },
+                    title = book.metadata.title.ifBlank {
+                        // Text files keep their extension: «nginx.conf» says more than «nginx».
+                        val name = displayName(uri)
+                        (if (format == BookFormat.Text) name else name?.substringBeforeLast('.')) ?: "Book"
+                    },
                     authors = book.metadata.authors.joinToString("\n"),
                     series = book.metadata.series,
                     seriesIndex = book.metadata.seriesIndex,
@@ -127,6 +132,41 @@ class LibraryRepository @Inject constructor(
             tmp.delete()
         }
     }
+
+    /** PDF keeps its fixed pages: no parsed cache, the first page becomes the cover. */
+    private suspend fun importPdf(id: String, original: File, uri: Uri, sourceUri: String?): ImportResult {
+        val hasCover = try {
+            PdfCover.render(original, COVER_WIDTH)?.let { bitmap ->
+                files.cover(id).outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 88, it) }
+                true
+            } ?: false
+        } catch (e: Exception) {
+            // Encrypted or broken: PdfRenderer can't open it, so the viewer couldn't either.
+            files.delete(id)
+            throw ImportException("Cannot read ${displayName(uri)}", e)
+        }
+        books.insert(
+            BookEntity(
+                id = id,
+                title = displayName(uri)?.substringBeforeLast('.') ?: "PDF",
+                authors = "",
+                series = null,
+                seriesIndex = null,
+                language = null,
+                format = BookFormat.Pdf.name,
+                fileSize = original.length(),
+                sourceUri = sourceUri,
+                hasCover = hasCover,
+                addedAt = System.currentTimeMillis(),
+                coverColors = if (hasCover) coverColors(files.cover(id)) else null,
+                manualOrder = -(System.currentTimeMillis() / 1000).toInt(),
+            ),
+        )
+        return ImportResult.Added(id)
+    }
+
+    /** The original file of a book stored as [format]. */
+    fun originalFile(id: String, format: BookFormat): File = files.original(id, format.extension)
 
     /** Loads the parsed book, from memory, the binary cache, or by re-parsing the original. */
     suspend fun load(id: String): Book = withContext(Dispatchers.IO) {

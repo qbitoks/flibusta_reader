@@ -18,8 +18,13 @@ import app.folio.core.designsystem.FolioTheme
 import app.folio.core.designsystem.uiColors
 
 @Composable
-fun ReaderRoute(onClose: () -> Unit, viewModel: ReaderViewModel = hiltViewModel()) {
-    ReaderScreen(viewModel, onClose)
+fun ReaderRoute(onClose: () -> Unit, pdf: PdfViewModel = hiltViewModel()) {
+    // The reflow ViewModel parses the book on creation, so it is created only for reflowable books.
+    when (val kind = pdf.kind.collectAsStateWithLifecycle().value) {
+        ReaderKind.Loading -> Unit
+        ReaderKind.Reflow -> ReaderScreen(hiltViewModel<ReaderViewModel>(), onClose)
+        else -> PdfViewer(pdf, kind, onClose)
+    }
 }
 
 

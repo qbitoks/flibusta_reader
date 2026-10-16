@@ -49,6 +49,7 @@
     <string name="catalog_download_retry">%1$s · повторить</string>
     <string name="catalog_formats_hint">FB2 — исходный формат каталога, скачивается быстрее. EPUB сервер собирает по запросу: подготовка может занять до минуты.</string>
     <string name="catalog_unreadable">Книга есть только в формате %1$s — приложение такие файлы не открывает.</string>
+    <string name="catalog_other_formats">Другие форматы: %1$s</string>
     <string name="catalog_no_downloads">Скачивание недоступно</string>
     <string name="catalog_no_description">Описание отсутствует</string>
     <string name="catalog_show_more">ещё</string>
