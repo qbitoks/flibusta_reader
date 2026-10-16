@@ -7,7 +7,7 @@ if (!(Test-Path -LiteralPath 'local.properties')) {
     if (!(Test-Path -LiteralPath $taskSdkPath)) { throw 'Укажите ANDROID_HOME с установленным Android SDK' }
     ('sdk.dir=' + $taskSdkPath.Replace('\', '/').Replace(':', '\:')) | Set-Content -Encoding ascii local.properties
 }
-& ./gradlew.bat :core:opds:test :core:format:test :core:layout:testDebugUnitTest :core:data:testDebugUnitTest :core:designsystem:testDebugUnitTest :feature:reader:testDebugUnitTest :feature:catalog:testDebugUnitTest :app:assembleRelease :app:lintDebug --console=plain
+& ./gradlew.bat :core:opds:test :core:format:test :core:layout:testDebugUnitTest :core:data:testDebugUnitTest :core:speech:testDebugUnitTest :core:designsystem:testDebugUnitTest :feature:reader:testDebugUnitTest :feature:catalog:testDebugUnitTest :app:assembleRelease :app:lintDebug --console=plain
 if ($LASTEXITCODE -ne 0) { throw "Сборка завершилась с кодом $LASTEXITCODE" }
 $taskVersion = [regex]::Match((Get-Content -Raw 'app/build.gradle.kts'), 'versionName\s*=\s*"([^"]+)"').Groups[1].Value
 if (!$taskVersion) { throw 'Не найден versionName в app/build.gradle.kts' }

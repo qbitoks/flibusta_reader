@@ -293,4 +293,13 @@
     <string name="line_group_behavior">Поведение</string>
     <string name="pdf_page">%1$d из %2$d</string>
     <string name="pdf_broken">Этот PDF не открывается: возможно, он защищён паролем или повреждён.</string>
+    <string name="speech_listen">Слушать</string>
+    <string name="speech_play">Продолжить</string>
+    <string name="speech_pause">Пауза</string>
+    <string name="speech_next">Следующее предложение</string>
+    <string name="speech_previous">Предыдущее предложение</string>
+    <string name="speech_stop">Остановить чтение вслух</string>
+    <string name="speech_rate">Скорость</string>
+    <string name="speech_rate_value">%1$s×</string>
+    <string name="speech_no_voice">Нет голоса для языка книги. Установите его в настройках синтеза речи.</string>
 </resources>

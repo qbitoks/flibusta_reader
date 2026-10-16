@@ -285,4 +285,13 @@
     <string name="line_group_behavior">Behaviour</string>
     <string name="pdf_page">%1$d of %2$d</string>
     <string name="pdf_broken">This PDF can\'t be opened: it may be encrypted or damaged.</string>
+    <string name="speech_listen">Read Aloud</string>
+    <string name="speech_play">Play</string>
+    <string name="speech_pause">Pause</string>
+    <string name="speech_next">Next sentence</string>
+    <string name="speech_previous">Previous sentence</string>
+    <string name="speech_stop">Stop reading aloud</string>
+    <string name="speech_rate">Speed</string>
+    <string name="speech_rate_value">%1$s×</string>
+    <string name="speech_no_voice">No voice for the book language. Install one in the speech settings.</string>
 </resources>

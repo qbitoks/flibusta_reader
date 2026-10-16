@@ -33,6 +33,9 @@ import app.folio.core.model.TocEntry
 import app.folio.core.model.footnoteBlocks
 import app.folio.core.model.parseInternalTarget
 import app.folio.core.model.progressAt
+import app.folio.core.speech.SpeechController
+import app.folio.core.speech.SpeechState
+import app.folio.core.data.settings.PageTurn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
@@ -96,6 +99,7 @@ class ReaderViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val library: LibraryRepository,
     private val settingsRepository: SettingsRepository,
+    private val speech: SpeechController,
     @ApplicationContext context: Context,
 ) : ViewModel() {
     val bookId: String = checkNotNull(savedState["bookId"])
@@ -193,6 +197,40 @@ class ReaderViewModel @Inject constructor(
         viewModelScope.launch {
             bookmarks.collect { refreshBookmarked() }
         }
+        viewModelScope.launch {
+            speech.state.map { it.current?.start.takeIf { _ -> it.bookId == bookId } }
+                .distinctUntilChanged().filterNotNull()
+                .collect(::followSpeech)
+        }
+    }
+
+    // --- Read aloud ---
+
+    /** Reading aloud, app-wide; [SpeechState.bookId] tells whether it is this book. */
+    val speechState: StateFlow<SpeechState> = speech.state
+
+    /** «Слушать»: reads from the current page, or resumes this book if it is already loaded. */
+    fun listen() {
+        val book = book ?: return
+        val s = speech.state.value
+        if (s.bookId == bookId && s.current != null) speech.toggle() else speech.start(bookId, book, readingPosition)
+    }
+
+    fun toggleSpeech() = speech.toggle()
+    fun skipSpeech(delta: Int) = speech.skip(delta)
+    fun setSpeechRate(rate: Float) = speech.setRate(rate)
+    fun stopSpeech() = speech.stop()
+    fun dismissNoVoice() = speech.dismissNoVoice()
+
+    /** Turns to the spoken phrase once it leaves the screen (in Scroll the next page is on screen too). */
+    private fun followSpeech(start: Position) {
+        val page = state.page ?: return
+        val next = state.next
+        fun ends(p: Page, after: Page?) = after?.let { start < it.start } ?: (start.chapter == p.chapter)
+        val afterNext = next?.let { engine?.peek(it.chapter)?.pages?.getOrNull(it.index + 1) }
+        val shown = start >= page.start && ends(page, next) ||
+            settings.value.pageTurn == PageTurn.Scroll && next != null && start >= next.start && ends(next, afterNext)
+        if (!shown) goTo(start, record = false)
     }
 
     fun onViewport(v: Viewport) {

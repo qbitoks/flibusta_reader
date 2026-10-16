@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.CalendarViewDay
 import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.folio.core.data.settings.PageTurn
 import app.folio.core.data.settings.ReaderSettings
 import app.folio.core.designsystem.Folio
@@ -56,6 +58,8 @@ internal fun ReaderNavigationPanel(
     val haptic = LocalHapticFeedback.current
     val guideAvailable = settings.pageTurn != PageTurn.Scroll
     val c = Folio.colors
+    val speech by vm.speechState.collectAsStateWithLifecycle()
+    val listen = rememberListen(vm)
 
     Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).glass(RectangleShape, tint = palette.background.copy(alpha = 0.94f))
         .readerPanelInput().padding(bottom = bottomInset)) {
@@ -106,6 +110,13 @@ internal fun ReaderNavigationPanel(
                     active = settings.guideLine && guideAvailable, enabled = guideAvailable, modifier = Modifier.weight(1f)) {
                     vm.setGuideLine(!settings.guideLine)
                 }
+                NavigationAction(Icons.Rounded.Headphones, stringResource(R.string.speech_listen),
+                    active = speech.bookId == vm.bookId && speech.playing, enabled = state.page != null, modifier = Modifier.weight(1f)) {
+                    val wasPlaying = speech.bookId == vm.bookId && speech.playing
+                    listen()
+                    // Starting closes the panel so the page and the mini-player show.
+                    if (!wasPlaying) controls.chromeVisible = false
+                }
                 NavigationAction(Icons.Rounded.Search, stringResource(R.string.reader_search), modifier = Modifier.weight(1f)) {
                     controls.sheet = ReaderSheet.Search
                 }
@@ -124,7 +135,7 @@ private fun NavigationAction(
         .background(if (active) c.label.copy(alpha = 0.08f) else Color.Transparent)
         .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
         .semantics {
-            if (activeTint != null || icon == Icons.Rounded.CalendarViewDay) selected = active
+            if (activeTint != null || icon == Icons.Rounded.CalendarViewDay || icon == Icons.Rounded.Headphones) selected = active
         }, contentAlignment = Alignment.Center) {
         Icon(icon, label, tint = if (!enabled) c.secondaryLabel.copy(alpha = 0.45f) else if (active) activeTint ?: c.label else c.label,
             modifier = Modifier.size(26.dp))

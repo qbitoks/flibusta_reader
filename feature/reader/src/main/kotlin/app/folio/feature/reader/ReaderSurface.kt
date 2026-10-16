@@ -1,6 +1,7 @@
 package app.folio.feature.reader
 
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -129,6 +131,9 @@ internal fun ReaderSurface(
                 if (color == HighlightColor.Underline) Mark(span, paint, MarkStyle.Underline, underlinePx) else Mark(span, paint, MarkStyle.Highlight, cornerPx)
             }
         }
+        val speech by vm.speechState.collectAsStateWithLifecycle()
+        NoVoiceEffect(vm, speech)
+        val pageMarks = speechMark(speech, vm.bookId, palette, cornerPx)?.let { savedMarks + it } ?: savedMarks
         LaunchedEffect(state.page) {
             vm.select(null)
             controls.activeHighlight = null
@@ -148,11 +153,16 @@ internal fun ReaderSurface(
             }
         }
         Box(Modifier.fillMaxSize().then(source)) {
-            ReaderPages(vm, settings, palette, controls, layout, savedMarks, highlights, marks, interaction, locator, footerWords, clock, battery, onClose)
+            ReaderPages(vm, settings, palette, controls, layout, pageMarks, highlights, marks, interaction, locator, footerWords, clock, battery, onClose)
         }
         ReaderSelectionOverlays(vm, settings, palette, controls, layout, highlights, locator)
         ReaderChrome(vm, settings, palette, controls, layout, fragments, marks, footerWords, clock, battery, onClose, interaction.onFooterTap,
             compact = maxHeight < 500.dp, screenHeight = maxHeight)
+        androidx.compose.animation.AnimatedVisibility(speech.bookId == vm.bookId && !controls.chromeVisible,
+            Modifier.align(Alignment.BottomCenter).padding(bottom = layout.bottomInset + 28.dp),
+            enter = androidx.compose.animation.fadeIn(), exit = androidx.compose.animation.fadeOut()) {
+            SpeechMiniPlayer(vm, speech, palette)
+        }
     }
     }
 }

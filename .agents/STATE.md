@@ -10,6 +10,8 @@ status: active
   menu palettes and guide landings in Slide/Curl/Fade.
 
 ## Phone verification before distribution
+- Read aloud (stage 1): «Слушать» in the navigation panel, mini-player, phrase band, page following in Slide/Scroll,
+  notification/lock-screen/headset controls, pause on headphone unplug, no-voice hint.
 - Reader settings: Basic/Advanced tabs, palette cards, Advanced-only reset, default/book reset, preset paragraph
   gaps and seam leading, cyclic interval/margin cards and percentage margins, footer capsules, 36 dp Scroll lines.
 - Reader controls: themed scrubber, five-page history arrows, position sheet, bottom search, corner bookmark.
@@ -19,6 +21,7 @@ status: active
   list (stars, switcher menu, long-press edit, add by address, preset reset).
 
 ## Next steps
+- Read aloud stage 2: sherpa-onnx + Piper voices behind `SpeechEngine` (models downloaded on demand); stage 3 Silero only after an on-device probe (CC BY-NC).
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.
 - Replace archived Readium regressions with checks for the current UI; CI uses `scripts/ci-emulator.ps1`.
 - Potential reader follow-up: add the roadmap's scroll scrubber with chapter/page bubble.

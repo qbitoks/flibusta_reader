@@ -12,6 +12,7 @@ Agent infrastructure (`.agents/`, `scripts/agent-lint.sh`, tool adapters) is des
 - `core/opds/` — JVM OPDS 1/2 parsers, HTTPS-only requests, safe XML; JUnit tests — `core/opds/AGENTS.md`
 - `core/data/` — Room, files, settings, library/catalog repositories, catalog list and downloads — `core/data/AGENTS.md`
 - `core/designsystem/` — Apple Books theme, fonts, glass, covers, components — `core/designsystem/AGENTS.md`
+- `core/speech/` — read aloud: sentence phrases, TTS engines, controller, media service — `core/speech/AGENTS.md`
 - `feature/library/` — «Библиотека» and «Главная» screens and ViewModels — `feature/library/AGENTS.md`
 - `feature/reader/` — reader: page turning, scroll mode, header/footer, selection — `feature/reader/AGENTS.md`
 - `feature/catalog/` — «Каталог»: catalog switcher and «Каталоги» list, OPDS home, search, book sheet, downloads — `feature/catalog/AGENTS.md`

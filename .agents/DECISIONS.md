@@ -78,3 +78,4 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | designsystem | Own `FolioSheet` instead of `ModalBottomSheet`: close at 35 % pull or fast 80 dp swipe; content scroll never closes | M3 closed sheets on stray flicks
 2026-10-16 | reader | Settings sheet drags to close (reverses «never drag»); half detent, grabber and book strip tried and dropped | user decision
 2026-10-16 | docs | README.md is a Russian promo-style overview of what Folio does, not a feature spec; behaviour details live in area AGENTS.md | user decision; GitHub visitors want a pitch
+2026-10-16 | speech | `core/speech`: `SpeechEngine` interface, system TTS first; platform `MediaSession` + FGS, not Media3 | no new dependency; Piper/Silero become engines

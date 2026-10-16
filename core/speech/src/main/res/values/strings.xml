@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="speech_channel">Read aloud</string>
+    <string name="speech_play">Play</string>
+    <string name="speech_pause">Pause</string>
+    <string name="speech_next">Next sentence</string>
+    <string name="speech_previous">Previous sentence</string>
+    <string name="speech_stop">Stop</string>
+</resources>
