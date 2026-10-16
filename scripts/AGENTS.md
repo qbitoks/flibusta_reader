@@ -2,7 +2,7 @@
 
 ## Entry points
 - Use `scripts/doctor.ps1` for environment checks; `-RequireEmulator -Serial <serial>` also checks a device.
-- Use `scripts/build.ps1` for the root Check command and a local release APK; it does not install.
+- Use `scripts/build.ps1` for the root Check command; it copies the APK to `artifacts/Folio-<versionName>-release.apk`, no install.
 - Use `scripts/ci-emulator.ps1` as the canonical automated device check: packaged APK install, launch, rotation and restart.
 - Read `.agents/rules/release.md` before changing packaging, publishing, metadata, signing or CI.
 - Use `scripts/agent-lint.sh` for docs; its maintenance workflow is `.agents/playbooks/maintenance.md`.

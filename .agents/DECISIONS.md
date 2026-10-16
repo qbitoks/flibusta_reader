@@ -37,28 +37,19 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-13 | reader | Use TOC ranges for chapter progress and title; guide direction follows successful landings | user-approved fixes
 2026-10-13 | code | Split by responsibility; aim for files <400 lines, composables <150 (soft targets) | targeted reads save context; avoid fragments with no independent purpose
 2026-10-13 | reader settings | Fixed dialog, pinned native-text preview, separate choice cards and descriptive styles; preserve settings keys | user-approved redesign
-2026-10-13 | reader settings | Compact: theme swatches, segments, style chips; labels shrink; radio list only for >130 % text | user: tiles and lists too tall
+2026-10-13 | reader settings | Compact: segments with shrinking labels; radio list only for >130 % text | user: tiles and lists too tall
 2026-10-13 | reader settings | Shared settings + per-book differences for every panel setting; scope menu under title | user decision; replaces shared-only theme/text
 2026-10-13 | reader settings | Panel opens on book scope iff the book has own settings; no stored scope | a remembered mode caused accidental edits
 2026-10-14 | reader settings | Footer «Нет» drops only the page number; time/battery/left stay in «Свои параметры» | user: wants a clock-only line
 2026-10-14 | reader settings | Defaults: header Chapter, footer «42» without clock/battery, Slide; missing keys follow new defaults | user decision
 2026-10-14 | reader | Scroll: independent Clip/Fade inside each disclosure; fixed block edges, absolute gap, vertical label alignment | user decision
 2026-10-14 | app | Renamed to Folio; package/applicationId `app.folio`, DB `folio.db` | user decision; clean break: old installs do not upgrade, data not migrated
-2026-10-14 | reader settings | Text style card (`TextPreset`) apart from colour theme; theme picks its card unless «Мой» | user decision; no migration
-- 2026-10-14 «Моя» theme (7th swatch) replaces the theme: page colour, warmth, contrast, text; see design/reader.md.
-  Superseded reset by deletion on 2026-10-15: restore the last standard theme; see design/reader.md.
-- 2026-10-14 | reader | Presets supply paragraph gap and indent; «Моя» edits both, with no per-theme saved overrides | user decision.
-  Free colour picker rejected: too easy to get unreadable text.
+2026-10-14 | reader | Free colour picker rejected; colours come from palettes and tone/contrast presets | too easy to get unreadable text
 2026-10-14 | reader settings | «На странице»: omit line preset buttons; clock/battery first, advanced disclosure never disables settings | user-approved simplification
-2026-10-14 | reader settings | Footer content: four live capsules, format menu, chapter/time/battery toggles; adapt to two columns | user-approved design
-2026-10-15 | reader settings | Supersede footer format menu with tap cycle; use segment styling and stable width-based wrapping | user correction
-2026-10-15 | reader settings | Add slot copies current theme; saved custom swatch has pencil; delete returns to last standard | user-approved design
-2026-10-15 | reader settings | Remove deletion Undo and bottom scope explanation from Appearance | user correction
+2026-10-14 | reader settings | Footer content: four live capsules (format cycles on tap), chapter/time/battery toggles; width-based wrap | user-approved design, tap cycle per 2026-10-15 correction
 2026-10-15 | reader | Replace floating menu with top/bottom overlay panels and release-only scrubber; visible-control taps only dismiss | user-approved design; supersedes edge-tap dismissal+turn
 2026-10-15 | reader history | Keep arrows beside tappable percent for five reading pages; remove floating return, retain history in position sheet | user correction
-
 2026-10-15 | reader settings | Supersede linked text/custom themes: five palettes, independent text, details disclosure and scoped factory reset | user-approved design
-
 2026-10-15 | reader settings | Basic: window, palette, size; Advanced: text, colour, page; reset affects Advanced only | user correction; replaces general disclosure/reset
 2026-10-15 | reader settings | Move turning to Basic with no group headings; Advanced starts with unchanged lines, then collapsible font/spacing/tone | user-approved layout
 2026-10-15 | reader spacing | Use two cyclic cards with custom glyphs; sliders share values; custom taps restart at minimum | user correction

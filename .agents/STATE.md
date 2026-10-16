@@ -5,21 +5,18 @@ status: active
 
 ## Current focus
 - Work from the user's task; follow-ups below need an explicit task, not autonomous implementation.
-- 0.3.x uses the prototype engine; OPDS is the «Каталог» tab. No data migration from 0.2.x (user decision).
-- Catalog browse/search, EPUB/FB2 downloads and Range resume were checked against a live OPDS server on an emulator.
-- ReaderPhone checks cover upgrade/restart, presets, menu palettes and guide landings in Slide/Curl/Fade.
-- Finish on-device default/book reset checks and physical-phone verification before distribution.
-- 0.3.10 includes preset paragraph spacing/indent and restored seam leading; verify on a phone before distribution.
-- Verify Basic/Advanced tabs, palette-only cards and Advanced-only scoped reset on a phone; old settings migrations are removed.
-- Verify cyclic interval/margin cards, custom glyphs and percentage margins in book and preview on a phone.
-- Verify footer capsules on a phone: cyclic format, independent toggles, large text wrap and persisted settings.
-- Verify compact 36 dp Scroll defaults, reordered details, vertical alignment and zero gap at rules on a phone.
+- 0.3.x (now 0.3.16) uses the prototype engine; OPDS is the «Каталог» tab. No data migration from 0.2.x (user decision).
+- Checked on an emulator: live OPDS browse/search, EPUB/FB2 downloads, Range resume; upgrade/restart, presets,
+  menu palettes and guide landings in Slide/Curl/Fade.
 
-- Verify text-file import on a phone: txt/conf/no-extension, windows-1251, open-with and folder scan.
-- Verify multi-catalog on a phone: migration of old sources, switching, Open Library web links, Gutenberg search.
-- Verify the unified «Каталоги» list on a phone: stars, switcher menu, long-press edit, add by address, preset reset.
-- Verify real Flibusta MOBI/RTF/HTML/TXT downloads and a DOCX on a phone; parsers are tested only on synthetic files.
-- Verify themed scrubber, five-page history arrows, exact position sheet, bottom search and corner bookmark on a phone.
+## Phone verification before distribution
+- Reader settings: Basic/Advanced tabs, palette cards, Advanced-only reset, default/book reset, preset paragraph
+  gaps and seam leading, cyclic interval/margin cards and percentage margins, footer capsules, 36 dp Scroll lines.
+- Reader controls: themed scrubber, five-page history arrows, position sheet, bottom search, corner bookmark.
+- Import: text files (txt/conf/no extension, windows-1251, open-with, folder scan); real Flibusta MOBI/RTF/HTML/TXT
+  downloads and a DOCX (parsers are tested only on synthetic files).
+- Catalogs: migration of old sources, switching, Open Library web links, Gutenberg search, the unified «Каталоги»
+  list (stars, switcher menu, long-press edit, add by address, preset reset).
 
 ## Next steps
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.
@@ -31,5 +28,4 @@ status: active
 - Wrapper download of Gradle 9.8 was flaky on this machine (connection resets).
 - The emulator's DNS proxy fails behind the host VPN; a fresh AVD with `-dns-server` works.
 - No download notification: progress is visible only in the app («Загрузки»).
-- Paragraph seam leading is restored locally; verify preset gaps on a physical phone before distribution.
 - The archived prototype roadmap is historical: `.agents/archive/prototype-roadmap.md`.
