@@ -26,7 +26,7 @@ $badging = (& $aapt dump badging $Apk 2>&1) -join "`n"
 if ($LASTEXITCODE -ne 0) { throw 'Cannot read APK manifest' }
 if ($badging -notmatch "package: name='app.folio' versionCode='$($metadata.versionCode)' versionName='$([regex]::Escape($metadata.versionName))'" -or
     $badging -notmatch "(?m)^sdkVersion:'$($metadata.minSdk)'" -or
-    ($badging -match '(?m)^native-code:' -and $badging -notmatch "(?m)^native-code: 'arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64'$")) {
+    ($badging -match '(?m)^native-code:' -and $badging -notmatch "(?m)^native-code: 'arm64-v8a' 'x86_64'$")) {
     throw 'APK manifest does not match universal release metadata'
 }
 $commit = (git rev-parse HEAD) -join ''
@@ -44,7 +44,7 @@ $notes = @"
 
 **Файл:** ``$($metadata.apkName)``.
 
-**Для кого:** телефоны и планшеты с Android $($metadata.minimumAndroid)+ (API $($metadata.minSdk)+). Универсальная release-сборка; отдельные APK для архитектур не нужны. Для технического тестирования прототипа, не для Google Play. Для iPhone/iPad, Windows и более старого Android не подходит.
+**Для кого:** телефоны и планшеты с Android $($metadata.minimumAndroid)+ (API $($metadata.minSdk)+). Одна release-сборка для 64-битных устройств (arm64; x86_64 для эмулятора); отдельные APK для архитектур не нужны. Для технического тестирования прототипа, не для Google Play. Для iPhone/iPad, Windows и более старого Android не подходит.
 
 **Установка:** разрешите установку APK приложению, которым открываете файл. $upgrade
 

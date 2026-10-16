@@ -19,4 +19,5 @@
 - `prepare` is a look-ahead hint (the controller passes the next phrase); Piper synthesizes it while the current one plays.
 - sherpa-onnx `OfflineTts` is not thread-safe: all its calls go through `PiperEngine`'s single-thread dispatcher.
 - R8: `consumer-rules.pro` keeps `com.k2fsa.sherpa.onnx.**` (JNI reads fields by name). Native libs: arm64-v8a + x86_64 only.
+- `scripts/package-release.ps1` checks the APK native-code is exactly arm64-v8a + x86_64; change both together.
 - Rate is kept in `shared_prefs/speech.xml` (`rate`); see `.agents/rules/storage.md`.
