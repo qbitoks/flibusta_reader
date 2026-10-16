@@ -42,5 +42,6 @@ downloads live in `core/data/.../catalog/` (`CatalogRepository`, `DownloadManage
 ## Gotchas
 - `Feed` objects hold Compose state and their `LazyListState`; keep them in the ViewModel, not in composables.
 - Cancelling a download disconnects its socket; that error must stay a stop (`stopped()`), not a failure.
-- Librusec book links return an HTML page, iKnigi redirects to a LitRes trial (403), EKNIGA sections
+- Librusec book links return an HTML page, iKnigi redirects to a LitRes trial (403 from a foreign IP/VPN,
+  works from a Russian one; an empty `hub_id` gives an HTML page), EKNIGA sections
   answer a MySQL error page; PROFILIB declares search on dead host profilib.me (checked 2026-10-16).
