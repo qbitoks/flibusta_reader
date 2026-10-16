@@ -31,11 +31,13 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   row or a preset; `recent` — catalog searches, newline-joined;
   `download_issues` — `host<TAB>code` lines of catalogs whose last download was refused. The old `catalog`/`downloads`
   origins migrate once into a Flibusta-style catalog and are removed; with neither key the starter set is seeded.
-- `shared_prefs/speech.xml`: `rate` (float, read-aloud speed), `engine` (`system`|`piper`|`silero`), `piper_<lang>` (voice id),
-  `silero_speaker` (`ru_dmitriy`: Silero speaker key, an index in the model's speaker table).
-- `files/voices/piper/<id>/` — unpacked Piper voice (`*.onnx`, `tokens.txt`, `espeak-ng-data/`); `<id>.part`/`<id>.tmp`
-  are an unfinished download/unpack, deleted on the next attempt. `<id>` is the Piper name (`ru_RU-irina-medium`).
-- `files/voices/silero/<id>/model.onnx` — the Silero model (`<id>` = `silero-v5-cis-base-int8`); same `.part`/`.tmp` rule.
+- `shared_prefs/speech.xml`: `rate` (float, read-aloud speed), `engine_package` (TTS engine package; absent = system default),
+  `voice_<lang>` (voice name of that engine). Keys of 0.5 (`engine`, `piper_*`, `silero_speaker`) and `files/voices/`
+  (built-in Piper/Silero voices) are deleted on start (`SpeechVoices`): engines are separate apps now, no migration (user decision).
+- `files/catalog-presets.json` — last `catalogs.json` from the modules repository (`CatalogPresetsCodec`); `catalog.xml`
+  `presets_checked` — when it was last fetched. Missing or junk = the bundled presets.
+- `shared_prefs/modules.xml`: `index` (last `modules.json`), `checked` (fetch time). `cache/modules/<id>.apk` — APK
+  being installed, deleted after the installer answers.
 - `shared_prefs/catalog_auth.xml` (`CatalogCredentials`): catalog id → `login\n<base64 IV+AES-GCM ciphertext>`, key
   `catalog_auth` in AndroidKeyStore. Never store the password in plain text; an undecryptable one reads as absent.
   Removing an own catalog removes its row; presets keep it. `allowBackup` stays false (the key doesn't travel).

@@ -1,26 +1,30 @@
 package app.folio.feature.reader
 
+import android.content.Context
+import android.content.Intent
+import android.speech.tts.TextToSpeech
 import android.text.format.Formatter
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.folio.core.data.modules.InstallState
+import app.folio.core.data.modules.ModuleApk
 import app.folio.core.designsystem.Folio
 import app.folio.core.designsystem.FolioType
 import app.folio.core.designsystem.ReaderPalette
@@ -30,25 +34,28 @@ import app.folio.core.designsystem.components.GroupHeader
 import app.folio.core.designsystem.components.GroupedCard
 import app.folio.core.designsystem.components.GroupedRow
 import app.folio.core.designsystem.components.SheetHeader
-import app.folio.core.speech.OfflineVoice
-import app.folio.core.speech.SileroModel
-import app.folio.core.speech.SileroSpeaker
-import app.folio.core.speech.SileroSpeakers
-import app.folio.core.speech.SpeechEngineKind
-import app.folio.core.speech.VoiceStatus
-import app.folio.core.speech.piperVoicesFor
-import java.util.Locale
 
-/** «Голос»: system engine or an offline Piper / Silero voice for the book's language, with downloads. */
+/**
+ * «Голос»: the speech engine (Folio Piper, Folio Silero, any other installed one or the system default), its voice
+ * for the book's language, and the Folio engine modules to install or update from the modules repository.
+ */
 @Composable
 internal fun VoiceSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismiss: () -> Unit) {
     val choice by vm.voiceChoice.collectAsStateWithLifecycle()
-    val status by vm.voiceStatus.collectAsStateWithLifecycle()
+    val voices by vm.engineVoices.collectAsStateWithLifecycle()
+    val installed by vm.installedModules.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val locale = vm.speechLocale
-    val engine = choice.engine
-    val voices = piperVoicesFor(locale)
-    val chosen = choice.piper[locale.language] ?: voices.firstOrNull { status[it.id] == VoiceStatus.Installed }?.id
+    // Re-read engines when one is installed or removed, and on return from an engine's voice screen.
+    LifecycleResumeEffect(Unit) {
+        vm.refreshModules()
+        vm.loadEngineVoices()
+        onPauseOrDispose {}
+    }
+    LaunchedEffect(installed) { vm.loadEngineVoices() }
+    val engines = remember(installed) { vm.speechEngines() }
+    val engine = choice.engine?.takeIf { pkg -> engines.any { it.packageName == pkg } }
+    val active = engine ?: vm.defaultSpeechEngine()
     FolioSheet(onDismiss = onDismiss, containerColor = palette.sheet()) {
         SheetHeader(stringResource(R.string.speech_voice), trailing = {
             CircleButton(Icons.Rounded.Close, stringResource(R.string.reader_close), onDismiss)
@@ -56,107 +63,116 @@ internal fun VoiceSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismiss: 
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
             GroupHeader(stringResource(R.string.speech_engine))
             GroupedCard {
-                GroupedRow(stringResource(R.string.speech_engine_system), trailing = { if (engine == SpeechEngineKind.System) Check() },
-                    onClick = { vm.setSpeechEngine(SpeechEngineKind.System) })
-                GroupedRow(stringResource(R.string.speech_engine_piper), trailing = { if (engine == SpeechEngineKind.Piper) Check() },
-                    onClick = { vm.setSpeechEngine(SpeechEngineKind.Piper) })
-                GroupedRow(stringResource(R.string.speech_engine_silero), trailing = { if (engine == SpeechEngineKind.Silero) Check() },
-                    showDivider = false, onClick = { vm.setSpeechEngine(SpeechEngineKind.Silero) })
-            }
-            when (engine) {
-                SpeechEngineKind.System ->
-                    GroupedCard(Modifier.padding(top = 16.dp)) {
-                        GroupedRow(stringResource(R.string.speech_system_settings), chevron = true, showDivider = false,
-                            onClick = { openTtsSettings(context) })
-                    }
-                SpeechEngineKind.Silero -> SileroVoices(vm, choice.silero, status[SileroModel.id] ?: VoiceStatus.Missing, locale)
-                SpeechEngineKind.Piper -> {
-                    GroupHeader(stringResource(R.string.speech_voices, locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }))
-                    if (voices.isEmpty()) {
-                        Note(stringResource(R.string.speech_no_piper_voices))
-                    } else {
-                        GroupedCard {
-                            voices.forEachIndexed { i, voice ->
-                                VoiceRow(vm, voice, "${voice.speaker} · ${voice.tag}", status[voice.id] ?: VoiceStatus.Missing, voice.id == chosen,
-                                    last = i == voices.lastIndex, onSelect = { vm.selectVoice(voice) })
-                            }
-                        }
-                        if (voices.none { status[it.id] == VoiceStatus.Installed }) Note(stringResource(R.string.speech_piper_fallback))
-                    }
-                    Note(stringResource(R.string.speech_piper_about))
+                GroupedRow(stringResource(R.string.speech_engine_system), trailing = { if (engine == null) Check() },
+                    showDivider = engines.isNotEmpty(), onClick = { vm.setSpeechEngine(null) })
+                engines.forEachIndexed { i, e ->
+                    GroupedRow(e.label, trailing = { if (engine == e.packageName) Check() }, showDivider = i != engines.lastIndex,
+                        onClick = { vm.setSpeechEngine(e.packageName) })
                 }
             }
+            GroupHeader(stringResource(R.string.speech_voices, locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }))
+            val list = voices
+            when {
+                list == null -> Box(Modifier.fillMaxWidth().padding(16.dp)) {
+                    CircularProgressIndicator(Modifier.size(24.dp).align(androidx.compose.ui.Alignment.Center), color = Folio.colors.accent, strokeWidth = 2.dp)
+                }
+                list.isEmpty() -> Note(stringResource(R.string.speech_no_engine_voices))
+                else -> GroupedCard {
+                    val chosen = choice.voices[locale.language]?.takeIf { name -> list.any { it.name == name } }
+                    list.forEachIndexed { i, v ->
+                        GroupedRow(v.title, value = if (v.needsNetwork) stringResource(R.string.speech_voice_online) else null,
+                            trailing = { if (v.name == chosen) Check() }, showDivider = i != list.lastIndex,
+                            onClick = { vm.setSpeechVoice(v) })
+                    }
+                }
+            }
+            GroupedCard(Modifier.padding(top = 16.dp)) {
+                if (active != null && active.startsWith(FOLIO_ENGINES)) {
+                    GroupedRow(stringResource(R.string.speech_engine_voices), chevron = true, showDivider = true,
+                        onClick = { openEngineVoices(context, active) })
+                }
+                GroupedRow(stringResource(R.string.speech_system_settings), chevron = true, showDivider = false,
+                    onClick = { openTtsSettings(context) })
+            }
+            ModulesGroup(vm, installed)
         }
     }
 }
 
-/** Silero: one model download, then its Russian speakers to pick from. */
+/** The Folio engine apps from the modules repository: install, update, open. */
 @Composable
-private fun SileroVoices(vm: ReaderViewModel, chosen: SileroSpeaker, status: VoiceStatus, locale: Locale) {
-    if (!SileroModel.speaks(locale)) {
-        Note(stringResource(R.string.speech_silero_russian_only))
+private fun ModulesGroup(vm: ReaderViewModel, installed: Map<String, Long>) {
+    val modules by vm.modules.collectAsStateWithLifecycle()
+    val states by vm.moduleStates.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    GroupHeader(stringResource(R.string.speech_modules))
+    if (modules.isEmpty()) {
+        Note(stringResource(R.string.speech_modules_loading))
         return
     }
-    GroupHeader(stringResource(R.string.speech_silero_model))
     GroupedCard {
-        VoiceRow(vm, SileroModel, stringResource(R.string.speech_silero_model_name), status, selected = false, last = true,
-            onSelect = { vm.downloadVoice(SileroModel) })
-    }
-    if (status == VoiceStatus.Installed) {
-        GroupHeader(stringResource(R.string.speech_voices, locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }))
-        GroupedCard {
-            SileroSpeakers.forEachIndexed { i, speaker ->
-                GroupedRow(speaker.name, trailing = { if (speaker == chosen) Check() }, showDivider = i != SileroSpeakers.lastIndex,
-                    onClick = { vm.selectSileroSpeaker(speaker) })
-            }
+        modules.forEachIndexed { i, m ->
+            val version = installed[m.packageName]
+            val state = states[m.packageName] ?: InstallState.Idle
+            GroupedRow(
+                title = m.title,
+                value = moduleValue(context, m, version, state),
+                showDivider = i != modules.lastIndex,
+                trailing = { ModuleAction(m, version, state) },
+                onClick = {
+                    when {
+                        state is InstallState.Downloading -> vm.cancelModule(m)
+                        version == null || version < m.versionCode -> vm.installModule(m)
+                        else -> openEngineVoices(context, m.packageName)
+                    }
+                },
+            )
         }
-    } else {
-        Note(stringResource(R.string.speech_piper_fallback))
     }
-    Note(stringResource(R.string.speech_silero_about))
+    Note(stringResource(R.string.speech_modules_about))
 }
 
 @Composable
-private fun VoiceRow(vm: ReaderViewModel, voice: OfflineVoice, title: String, status: VoiceStatus, selected: Boolean, last: Boolean,
-                     onSelect: () -> Unit) {
-    val c = Folio.colors
-    val context = LocalContext.current
-    val size = Formatter.formatShortFileSize(context, voice.bytes)
-    val value = when (status) {
-        VoiceStatus.Missing -> size
-        VoiceStatus.Failed -> stringResource(R.string.speech_voice_failed)
-        is VoiceStatus.Downloading -> status.fraction?.let { "${(it * 100).toInt()} %" } ?: stringResource(R.string.speech_voice_unpacking)
-        VoiceStatus.Installed -> null
+private fun moduleValue(context: Context, m: ModuleApk, version: Long?, state: InstallState): String? = when (state) {
+    is InstallState.Downloading -> state.fraction?.let { "${(it * 100).toInt()} %" } ?: stringResource(R.string.speech_module_downloading)
+    InstallState.Installing -> stringResource(R.string.speech_module_installing)
+    InstallState.NeedsPermission -> stringResource(R.string.speech_module_permission)
+    is InstallState.Failed -> stringResource(R.string.speech_module_failed)
+    InstallState.Idle -> when {
+        version == null -> Formatter.formatShortFileSize(context, m.bytes)
+        version < m.versionCode -> m.versionName
+        else -> null
     }
-    GroupedRow(
-        title = title,
-        value = value,
-        showDivider = !last,
-        trailing = {
-            when (status) {
-                VoiceStatus.Installed -> {
-                    if (selected) Check()
-                    SmallIcon(Icons.Rounded.DeleteOutline, stringResource(R.string.speech_voice_delete), c.destructive) { vm.deleteVoice(voice) }
-                }
-                is VoiceStatus.Downloading -> SmallIcon(Icons.Rounded.Close, stringResource(R.string.speech_voice_cancel), c.secondaryLabel) { vm.cancelVoice(voice) }
-                else -> Text(stringResource(if (status == VoiceStatus.Failed) R.string.speech_voice_retry else R.string.speech_voice_download), style = FolioType.body, color = c.accent,
-                    modifier = Modifier.padding(start = 12.dp))
-            }
-        },
-        onClick = { if (status !is VoiceStatus.Downloading) onSelect() },
-    )
+}
+
+@Composable
+private fun ModuleAction(m: ModuleApk, version: Long?, state: InstallState) {
+    val c = Folio.colors
+    val label = when {
+        state is InstallState.Downloading -> R.string.speech_voice_cancel
+        state is InstallState.Installing -> null
+        state is InstallState.Failed -> R.string.speech_voice_retry
+        version == null -> R.string.speech_module_install
+        version < m.versionCode -> R.string.speech_module_update
+        else -> null
+    }
+    if (label != null) {
+        Text(stringResource(label), style = FolioType.body, color = c.accent, modifier = Modifier.padding(start = 12.dp))
+    }
+}
+
+private const val FOLIO_ENGINES = "app.folio.tts."
+
+/** A Folio engine's voice screen (download voices, default voice). */
+private fun openEngineVoices(context: Context, packageName: String) {
+    runCatching {
+        context.startActivity(Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA).setPackage(packageName)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
 }
 
 @Composable
 private fun Check() = Icon(Icons.Rounded.Check, null, tint = Folio.colors.accent, modifier = Modifier.padding(start = 8.dp).size(22.dp))
-
-@Composable
-private fun SmallIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, tint: androidx.compose.ui.graphics.Color, onClick: () -> Unit) {
-    Box(Modifier.padding(start = 4.dp).size(40.dp).clip(CircleShape).clickable(role = Role.Button, onClick = onClick),
-        contentAlignment = androidx.compose.ui.Alignment.Center) {
-        Icon(icon, description, tint = tint, modifier = Modifier.size(22.dp))
-    }
-}
 
 @Composable
 private fun Note(text: String) {

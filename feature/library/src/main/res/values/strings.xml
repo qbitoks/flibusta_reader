@@ -93,4 +93,12 @@
     <string name="import_exists">Already in your library</string>
     <string name="import_failed">Couldn’t open %1$s</string>
     <string name="library_reading_settings">Reading Settings</string>
+
+    <string name="update_title">Folio %1$s is available</string>
+    <string name="update_text">A new version from GitHub; your settings and books stay.</string>
+    <string name="update_install">Update</string>
+    <string name="update_downloading">Downloading…</string>
+    <string name="update_installing">Installing…</string>
+    <string name="update_permission">Allow installing</string>
+    <string name="update_retry">Retry</string>
 </resources>

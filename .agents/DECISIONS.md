@@ -79,8 +79,7 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | reader | Settings sheet drags to close (reverses «never drag»); half detent, grabber and book strip tried and dropped | user decision
 2026-10-16 | docs | README.md is a Russian promo-style overview of what Folio does, not a feature spec; behaviour details live in area AGENTS.md | user decision; GitHub visitors want a pitch
 2026-10-16 | speech | `core/speech`: `SpeechEngine` interface, system TTS first; platform `MediaSession` + FGS, not Media3 | no new dependency; Piper/Silero become engines
-2026-10-16 | speech | Piper via sherpa-onnx AAR from JitPack; int8 voices from its GitHub `tts-models` | ~20 MB a voice, no own hosting
-2026-10-16 | speech | APK: ABIs arm64-v8a + x86_64, compressed jniLibs | onnxruntime made it 75 MB; now ~32 MB
-2026-10-16 | speech | Silero: MIT `v5_cis_base` → eager PyTorch → int8 ONNX on onnxruntime | not PyTorch Mobile, not CC BY-NC `v5_ru`; RTF ~0.02
-2026-10-16 | speech | Silero `.onnx` is a Folio release asset; `speed` divides durations linearly | no upstream ONNX; `dur_coef` is log-scale
-- Silero's ORT JNI is re-tagged at build time to run on sherpa-onnx's libonnxruntime.so; two ORT copies can't coexist.
+2026-10-16 | speech | Offline voices are separate TTS engine apps in qbitoks/folio-modules | APK 55 → 6 MB; engines update alone; no code loading
+2026-10-16 | modules | Folio installs engines and its updates via PackageInstaller after SHA-256 + same-cert checks | no Google Play planned (user)
+2026-10-16 | catalog | Preset catalogs come from `catalogs.json` in folio-modules (daily, cached), bundled list as fallback | update the list without an app release
+2026-10-16 | speech | No migration of 0.5 voices/prefs: `files/voices/` and old speech keys are deleted | user decision: voices are downloaded again in the engines

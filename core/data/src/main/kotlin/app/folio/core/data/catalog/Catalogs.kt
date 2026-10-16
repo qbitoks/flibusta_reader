@@ -55,7 +55,8 @@ object CatalogPresets {
         format = format,
     )
 
-    val all: List<CatalogPreset> = listOf(
+    /** Built in, used until `catalogs.json` from the modules repository arrives ([replace]). */
+    val bundled: List<CatalogPreset> = listOf(
         CatalogPreset(flibustaStyle("flibusta", "Флибуста", "https://flibusta.is"), "Большая библиотека на русском: FB2, EPUB"),
         CatalogPreset(Catalog("librusec", "Либрусек", "https://lib.rus.ec/opds"), "Художественная, фантастика, техническая литература", "Скачивание только после входа на сайте."),
         CatalogPreset(Catalog("iknigi", "iKnigi", "https://iknigi.net/opds"), "Художественная и современная литература", "Отдаёт только ознакомительные фрагменты с ЛитРес."),
@@ -73,8 +74,19 @@ object CatalogPresets {
         CatalogPreset(Catalog("textos", "Textos.info", "https://www.textos.info/catalogo.atom"), "Испанская литература", russian = false),
     )
 
+    @Volatile
+    private var current: List<CatalogPreset> = bundled
+
+    /** The presets in effect: the downloaded list when there is one, else [bundled]. */
+    val all: List<CatalogPreset> get() = current
+
+    /** Switches to a downloaded list; an empty one is ignored. */
+    fun replace(list: List<CatalogPreset>) {
+        if (list.isNotEmpty()) current = list
+    }
+
     /** First launch: Flibusta (the former built-in source) and Project Gutenberg. */
-    val starter: List<Catalog> get() = listOf("flibusta", "gutenberg").mapNotNull { id -> all.firstOrNull { it.catalog.id == id }?.catalog }
+    val starter: List<Catalog> get() = listOf("flibusta", "gutenberg").mapNotNull { id -> bundled.firstOrNull { it.catalog.id == id }?.catalog }
 
     fun preset(id: String): CatalogPreset? = all.firstOrNull { it.catalog.id == id }
 
@@ -156,5 +168,38 @@ internal object CatalogCodec {
                 favorite = (o["favorite"] as? JsonPrimitive)?.contentOrNull != "false",
             )
         }
+    }
+}
+
+/**
+ * `catalogs.json` of the modules repository: `{"version":1,"catalogs":[{id,title,address,downloads?,searchBooks?,
+ * searchAuthors?,newBooks?,format?,description,note?,russian}]}`. Rows without an HTTPS address are dropped;
+ * a newer major [version] or junk decodes as null, so the app keeps what it has.
+ */
+internal object CatalogPresetsCodec {
+    private val json = Json { ignoreUnknownKeys = true }
+    const val VERSION = 1
+
+    fun decode(value: String): List<CatalogPreset>? {
+        val root = runCatching { json.parseToJsonElement(value) as? JsonObject }.getOrNull() ?: return null
+        if ((root["version"] as? JsonPrimitive)?.contentOrNull?.toIntOrNull() != VERSION) return null
+        val rows = root["catalogs"] as? JsonArray ?: return null
+        val presets = rows.mapNotNull { item ->
+            val o = item as? JsonObject ?: return@mapNotNull null
+            fun s(key: String) = (o[key] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+            fun https(key: String) = s(key)?.takeIf { it.startsWith("https://") }
+            val catalog = Catalog(
+                id = s("id") ?: return@mapNotNull null,
+                title = s("title") ?: return@mapNotNull null,
+                address = https("address") ?: return@mapNotNull null,
+                downloads = https("downloads"),
+                searchBooks = https("searchBooks"),
+                searchAuthors = https("searchAuthors"),
+                newBooks = https("newBooks"),
+                format = s("format")?.takeIf { it in Catalog.FORMATS } ?: Catalog.DEFAULT_FORMAT,
+            )
+            CatalogPreset(catalog, s("description").orEmpty(), s("note"), (o["russian"] as? JsonPrimitive)?.contentOrNull != "false")
+        }
+        return presets.distinctBy { it.catalog.id }.takeIf { it.isNotEmpty() }
     }
 }

@@ -9,6 +9,9 @@
 - Use `core/data/src/main/kotlin/app/folio/core/data/catalog/CatalogRepository.kt` for feeds, covers and catalog sources.
 - Use `core/data/src/main/kotlin/app/folio/core/data/catalog/DownloadManager.kt` for download rows, resume and workers.
 - Use `core/data/src/main/kotlin/app/folio/core/data/library/FolderScanner.kt` for SAF folder scans and scheduled imports.
+- Use `core/data/src/main/kotlin/app/folio/core/data/modules/ModuleInstaller.kt` for engine/app installs from the modules
+  repository (`ModulesRepository` URLs, `ModuleIndexCodec`); it verifies SHA-256, package and Folio's certificate before
+  `PackageInstaller`. Preset catalogs: `CatalogRepository.refreshPresets` + `CatalogPresetsCodec`.
 - Bind repositories in `core/data/src/main/kotlin/app/folio/core/data/di/DataModule.kt`; keep UI in feature modules.
 
 ## Invariants

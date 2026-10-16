@@ -296,23 +296,23 @@
     <string name="speech_no_voice">No voice for the book language. Install one in the speech settings.</string>
     <string name="speech_voice">Voice</string>
     <string name="speech_engine">Engine</string>
-    <string name="speech_engine_system">System speech</string>
-    <string name="speech_engine_piper">Piper, offline neural voices</string>
     <string name="speech_system_settings">Speech settings on the device</string>
     <string name="speech_voices">Voices · %1$s</string>
-    <string name="speech_no_piper_voices">Piper has no voices for the book language yet; the system engine reads it.</string>
-    <string name="speech_piper_fallback">Until a voice is downloaded, the system engine reads.</string>
-    <string name="speech_piper_about">Voices download from GitHub (sherpa-onnx) once and then work without the internet.</string>
-    <string name="speech_voice_download">Download</string>
     <string name="speech_voice_cancel">Cancel download</string>
-    <string name="speech_voice_delete">Delete voice</string>
-    <string name="speech_voice_failed">Failed</string>
     <string name="speech_read_from_here">Read from here</string>
     <string name="speech_voice_retry">Retry</string>
-    <string name="speech_voice_unpacking">Unpacking…</string>
-    <string name="speech_engine_silero">Silero, offline Russian voices</string>
-    <string name="speech_silero_model">Model</string>
-    <string name="speech_silero_model_name">Silero v5 · 29 voices</string>
-    <string name="speech_silero_russian_only">Silero reads Russian only; the system engine reads this book.</string>
-    <string name="speech_silero_about">The Silero model (MIT license) downloads from the Folio GitHub once and then works without the internet. Numbers are read as words; Latin text is skipped.</string>
+
+    <string name="speech_engine_system">System default</string>
+    <string name="speech_no_engine_voices">This engine has no voices for the book\'s language. Download them in the engine\'s settings or pick another engine.</string>
+    <string name="speech_voice_online">online</string>
+    <string name="speech_engine_voices">Engine voices</string>
+    <string name="speech_modules">Folio speech modules</string>
+    <string name="speech_modules_loading">Loading the module list…</string>
+    <string name="speech_modules_about">Modules are separate speech engine apps. Folio downloads them from GitHub (qbitoks/folio-modules), checks the checksum and signature and installs them through the system installer. Voices are downloaded in the engine itself.</string>
+    <string name="speech_module_downloading">Downloading…</string>
+    <string name="speech_module_installing">Installing…</string>
+    <string name="speech_module_permission">Allow installing</string>
+    <string name="speech_module_failed">Failed</string>
+    <string name="speech_module_install">Install</string>
+    <string name="speech_module_update">Update</string>
 </resources>

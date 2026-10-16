@@ -97,9 +97,11 @@ internal fun CatalogsSheet(vm: CatalogViewModel, onDismiss: () -> Unit, edit: Ca
 @Composable
 private fun CatalogList(vm: CatalogViewModel, onDismiss: () -> Unit, onEdit: (Catalog?) -> Unit) {
     val saved by vm.catalogs.collectAsStateWithLifecycle()
+    // CatalogPresets reads the list in effect; collecting it recomposes when a new one arrives.
+    val presets by vm.presets.collectAsStateWithLifecycle()
     val issues by vm.downloadIssues.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
-    val all = CatalogDirectory.all(saved).filter { it.matches(query) }
+    val all = presets.let { CatalogDirectory.all(saved) }.filter { it.matches(query) }
     val rest = all.filterNot { it.favorite }
     val open = { catalog: Catalog -> vm.select(catalog); onDismiss() }
     @Composable

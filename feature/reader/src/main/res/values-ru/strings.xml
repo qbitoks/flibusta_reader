@@ -304,23 +304,23 @@
     <string name="speech_no_voice">Нет голоса для языка книги. Установите его в настройках синтеза речи.</string>
     <string name="speech_voice">Голос</string>
     <string name="speech_engine">Движок</string>
-    <string name="speech_engine_system">Системный синтез</string>
-    <string name="speech_engine_piper">Piper — офлайн-нейроголоса</string>
     <string name="speech_system_settings">Настройки синтеза речи на устройстве</string>
     <string name="speech_voices">Голоса · %1$s</string>
-    <string name="speech_no_piper_voices">Для языка книги у Piper пока нет голосов, читает системный синтез.</string>
-    <string name="speech_piper_fallback">Пока голос не загружен, читает системный синтез.</string>
-    <string name="speech_piper_about">Голоса один раз скачиваются с GitHub (sherpa-onnx) и дальше работают без интернета.</string>
-    <string name="speech_voice_download">Загрузить</string>
     <string name="speech_voice_cancel">Отменить загрузку</string>
-    <string name="speech_voice_delete">Удалить голос</string>
-    <string name="speech_voice_failed">Ошибка</string>
     <string name="speech_read_from_here">Читать отсюда</string>
     <string name="speech_voice_retry">Повторить</string>
-    <string name="speech_voice_unpacking">Распаковка…</string>
-    <string name="speech_engine_silero">Silero — офлайн-голоса для русского</string>
-    <string name="speech_silero_model">Модель</string>
-    <string name="speech_silero_model_name">Silero v5 · 29 голосов</string>
-    <string name="speech_silero_russian_only">Silero читает только по-русски. Эту книгу читает системный синтез.</string>
-    <string name="speech_silero_about">Модель Silero (лицензия MIT) один раз скачивается с GitHub Folio и дальше работает без интернета. Цифры читаются словами, латиница пропускается.</string>
+
+    <string name="speech_engine_system">Системный по умолчанию</string>
+    <string name="speech_no_engine_voices">У этого движка нет голосов для языка книги. Скачайте их в настройках движка или выберите другой движок.</string>
+    <string name="speech_voice_online">онлайн</string>
+    <string name="speech_engine_voices">Голоса движка</string>
+    <string name="speech_modules">Модули озвучки Folio</string>
+    <string name="speech_modules_loading">Список модулей загружается…</string>
+    <string name="speech_modules_about">Модули — отдельные приложения-движки синтеза речи. Folio скачивает их с GitHub (qbitoks/folio-modules), сверяет контрольную сумму и подпись и ставит через системный установщик. Голоса скачиваются в самом движке.</string>
+    <string name="speech_module_downloading">Загрузка…</string>
+    <string name="speech_module_installing">Установка…</string>
+    <string name="speech_module_permission">Разрешите установку</string>
+    <string name="speech_module_failed">Ошибка</string>
+    <string name="speech_module_install">Установить</string>
+    <string name="speech_module_update">Обновить</string>
 </resources>

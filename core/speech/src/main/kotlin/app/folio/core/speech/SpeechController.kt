@@ -154,7 +154,7 @@ class SpeechController @Inject constructor(
                     _state.update { it.copy(current = u) }
                     savePosition(force = false)
                     val rate = _state.value.rate
-                    // Looking one phrase ahead lets Piper synthesize it while this one plays.
+                    // Looking one phrase ahead lets the engine synthesize it while this one plays.
                     next?.let { engine.prepare(it.text, locale, rate) }
                     engine.speak(u.text, locale, rate, 1f)
                 }
@@ -202,5 +202,5 @@ internal fun previousUtterance(book: Book, current: Utterance): Utterance? {
 @InstallIn(SingletonComponent::class)
 internal abstract class SpeechModule {
     @Binds
-    abstract fun engine(engine: SelectedEngine): SpeechEngine
+    abstract fun engine(engine: SystemTtsEngine): SpeechEngine
 }

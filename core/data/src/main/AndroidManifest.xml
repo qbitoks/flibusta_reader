@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Folio installs its speech engines and its own updates (ModuleInstaller). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <queries>
+        <package android:name="app.folio.tts.piper" />
+        <package android:name="app.folio.tts.silero" />
+    </queries>
+
+    <application>
+        <receiver
+            android:name=".modules.InstallResultReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

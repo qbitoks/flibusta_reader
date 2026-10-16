@@ -4,8 +4,8 @@ import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicLong
@@ -14,16 +14,32 @@ import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/** Android's own [TextToSpeech]: whichever engine and voice the user picked in system settings. */
+/**
+ * Android's [TextToSpeech] with the engine and voice picked in [SpeechVoices] (a Folio engine app, or any
+ * other installed one). The phrase after the current one ([prepare]) is queued behind it, so the engine
+ * synthesizes it while this one sounds and phrases follow without a pause.
+ */
 @Singleton
-class SystemTtsEngine @Inject constructor(@ApplicationContext private val context: Context) : SpeechEngine {
+class SystemTtsEngine @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val voices: SpeechVoices,
+) : SpeechEngine {
     private var tts: TextToSpeech? = null
     private var ready: CompletableDeferred<TextToSpeech>? = null
-    private var locale: Locale? = null
+    /** What [tts] was created for and set to; a change recreates or re-applies it. */
+    private var engine: String? = null
+    private var applied: Pair<Locale, String?>? = null
     private val ids = AtomicLong()
 
-    @Volatile
+    /** Hint from the controller: the phrase it says next. */
+    private var ahead: String? = null
+    /** The phrase queued behind the current one: its text, rate and utterance id. */
+    private var queued: Triple<String, Float, String>? = null
+
+    private val lock = Any()
     private var pending: Pair<String, CancellableContinuation<Unit>>? = null
+    /** Utterances that ended before anyone waited for them (a short queued phrase), and how. */
+    private val ended = HashMap<String, Exception?>()
 
     private val listener = object : UtteranceProgressListener() {
         override fun onStart(utteranceId: String) {}
@@ -36,18 +52,30 @@ class SystemTtsEngine @Inject constructor(@ApplicationContext private val contex
     }
 
     private fun finish(id: String, error: Exception?) {
-        val (pendingId, cont) = pending ?: return
-        if (pendingId != id) return
-        pending = null
+        val cont = synchronized(lock) {
+            val (pendingId, cont) = pending ?: run {
+                ended[id] = error
+                return
+            }
+            if (pendingId != id) {
+                ended[id] = error
+                return
+            }
+            pending = null
+            cont
+        }
         if (cont.isActive) if (error == null) cont.resume(Unit) else cont.resumeWithException(error)
     }
 
     private suspend fun engine(): TextToSpeech {
+        val wanted = voices.choice.value.engine
+        if (wanted != engine) release()
         ready?.let { return it.await() }
         val deferred = CompletableDeferred<TextToSpeech>()
         ready = deferred
+        engine = wanted
         var created: TextToSpeech? = null
-        created = TextToSpeech(context) { status ->
+        created = TextToSpeech(context, { status ->
             val t = created
             if (status == TextToSpeech.SUCCESS && t != null) {
                 t.setOnUtteranceProgressListener(listener)
@@ -55,7 +83,7 @@ class SystemTtsEngine @Inject constructor(@ApplicationContext private val contex
             } else {
                 deferred.completeExceptionally(SpeechUnavailableException("No TTS engine"))
             }
-        }
+        }, wanted)
         tts = created
         return try {
             deferred.await()
@@ -65,36 +93,76 @@ class SystemTtsEngine @Inject constructor(@ApplicationContext private val contex
         }
     }
 
+    /** Sets the language and the chosen voice for it, when they changed since the last phrase. */
+    private fun apply(t: TextToSpeech, locale: Locale) {
+        val voiceName = voices.choice.value.voices[locale.language]
+        if (applied == locale to voiceName) return
+        val result = t.setLanguage(locale)
+        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            throw SpeechUnavailableException("No voice for $locale")
+        }
+        voiceName?.let { name -> t.voices?.firstOrNull { it.name == name }?.let { t.voice = it } }
+        applied = locale to voiceName
+    }
+
+    override fun prepare(text: String, locale: Locale, rate: Float) {
+        ahead = text
+    }
+
     override suspend fun speak(text: String, locale: Locale, rate: Float, pitch: Float) {
         val t = engine()
-        if (this.locale != locale) {
-            val result = t.setLanguage(locale)
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                throw SpeechUnavailableException("No voice for $locale")
-            }
-            this.locale = locale
+        val next = ahead
+        ahead = null
+        val id = queued?.takeIf { it.first == text && it.second == rate }?.third ?: run {
+            synchronized(lock) { ended.clear() }
+            apply(t, locale)
+            t.setSpeechRate(rate)
+            t.setPitch(pitch)
+            enqueue(t, text, TextToSpeech.QUEUE_FLUSH)
         }
-        t.setSpeechRate(rate)
-        t.setPitch(pitch)
+        queued = null
+        if (next != null && next != text) {
+            t.setSpeechRate(rate)
+            queued = Triple(next, rate, enqueue(t, next, TextToSpeech.QUEUE_ADD))
+        }
+        await(t, id)
+    }
+
+    private fun enqueue(t: TextToSpeech, text: String, mode: Int): String {
         val id = "folio-${ids.incrementAndGet()}"
-        suspendCancellableCoroutine { cont ->
-            pending = id to cont
-            cont.invokeOnCancellation {
+        if (t.speak(text, mode, null, id) != TextToSpeech.SUCCESS) throw SpeechUnavailableException("TTS refused the text")
+        return id
+    }
+
+    private suspend fun await(t: TextToSpeech, id: String) = suspendCancellableCoroutine { cont ->
+        cont.invokeOnCancellation {
+            synchronized(lock) {
                 pending = null
-                t.stop()
+                ended.clear()
             }
-            if (t.speak(text, TextToSpeech.QUEUE_FLUSH, null, id) != TextToSpeech.SUCCESS) {
-                pending = null
-                cont.resumeWithException(SpeechUnavailableException("TTS refused the text"))
+            queued = null
+            t.stop()
+        }
+        val (done, error) = synchronized(lock) {
+            if (ended.containsKey(id)) true to ended.remove(id) else {
+                pending = id to cont
+                false to null
             }
         }
+        if (done) if (error == null) cont.resume(Unit) else cont.resumeWithException(error)
     }
 
     override fun release() {
         tts?.shutdown()
         tts = null
         ready = null
-        locale = null
-        pending = null
+        engine = null
+        applied = null
+        ahead = null
+        queued = null
+        synchronized(lock) {
+            pending = null
+            ended.clear()
+        }
     }
 }

@@ -12,8 +12,10 @@ status: active
 ## Phone verification before distribution
 - Read aloud (stage 1): «Слушать» in the navigation panel, mini-player, phrase band, page following in Slide/Scroll,
   notification/lock-screen/headset controls, pause on headphone unplug, no-voice hint.
-- Read aloud (stage 2): «Голос» sheet from the mini-player, Piper voice download/unpack/delete, Piper speech
-  (no gaps between phrases), system fallback while no voice is installed. Synthesis is untested on a device.
+- Read aloud via engine modules (0.6.0): install Folio Piper/Silero from «Голос» (unknown-apps permission, system
+  installer confirm), voice download in the engine, reading with the chosen voice, Folio self-update card on Home.
+  Emulator-checked: engine detection, Piper voice download, gapless reading with Irina; the in-app install was not
+  run there (the unknown-apps permission was left to the user).
 - Reader settings: Basic/Advanced tabs, palette cards, Advanced-only reset, default/book reset, preset paragraph
   gaps and seam leading, cyclic interval/margin cards and percentage margins, footer capsules, 36 dp Scroll lines.
 - Reader controls: themed scrubber, five-page history arrows, position sheet, bottom search, corner bookmark.
@@ -23,7 +25,9 @@ status: active
   list (stars, switcher menu, long-press edit, add by address, preset reset).
 
 ## Next steps
-- Read aloud stage 3: Silero only after an on-device probe (CC BY-NC).
+- Add secret `ANDROID_DEBUG_KEYSTORE_BASE64` (same preview keystore as Folio) to `qbitoks/folio-modules`, so engine
+  tags build in CI; 1.0.0 engines were published by hand from a local build signed with that key.
+- Cut Folio v0.6.0: 0.5.0 users get the update card only from 0.6.0 on (0.5.0 has no updater).
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.
 - Replace archived Readium regressions with checks for the current UI; CI uses `scripts/ci-emulator.ps1`.
 - Potential reader follow-up: add the roadmap's scroll scrubber with chapter/page bubble.

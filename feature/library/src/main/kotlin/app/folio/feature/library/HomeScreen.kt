@@ -80,6 +80,7 @@ fun HomeScreen(
         item {
             SectionBand(first = true) {
                 LargeTitleHeader(stringResource(R.string.home_title))
+                AppUpdateCard(Modifier.padding(start = 32.dp, end = 32.dp, bottom = 16.dp))
                 if (home.continueReading.isNotEmpty()) {
                     SectionTitle(stringResource(R.string.home_continue), Modifier.padding(top = 0.dp))
                     LazyRow(
@@ -235,6 +236,7 @@ private fun CardBackdrop(item: BookItem) {
 private fun EmptyLibrary(contentPadding: PaddingValues, onAddBooks: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(bottom = contentPadding.calculateBottomPadding())) {
         LargeTitleHeader(stringResource(R.string.home_title))
+        AppUpdateCard(Modifier.padding(horizontal = 32.dp))
         Column(
             Modifier.fillMaxSize().padding(32.dp),
             verticalArrangement = Arrangement.Center,

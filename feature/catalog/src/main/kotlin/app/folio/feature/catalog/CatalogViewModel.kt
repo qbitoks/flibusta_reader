@@ -1,5 +1,7 @@
 package app.folio.feature.catalog
 
+import android.util.Log
+import app.folio.core.data.catalog.CatalogPreset
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -70,6 +72,7 @@ class CatalogViewModel @Inject constructor(
     private val saved: SavedStateHandle,
 ) : ViewModel() {
     val catalogs: StateFlow<List<Catalog>> = repository.catalogs
+    val presets: StateFlow<List<CatalogPreset>> = repository.presets
     var catalog by mutableStateOf(repository.current.value)
         private set
     var root by mutableStateOf(Feed(catalog?.address.orEmpty(), ""))
@@ -107,6 +110,15 @@ class CatalogViewModel @Inject constructor(
     val canGoBack: Boolean get() = stack.isNotEmpty() || results != null
 
     init {
+        viewModelScope.launch {
+            try {
+                repository.refreshPresets()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("CatalogViewModel", "Catalog list not refreshed", e)
+            }
+        }
         loadHome()
         viewModelScope.launch { downloads.collect(::fallBack) }
         viewModelScope.launch {

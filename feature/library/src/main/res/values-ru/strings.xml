@@ -97,4 +97,12 @@
     <string name="import_exists">Уже есть в библиотеке</string>
     <string name="import_failed">Не удалось открыть %1$s</string>
     <string name="library_reading_settings">Настройки чтения</string>
+
+    <string name="update_title">Доступна версия Folio %1$s</string>
+    <string name="update_text">Новая версия с GitHub; настройки и книги сохранятся.</string>
+    <string name="update_install">Обновить</string>
+    <string name="update_downloading">Загрузка…</string>
+    <string name="update_installing">Установка…</string>
+    <string name="update_permission">Разрешите установку</string>
+    <string name="update_retry">Повторить</string>
 </resources>
