@@ -5,14 +5,15 @@ import java.util.Locale
 /** One downloadable Piper voice (sherpa-onnx `tts-models` release, int8: ~20 MB, quality close to fp32). */
 data class PiperVoice(
     /** Piper name, e.g. `ru_RU-irina-medium`; also the folder under `files/voices/piper/`. */
-    val id: String,
+    override val id: String,
     val speaker: String,
-    val bytes: Long,
-) {
+    override val bytes: Long,
+) : OfflineVoice {
+    override val folder: String get() = "piper"
     /** BCP 47 tag of the voice, e.g. `ru-RU`. */
     val tag: String get() = id.substringBefore('-').replace('_', '-')
     val language: String get() = id.substringBefore('_')
-    val url: String get() = "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-$id-int8.tar.bz2"
+    override val url: String get() = "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-$id-int8.tar.bz2"
 }
 
 /** The voices offered for download; single-speaker, medium quality where Piper has one. */

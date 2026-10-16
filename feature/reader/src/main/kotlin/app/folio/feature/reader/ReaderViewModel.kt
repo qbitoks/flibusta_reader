@@ -35,6 +35,9 @@ import app.folio.core.model.parseInternalTarget
 import app.folio.core.model.progressAt
 import app.folio.core.speech.SpeechController
 import app.folio.core.speech.PiperVoice
+import app.folio.core.speech.OfflineVoice
+import app.folio.core.speech.SileroModel
+import app.folio.core.speech.SileroSpeaker
 import app.folio.core.speech.SpeechEngineKind
 import app.folio.core.speech.SpeechState
 import app.folio.core.speech.SpeechVoices
@@ -265,11 +268,24 @@ class ReaderViewModel @Inject constructor(
         speech.voiceChanged()
     }
 
-    fun cancelVoice(voice: PiperVoice) = voices.store.cancel(voice.id)
+    /** Picks a Silero [speaker], downloading the model first if needed; the system engine reads until then. */
+    fun selectSileroSpeaker(speaker: SileroSpeaker) {
+        if (!voices.store.installed(SileroModel.id)) voices.store.download(SileroModel)
+        voices.select(speaker)
+        speech.voiceChanged()
+    }
 
-    fun deleteVoice(voice: PiperVoice) {
-        if (speech.state.value.playing && voices.piperVoiceFor(speechLocale)?.id == voice.id) speech.pause()
-        voices.store.delete(voice.id)
+    fun downloadVoice(voice: OfflineVoice) = voices.store.download(voice)
+
+    fun cancelVoice(voice: OfflineVoice) = voices.store.cancel(voice.id)
+
+    fun deleteVoice(voice: OfflineVoice) {
+        val inUse = when (voice) {
+            is PiperVoice -> voices.piperVoiceFor(speechLocale)?.id == voice.id
+            SileroModel -> voices.usesSilero(speechLocale)
+        }
+        if (speech.state.value.playing && inUse) speech.pause()
+        voices.store.delete(voice)
     }
 
     /** Turns to the spoken phrase once it leaves the screen (in Scroll the next page is on screen too). */

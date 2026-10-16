@@ -35,24 +35,37 @@ sealed interface VoiceStatus {
     data object Installed : VoiceStatus
 }
 
+/** A downloadable offline voice: a [PiperVoice] or the [SileroModel]. */
+sealed interface OfflineVoice {
+    /** Unique across engines; also the folder name under `files/voices/<folder>/`. */
+    val id: String
+    val folder: String
+    /** A `.tar.bz2` voice archive (Piper) or a single `.onnx` model (Silero). */
+    val url: String
+    val bytes: Long
+}
+
+/** Every voice the store manages. */
+val OfflineVoices: List<OfflineVoice> = PiperCatalog + SileroModel
+
 /**
- * Piper voices on disk: `files/voices/piper/<id>/` (model `.onnx`, `tokens.txt`, `espeak-ng-data/`).
- * A voice counts as installed only once fully unpacked and renamed into place, so a crash mid-download
- * leaves only `<id>.part` / `<id>.tmp`, cleaned up by the next attempt.
+ * Offline voices on disk: Piper in `files/voices/piper/<id>/` (model `.onnx`, `tokens.txt`, `espeak-ng-data/`),
+ * Silero in `files/voices/silero/<id>/model.onnx`. A voice counts as installed only once complete and renamed
+ * into place, so a crash mid-download leaves only `<id>.part` / `<id>.tmp`, cleaned up by the next attempt.
  */
 @Singleton
 class VoiceStore @Inject constructor(@ApplicationContext context: Context) {
-    private val root = File(context.filesDir, "voices/piper")
+    private val root = File(context.filesDir, "voices")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val jobs = mutableMapOf<String, Job>()
-    private val _status = MutableStateFlow(PiperCatalog.associate { it.id to statusOnDisk(it.id) })
+    private val _status = MutableStateFlow(OfflineVoices.associate { it.id to statusOnDisk(it) })
     val status: StateFlow<Map<String, VoiceStatus>> = _status.asStateFlow()
 
     fun installed(id: String): Boolean = _status.value[id] == VoiceStatus.Installed
 
-    fun dir(id: String) = File(root, id)
+    fun dir(voice: OfflineVoice) = File(File(root, voice.folder), voice.id)
 
-    fun download(voice: PiperVoice) {
+    fun download(voice: OfflineVoice) {
         if (jobs[voice.id]?.isActive == true || installed(voice.id)) return
         set(voice.id, VoiceStatus.Downloading(0f))
         jobs[voice.id] = scope.launch {
@@ -60,12 +73,12 @@ class VoiceStore @Inject constructor(@ApplicationContext context: Context) {
                 install(voice)
                 set(voice.id, VoiceStatus.Installed)
             } catch (e: CancellationException) {
-                cleanUp(voice.id)
+                cleanUp(voice)
                 set(voice.id, VoiceStatus.Missing)
                 throw e
             } catch (e: Exception) {
                 Log.w(TAG, "Voice ${voice.id} failed", e)
-                cleanUp(voice.id)
+                cleanUp(voice)
                 set(voice.id, VoiceStatus.Failed)
             }
         }
@@ -75,19 +88,19 @@ class VoiceStore @Inject constructor(@ApplicationContext context: Context) {
         jobs.remove(id)?.cancel()
     }
 
-    fun delete(id: String) {
-        cancel(id)
+    fun delete(voice: OfflineVoice) {
+        cancel(voice.id)
         scope.launch {
-            dir(id).deleteRecursively()
-            cleanUp(id)
-            set(id, VoiceStatus.Missing)
+            dir(voice).deleteRecursively()
+            cleanUp(voice)
+            set(voice.id, VoiceStatus.Missing)
         }
     }
 
-    private suspend fun install(voice: PiperVoice) {
-        root.mkdirs()
-        cleanUp(voice.id)
-        val part = File(root, "${voice.id}.part")
+    private suspend fun install(voice: OfflineVoice) {
+        val parent = File(root, voice.folder).apply { mkdirs() }
+        cleanUp(voice)
+        val part = File(parent, "${voice.id}.part")
         runInterruptible {
             HttpsRequest(readTimeoutMs = 60_000).open(voice.url) { response ->
                 val total = response.contentLength.takeIf { it > 0 } ?: voice.bytes
@@ -97,11 +110,18 @@ class VoiceStore @Inject constructor(@ApplicationContext context: Context) {
         }
         currentCoroutineContext().ensureActive()
         set(voice.id, VoiceStatus.Downloading(null))
-        val tmp = File(root, "${voice.id}.tmp")
-        runInterruptible { unpack(part, tmp) }
+        val tmp = File(parent, "${voice.id}.tmp")
+        when (voice) {
+            is PiperVoice -> runInterruptible { unpack(part, tmp) }
+            SileroModel -> {
+                if (part.length() != voice.bytes) throw IOException("Model size ${part.length()} != ${voice.bytes}")
+                tmp.mkdirs()
+                if (!part.renameTo(File(tmp, SileroModel.FILE))) throw IOException("Can't move ${voice.id} into place")
+            }
+        }
         part.delete()
-        check(voiceFiles(tmp) != null) { "No Piper model in ${voice.id}" }
-        if (!tmp.renameTo(dir(voice.id))) throw IOException("Can't move ${voice.id} into place")
+        check(complete(voice, tmp)) { "No model in ${voice.id}" }
+        if (!tmp.renameTo(dir(voice))) throw IOException("Can't move ${voice.id} into place")
     }
 
     private fun copy(input: InputStream, to: File, progress: (Long) -> Unit) {
@@ -127,17 +147,24 @@ class VoiceStore @Inject constructor(@ApplicationContext context: Context) {
 
     private fun set(id: String, status: VoiceStatus) = _status.update { it + (id to status) }
 
-    private fun statusOnDisk(id: String) = if (voiceFiles(dir(id)) != null) VoiceStatus.Installed else VoiceStatus.Missing
+    private fun statusOnDisk(voice: OfflineVoice) = if (complete(voice, dir(voice))) VoiceStatus.Installed else VoiceStatus.Missing
 
-    private fun cleanUp(id: String) {
-        File(root, "$id.part").delete()
-        File(root, "$id.tmp").deleteRecursively()
+    private fun cleanUp(voice: OfflineVoice) {
+        val parent = File(root, voice.folder)
+        File(parent, "${voice.id}.part").delete()
+        File(parent, "${voice.id}.tmp").deleteRecursively()
     }
 
     private companion object {
         const val TAG = "VoiceStore"
         const val MAX_ARCHIVE_BYTES = 200L * 1024 * 1024
     }
+}
+
+/** Whether [dir] holds everything [voice]'s engine loads. */
+internal fun complete(voice: OfflineVoice, dir: File): Boolean = when (voice) {
+    is PiperVoice -> voiceFiles(dir) != null
+    SileroModel -> File(dir, SileroModel.FILE).isFile
 }
 
 /** The files sherpa-onnx needs from an unpacked voice, or null when it isn't complete. */

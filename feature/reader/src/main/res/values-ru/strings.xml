@@ -318,4 +318,9 @@
     <string name="speech_read_from_here">Читать отсюда</string>
     <string name="speech_voice_retry">Повторить</string>
     <string name="speech_voice_unpacking">Распаковка…</string>
+    <string name="speech_engine_silero">Silero — офлайн-голоса для русского</string>
+    <string name="speech_silero_model">Модель</string>
+    <string name="speech_silero_model_name">Silero v5 · 29 голосов</string>
+    <string name="speech_silero_russian_only">Silero читает только по-русски. Эту книгу читает системный синтез.</string>
+    <string name="speech_silero_about">Модель Silero (лицензия MIT) один раз скачивается с GitHub Folio и дальше работает без интернета. Цифры читаются словами, латиница пропускается.</string>
 </resources>

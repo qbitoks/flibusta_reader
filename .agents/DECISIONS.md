@@ -81,3 +81,6 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | speech | `core/speech`: `SpeechEngine` interface, system TTS first; platform `MediaSession` + FGS, not Media3 | no new dependency; Piper/Silero become engines
 2026-10-16 | speech | Piper via sherpa-onnx AAR from JitPack; int8 voices from its GitHub `tts-models` | ~20 MB a voice, no own hosting
 2026-10-16 | speech | APK: ABIs arm64-v8a + x86_64, compressed jniLibs | onnxruntime made it 75 MB; now ~32 MB
+2026-10-16 | speech | Silero: MIT `v5_cis_base` → eager PyTorch → int8 ONNX on onnxruntime | not PyTorch Mobile, not CC BY-NC `v5_ru`; RTF ~0.02
+2026-10-16 | speech | Silero `.onnx` is a Folio release asset; `speed` divides durations linearly | no upstream ONNX; `dur_coef` is log-scale
+- Silero's ORT JNI is re-tagged at build time to run on sherpa-onnx's libonnxruntime.so; two ORT copies can't coexist.

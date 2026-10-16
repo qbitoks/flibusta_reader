@@ -2,7 +2,7 @@ package app.folio.core.speech
 
 import java.util.Locale
 
-/** A text-to-speech backend: [SystemTtsEngine] or [PiperEngine], picked by [SelectedEngine]. */
+/** A text-to-speech backend: [SystemTtsEngine], [PiperEngine] or [SileroEngine], picked by [SelectedEngine]. */
 interface SpeechEngine {
     /**
      * Speaks [text] and returns when it has been spoken. Cancelling the caller stops the voice at once.

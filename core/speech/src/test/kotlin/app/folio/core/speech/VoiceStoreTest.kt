@@ -70,4 +70,13 @@ class VoiceStoreTest {
         assertTrue(PiperCatalog.all { it.url.startsWith("https://") && it.url.endsWith("-int8.tar.bz2") })
         assertEquals(PiperCatalog.size, PiperCatalog.map { it.id }.toSet().size)
     }
+
+    @Test fun sileroModelIsCompleteWithItsOnnxFile() {
+        val dir = tmp.newFolder("silero")
+        assertFalse(complete(SileroModel, dir))
+        File(dir, SileroModel.FILE).writeText("m")
+        assertTrue(complete(SileroModel, dir))
+        assertTrue(SileroModel.url.startsWith("https://"))
+        assertEquals(OfflineVoices.size, OfflineVoices.map { it.id }.toSet().size)
+    }
 }

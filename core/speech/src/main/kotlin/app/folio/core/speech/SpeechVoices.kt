@@ -9,13 +9,14 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class SpeechEngineKind(val key: String) { System("system"), Piper("piper") }
+enum class SpeechEngineKind(val key: String) { System("system"), Piper("piper"), Silero("silero") }
 
 /** The user's engine and voice choice, in `shared_prefs/speech.xml`. */
 data class VoiceChoice(
     val engine: SpeechEngineKind = SpeechEngineKind.System,
     /** Language (`ru`) → Piper voice id. */
     val piper: Map<String, String> = emptyMap(),
+    val silero: SileroSpeaker = DefaultSileroSpeaker,
 )
 
 @Singleton
@@ -35,7 +36,13 @@ class SpeechVoices @Inject constructor(
     /** Makes [voice] the Piper voice for its language and Piper the engine. */
     fun select(voice: PiperVoice) {
         prefs.edit().putString(KEY_ENGINE, SpeechEngineKind.Piper.key).putString(KEY_PIPER + voice.language, voice.id).apply()
-        _choice.value = VoiceChoice(SpeechEngineKind.Piper, _choice.value.piper + (voice.language to voice.id))
+        _choice.value = _choice.value.copy(engine = SpeechEngineKind.Piper, piper = _choice.value.piper + (voice.language to voice.id))
+    }
+
+    /** Makes [speaker] the Silero voice and Silero the engine. */
+    fun select(speaker: SileroSpeaker) {
+        prefs.edit().putString(KEY_ENGINE, SpeechEngineKind.Silero.key).putString(KEY_SILERO, speaker.key).apply()
+        _choice.value = _choice.value.copy(engine = SpeechEngineKind.Silero, silero = speaker)
     }
 
     /** The installed Piper voice to read [locale] with: the chosen one, else any installed for the language. */
@@ -47,16 +54,21 @@ class SpeechVoices @Inject constructor(
     /** Piper is picked and has a voice for [locale]; otherwise the system engine reads. */
     fun usesPiper(locale: Locale): Boolean = _choice.value.engine == SpeechEngineKind.Piper && piperVoiceFor(locale) != null
 
+    /** Silero is picked, its model is installed and it speaks [locale]; otherwise the system engine reads. */
+    fun usesSilero(locale: Locale): Boolean =
+        _choice.value.engine == SpeechEngineKind.Silero && SileroModel.speaks(locale) && store.installed(SileroModel.id)
+
     private fun read(): VoiceChoice {
         val engine = SpeechEngineKind.entries.firstOrNull { it.key == prefs.getString(KEY_ENGINE, null) } ?: SpeechEngineKind.System
         val piper = prefs.all.mapNotNull { (key, value) ->
             if (key.startsWith(KEY_PIPER) && value is String) key.removePrefix(KEY_PIPER) to value else null
         }.toMap()
-        return VoiceChoice(engine, piper)
+        return VoiceChoice(engine, piper, sileroSpeaker(prefs.getString(KEY_SILERO, null)) ?: DefaultSileroSpeaker)
     }
 
     private companion object {
         const val KEY_ENGINE = "engine"
         const val KEY_PIPER = "piper_"
+        const val KEY_SILERO = "silero_speaker"
     }
 }

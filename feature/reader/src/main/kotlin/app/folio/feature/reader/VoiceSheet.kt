@@ -30,19 +30,23 @@ import app.folio.core.designsystem.components.GroupHeader
 import app.folio.core.designsystem.components.GroupedCard
 import app.folio.core.designsystem.components.GroupedRow
 import app.folio.core.designsystem.components.SheetHeader
-import app.folio.core.speech.PiperVoice
+import app.folio.core.speech.OfflineVoice
+import app.folio.core.speech.SileroModel
+import app.folio.core.speech.SileroSpeaker
+import app.folio.core.speech.SileroSpeakers
 import app.folio.core.speech.SpeechEngineKind
 import app.folio.core.speech.VoiceStatus
 import app.folio.core.speech.piperVoicesFor
+import java.util.Locale
 
-/** «Голос»: system engine or an offline Piper voice for the book's language, with downloads. */
+/** «Голос»: system engine or an offline Piper / Silero voice for the book's language, with downloads. */
 @Composable
 internal fun VoiceSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismiss: () -> Unit) {
     val choice by vm.voiceChoice.collectAsStateWithLifecycle()
     val status by vm.voiceStatus.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val locale = vm.speechLocale
-    val piper = choice.engine == SpeechEngineKind.Piper
+    val engine = choice.engine
     val voices = piperVoicesFor(locale)
     val chosen = choice.piper[locale.language] ?: voices.firstOrNull { status[it.id] == VoiceStatus.Installed }?.id
     FolioSheet(onDismiss = onDismiss, containerColor = palette.sheet()) {
@@ -52,36 +56,69 @@ internal fun VoiceSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismiss: 
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
             GroupHeader(stringResource(R.string.speech_engine))
             GroupedCard {
-                GroupedRow(stringResource(R.string.speech_engine_system), trailing = { if (!piper) Check() },
+                GroupedRow(stringResource(R.string.speech_engine_system), trailing = { if (engine == SpeechEngineKind.System) Check() },
                     onClick = { vm.setSpeechEngine(SpeechEngineKind.System) })
-                GroupedRow(stringResource(R.string.speech_engine_piper), trailing = { if (piper) Check() }, showDivider = false,
+                GroupedRow(stringResource(R.string.speech_engine_piper), trailing = { if (engine == SpeechEngineKind.Piper) Check() },
                     onClick = { vm.setSpeechEngine(SpeechEngineKind.Piper) })
+                GroupedRow(stringResource(R.string.speech_engine_silero), trailing = { if (engine == SpeechEngineKind.Silero) Check() },
+                    showDivider = false, onClick = { vm.setSpeechEngine(SpeechEngineKind.Silero) })
             }
-            if (!piper) {
-                GroupedCard(Modifier.padding(top = 16.dp)) {
-                    GroupedRow(stringResource(R.string.speech_system_settings), chevron = true, showDivider = false,
-                        onClick = { openTtsSettings(context) })
-                }
-            } else {
-                GroupHeader(stringResource(R.string.speech_voices, locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }))
-                if (voices.isEmpty()) {
-                    Note(stringResource(R.string.speech_no_piper_voices))
-                } else {
-                    GroupedCard {
-                        voices.forEachIndexed { i, voice ->
-                            VoiceRow(vm, voice, status[voice.id] ?: VoiceStatus.Missing, voice.id == chosen, last = i == voices.lastIndex)
-                        }
+            when (engine) {
+                SpeechEngineKind.System ->
+                    GroupedCard(Modifier.padding(top = 16.dp)) {
+                        GroupedRow(stringResource(R.string.speech_system_settings), chevron = true, showDivider = false,
+                            onClick = { openTtsSettings(context) })
                     }
-                    if (voices.none { status[it.id] == VoiceStatus.Installed }) Note(stringResource(R.string.speech_piper_fallback))
+                SpeechEngineKind.Silero -> SileroVoices(vm, choice.silero, status[SileroModel.id] ?: VoiceStatus.Missing, locale)
+                SpeechEngineKind.Piper -> {
+                    GroupHeader(stringResource(R.string.speech_voices, locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }))
+                    if (voices.isEmpty()) {
+                        Note(stringResource(R.string.speech_no_piper_voices))
+                    } else {
+                        GroupedCard {
+                            voices.forEachIndexed { i, voice ->
+                                VoiceRow(vm, voice, "${voice.speaker} · ${voice.tag}", status[voice.id] ?: VoiceStatus.Missing, voice.id == chosen,
+                                    last = i == voices.lastIndex, onSelect = { vm.selectVoice(voice) })
+                            }
+                        }
+                        if (voices.none { status[it.id] == VoiceStatus.Installed }) Note(stringResource(R.string.speech_piper_fallback))
+                    }
+                    Note(stringResource(R.string.speech_piper_about))
                 }
-                Note(stringResource(R.string.speech_piper_about))
             }
         }
     }
 }
 
+/** Silero: one model download, then its Russian speakers to pick from. */
 @Composable
-private fun VoiceRow(vm: ReaderViewModel, voice: PiperVoice, status: VoiceStatus, selected: Boolean, last: Boolean) {
+private fun SileroVoices(vm: ReaderViewModel, chosen: SileroSpeaker, status: VoiceStatus, locale: Locale) {
+    if (!SileroModel.speaks(locale)) {
+        Note(stringResource(R.string.speech_silero_russian_only))
+        return
+    }
+    GroupHeader(stringResource(R.string.speech_silero_model))
+    GroupedCard {
+        VoiceRow(vm, SileroModel, stringResource(R.string.speech_silero_model_name), status, selected = false, last = true,
+            onSelect = { vm.downloadVoice(SileroModel) })
+    }
+    if (status == VoiceStatus.Installed) {
+        GroupHeader(stringResource(R.string.speech_voices, locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }))
+        GroupedCard {
+            SileroSpeakers.forEachIndexed { i, speaker ->
+                GroupedRow(speaker.name, trailing = { if (speaker == chosen) Check() }, showDivider = i != SileroSpeakers.lastIndex,
+                    onClick = { vm.selectSileroSpeaker(speaker) })
+            }
+        }
+    } else {
+        Note(stringResource(R.string.speech_piper_fallback))
+    }
+    Note(stringResource(R.string.speech_silero_about))
+}
+
+@Composable
+private fun VoiceRow(vm: ReaderViewModel, voice: OfflineVoice, title: String, status: VoiceStatus, selected: Boolean, last: Boolean,
+                     onSelect: () -> Unit) {
     val c = Folio.colors
     val context = LocalContext.current
     val size = Formatter.formatShortFileSize(context, voice.bytes)
@@ -92,7 +129,7 @@ private fun VoiceRow(vm: ReaderViewModel, voice: PiperVoice, status: VoiceStatus
         VoiceStatus.Installed -> null
     }
     GroupedRow(
-        title = "${voice.speaker} · ${voice.tag}",
+        title = title,
         value = value,
         showDivider = !last,
         trailing = {
@@ -106,7 +143,7 @@ private fun VoiceRow(vm: ReaderViewModel, voice: PiperVoice, status: VoiceStatus
                     modifier = Modifier.padding(start = 12.dp))
             }
         },
-        onClick = { if (status !is VoiceStatus.Downloading) vm.selectVoice(voice) },
+        onClick = { if (status !is VoiceStatus.Downloading) onSelect() },
     )
 }
 

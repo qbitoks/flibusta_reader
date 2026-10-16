@@ -31,9 +31,11 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   row or a preset; `recent` — catalog searches, newline-joined;
   `download_issues` — `host<TAB>code` lines of catalogs whose last download was refused. The old `catalog`/`downloads`
   origins migrate once into a Flibusta-style catalog and are removed; with neither key the starter set is seeded.
-- `shared_prefs/speech.xml`: `rate` (float, read-aloud speed), `engine` (`system`|`piper`), `piper_<lang>` (voice id).
+- `shared_prefs/speech.xml`: `rate` (float, read-aloud speed), `engine` (`system`|`piper`|`silero`), `piper_<lang>` (voice id),
+  `silero_speaker` (`ru_dmitriy`: Silero speaker key, an index in the model's speaker table).
 - `files/voices/piper/<id>/` — unpacked Piper voice (`*.onnx`, `tokens.txt`, `espeak-ng-data/`); `<id>.part`/`<id>.tmp`
   are an unfinished download/unpack, deleted on the next attempt. `<id>` is the Piper name (`ru_RU-irina-medium`).
+- `files/voices/silero/<id>/model.onnx` — the Silero model (`<id>` = `silero-v5-cis-base-int8`); same `.part`/`.tmp` rule.
 - `shared_prefs/catalog_auth.xml` (`CatalogCredentials`): catalog id → `login\n<base64 IV+AES-GCM ciphertext>`, key
   `catalog_auth` in AndroidKeyStore. Never store the password in plain text; an undecryptable one reads as absent.
   Removing an own catalog removes its row; presets keep it. `allowBackup` stays false (the key doesn't travel).

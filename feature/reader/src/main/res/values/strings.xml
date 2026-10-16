@@ -310,4 +310,9 @@
     <string name="speech_read_from_here">Read from here</string>
     <string name="speech_voice_retry">Retry</string>
     <string name="speech_voice_unpacking">Unpacking…</string>
+    <string name="speech_engine_silero">Silero, offline Russian voices</string>
+    <string name="speech_silero_model">Model</string>
+    <string name="speech_silero_model_name">Silero v5 · 29 voices</string>
+    <string name="speech_silero_russian_only">Silero reads Russian only; the system engine reads this book.</string>
+    <string name="speech_silero_about">The Silero model (MIT license) downloads from the Folio GitHub once and then works without the internet. Numbers are read as words; Latin text is skipped.</string>
 </resources>
