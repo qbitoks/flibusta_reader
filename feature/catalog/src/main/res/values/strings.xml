@@ -36,17 +36,19 @@
 
     <!-- Book -->
     <string name="catalog_read">Read</string>
+    <string name="catalog_read_format">Read %1$s</string>
+    <string name="catalog_read_copy">Read · %1$s</string>
+    <string name="catalog_download_cancel">Cancel %1$s download</string>
+    <string name="catalog_formats">Formats</string>
     <string name="catalog_download">Download %1$s</string>
     <string name="catalog_download_queued">%1$s · queued</string>
     <string name="catalog_download_waiting">%1$s · waiting for network</string>
-    <string name="catalog_download_preparing">%1$s · server is preparing…</string>
+    <string name="catalog_download_preparing">%1$s · downloading…</string>
     <string name="catalog_download_percent">%1$s · %2$d%%</string>
     <string name="catalog_download_bytes">%1$s · %2$s</string>
     <string name="catalog_download_paused">%1$s · paused</string>
     <string name="catalog_download_retry">%1$s · try again</string>
-    <string name="catalog_formats_hint">FB2 is the catalog\'s own format and downloads faster. EPUB is built by the server on request and can take up to a minute to start.</string>
     <string name="catalog_unreadable">This book is only available as %1$s, which this app can\'t open.</string>
-    <string name="catalog_other_formats">Other formats: %1$s</string>
     <string name="catalog_no_downloads">Download is not available</string>
     <string name="catalog_no_description">No description</string>
     <string name="catalog_show_more">more</string>
@@ -61,7 +63,7 @@
     <string name="catalog_status_queued">Queued</string>
     <string name="catalog_status_waiting">Waiting for network</string>
     <string name="catalog_status_retrying">Retrying: %1$s</string>
-    <string name="catalog_status_preparing">Server is preparing the file…</string>
+    <string name="catalog_status_preparing">Downloading…</string>
     <string name="catalog_status_of">%1$s of %2$s</string>
     <string name="catalog_status_paused">Paused · %1$s</string>
     <string name="catalog_status_paused_empty">Paused</string>
@@ -114,7 +116,6 @@
     <string name="catalog_error_not_feed">The catalog server answered with an error page instead of a section</string>
     <string name="catalog_open_site">Open website</string>
     <string name="catalog_open_web_hint">Download the book in the browser (sign in if needed), then open the file in Folio with «Open with».</string>
-    <string name="catalog_issue_note">This catalog recently refused a book: %1$s.</string>
     <string name="catalog_issue_short">refuses files</string>
     <string name="catalog_favorites">Favorites</string>
     <string name="catalog_group_russian">In Russian</string>
@@ -123,6 +124,8 @@
     <string name="catalog_find">Search catalogs</string>
     <string name="catalog_favorite_add">Add to favorites</string>
     <string name="catalog_favorite_remove">Remove from favorites</string>
+    <string name="catalog_field_format">Download format</string>
+    <string name="catalog_format_text">The book card\'s «Download» takes this format first; every format is in its ••• menu.</string>
     <string name="catalog_advanced">Advanced</string>
     <string name="catalog_mirror_text">Only when a mirror serves the books: a site address without a path.</string>
     <string name="catalog_reset">Restore original addresses</string>

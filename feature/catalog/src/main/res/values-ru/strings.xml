@@ -38,17 +38,19 @@
 
     <!-- Book -->
     <string name="catalog_read">Читать</string>
+    <string name="catalog_read_format">Читать %1$s</string>
+    <string name="catalog_read_copy">Читать · %1$s</string>
+    <string name="catalog_download_cancel">Отменить загрузку %1$s</string>
+    <string name="catalog_formats">Форматы</string>
     <string name="catalog_download">Скачать %1$s</string>
     <string name="catalog_download_queued">%1$s · в очереди</string>
     <string name="catalog_download_waiting">%1$s · ждём сеть</string>
-    <string name="catalog_download_preparing">%1$s · сервер готовит файл…</string>
+    <string name="catalog_download_preparing">%1$s · загрузка…</string>
     <string name="catalog_download_percent">%1$s · %2$d %%</string>
     <string name="catalog_download_bytes">%1$s · %2$s</string>
     <string name="catalog_download_paused">%1$s · пауза</string>
     <string name="catalog_download_retry">%1$s · повторить</string>
-    <string name="catalog_formats_hint">FB2 — исходный формат каталога, скачивается быстрее. EPUB сервер собирает по запросу: подготовка может занять до минуты.</string>
     <string name="catalog_unreadable">Книга есть только в формате %1$s — приложение такие файлы не открывает.</string>
-    <string name="catalog_other_formats">Другие форматы: %1$s</string>
     <string name="catalog_no_downloads">Скачивание недоступно</string>
     <string name="catalog_no_description">Описание отсутствует</string>
     <string name="catalog_show_more">ещё</string>
@@ -63,7 +65,7 @@
     <string name="catalog_status_queued">В очереди</string>
     <string name="catalog_status_waiting">Ожидание сети</string>
     <string name="catalog_status_retrying">Повтор: %1$s</string>
-    <string name="catalog_status_preparing">Сервер готовит файл…</string>
+    <string name="catalog_status_preparing">Загрузка…</string>
     <string name="catalog_status_of">%1$s из %2$s</string>
     <string name="catalog_status_paused">Пауза · %1$s</string>
     <string name="catalog_status_paused_empty">Пауза</string>
@@ -116,7 +118,6 @@
     <string name="catalog_error_not_feed">Сервер каталога ответил страницей ошибки вместо раздела</string>
     <string name="catalog_open_site">Открыть сайт</string>
     <string name="catalog_open_web_hint">Скачайте книгу в браузере (если нужно, войдите на сайт), затем откройте файл в Folio через «Открыть с помощью».</string>
-    <string name="catalog_issue_note">Этот каталог недавно не отдал книгу: %1$s.</string>
     <string name="catalog_issue_short">не отдаёт файлы</string>
     <string name="catalog_favorites">Избранное</string>
     <string name="catalog_group_russian">На русском</string>
@@ -125,6 +126,8 @@
     <string name="catalog_find">Поиск по каталогам</string>
     <string name="catalog_favorite_add">В избранное</string>
     <string name="catalog_favorite_remove">Убрать из избранного</string>
+    <string name="catalog_field_format">Формат для скачивания</string>
+    <string name="catalog_format_text">Кнопка «Скачать» в карточке книги берёт этот формат первым; все форматы — в меню «•••».</string>
     <string name="catalog_advanced">Дополнительно</string>
     <string name="catalog_mirror_text">Нужен, только если книги отдаёт зеркало: адрес сайта без пути.</string>
     <string name="catalog_reset">Вернуть исходные адреса</string>

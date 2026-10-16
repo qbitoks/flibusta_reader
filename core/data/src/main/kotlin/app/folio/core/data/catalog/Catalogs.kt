@@ -13,8 +13,9 @@ import java.net.URL
 /**
  * One OPDS catalog the user keeps. [address] is the full feed URL. The optional fields override
  * what the feed declares: [downloads] is another origin to fetch books from (mirrors), the search
- * templates and [newBooks] cover servers whose declared links are menus (Flibusta). [favorite] puts it
- * at the top of «Каталоги»; rows saved before favorites existed decode as favorites.
+ * templates and [newBooks] cover servers whose declared links are menus (Flibusta). [format] is what the
+ * book sheet's «Скачать» takes first. [favorite] puts it at the top of «Каталоги»; rows saved before
+ * favorites existed decode as favorites.
  */
 data class Catalog(
     val id: String,
@@ -24,9 +25,16 @@ data class Catalog(
     val searchBooks: String? = null,
     val searchAuthors: String? = null,
     val newBooks: String? = null,
+    val format: String = DEFAULT_FORMAT,
     val favorite: Boolean = true,
 ) {
     val host: String get() = runCatching { URL(address).host }.getOrDefault(address)
+
+    companion object {
+        /** Formats a catalog can download first; the rest are conversions. */
+        val FORMATS = listOf("EPUB", "FB2")
+        const val DEFAULT_FORMAT = "EPUB"
+    }
 }
 
 /**
@@ -36,7 +44,7 @@ data class Catalog(
 data class CatalogPreset(val catalog: Catalog, val description: String, val note: String? = null, val russian: Boolean = true)
 
 object CatalogPresets {
-    fun flibustaStyle(id: String, title: String, origin: String, downloads: String? = null) = Catalog(
+    fun flibustaStyle(id: String, title: String, origin: String, downloads: String? = null, format: String = "FB2") = Catalog(
         id = id,
         title = title,
         address = "$origin/opds",
@@ -44,6 +52,7 @@ object CatalogPresets {
         searchBooks = "$origin/opds/search?searchType=books&searchTerm={searchTerms}",
         searchAuthors = "$origin/opds/search?searchType=authors&searchTerm={searchTerms}",
         newBooks = "$origin/opds/new/0/new",
+        format = format,
     )
 
     val all: List<CatalogPreset> = listOf(
@@ -124,6 +133,7 @@ internal object CatalogCodec {
                 c.searchBooks?.let { put("searchBooks", it) }
                 c.searchAuthors?.let { put("searchAuthors", it) }
                 c.newBooks?.let { put("newBooks", it) }
+                if (c.format != Catalog.DEFAULT_FORMAT) put("format", c.format)
                 if (!c.favorite) put("favorite", false)
             })
         }
@@ -142,6 +152,7 @@ internal object CatalogCodec {
                 searchBooks = s("searchBooks"),
                 searchAuthors = s("searchAuthors"),
                 newBooks = s("newBooks"),
+                format = s("format")?.takeIf { it in Catalog.FORMATS } ?: Catalog.DEFAULT_FORMAT,
                 favorite = (o["favorite"] as? JsonPrimitive)?.contentOrNull != "false",
             )
         }

@@ -38,7 +38,7 @@ class OpdsParserTest {
         assertEquals("1987", book.year)
         assertEquals("ru", book.language)
         assertEquals(825L * 1024, book.size)
-        assertEquals(listOf("FB2", "EPUB", "MOBI"), book.downloads.keys.toList())
+        assertEquals(listOf("EPUB", "FB2", "MOBI"), book.downloads.keys.toList())
         assertTrue(book.otherFormats.isEmpty())
         assertEquals(CatalogLink("Все книги автора Аршакуни Ольга", "https://books.example/opds/author/345809"), book.related.single())
     }
@@ -53,7 +53,7 @@ class OpdsParserTest {
         val links = listOf("txt+zip", "rtf+zip", "html+zip", "x-mobipocket-ebook", "epub+zip", "fb2+zip", "pdf", "djvu")
             .joinToString("") { """<link href="/b/1/${it.substringBefore('+')}" rel="http://opds-spec.org/acquisition/open-access" type="application/$it"/>""" }
         val book = OpdsParser.parse("""<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>Книга</title>$links</entry></feed>""", "https://books.example/opds").entries.single()
-        assertEquals(listOf("FB2", "EPUB", "MOBI", "RTF", "HTML", "TXT", "PDF"), book.downloads.keys.toList())
+        assertEquals(listOf("EPUB", "FB2", "MOBI", "RTF", "HTML", "TXT", "PDF"), book.downloads.keys.toList())
         assertEquals(listOf("DJVU"), book.otherFormats)
     }
     @Test fun authorEntryNavigatesToItsMainLinkNotFacets() {

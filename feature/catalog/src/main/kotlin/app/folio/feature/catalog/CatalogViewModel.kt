@@ -255,16 +255,19 @@ class CatalogViewModel @Inject constructor(
 
     fun retry(feed: Feed) = load(feed, fresh = true)
 
-    /** The last refusal from this book's catalog, to warn before a download that will likely fail. */
-    fun issueFor(entry: CatalogEntry): String? {
-        val host = entry.downloads.values.firstOrNull()?.let { runCatching { java.net.URL(it).host }.getOrNull() } ?: return null
-        return downloadIssues.value[host] ?: downloadIssues.value[catalog?.host]?.takeIf { catalog?.host == host }
+    /** The book's formats with the open catalog's own format first; the rest keep the parser's order. */
+    fun formatsOf(entry: CatalogEntry): List<String> {
+        val first = catalog?.format ?: Catalog.DEFAULT_FORMAT
+        return entry.downloads.keys.sortedBy { if (it == first) 0 else 1 }
     }
 
-    /** Starts [format]; if the catalog refuses it (sign-in, another site), the next main format is tried. */
-    fun download(entry: CatalogEntry, format: String) {
-        val rest = entry.downloads.keys.dropWhile { it != format }.drop(1).filter { it in mainFormats }
-        fallbacks[entry.id] = entry to rest
+    /**
+     * Starts [format]; with [fallBack], a refusal (sign-in, another site) tries the next main format.
+     * A format picked from the menu is what the user asked for, so it gets no fallback.
+     */
+    fun download(entry: CatalogEntry, format: String, fallBack: Boolean = true) {
+        val rest = if (fallBack) formatsOf(entry).dropWhile { it != format }.drop(1).filter { it in mainFormats } else emptyList()
+        if (rest.isEmpty()) fallbacks.remove(entry.id) else fallbacks[entry.id] = entry to rest
         enqueue(entry, format)
     }
 
@@ -301,6 +304,12 @@ class CatalogViewModel @Inject constructor(
     fun pause(id: String) { viewModelScope.launch { downloadManager.pause(id) } }
 
     fun resume(id: String) { viewModelScope.launch { downloadManager.resume(id) } }
+
+    /** Stops and forgets [id] from the book sheet, with any fallback still planned for [entry]. */
+    fun cancel(entry: CatalogEntry, id: String) {
+        fallbacks.remove(entry.id)
+        remove(id)
+    }
 
     fun remove(id: String) { viewModelScope.launch { downloadManager.remove(id) } }
 

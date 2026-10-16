@@ -16,6 +16,14 @@ class CatalogCodecTest {
         assertTrue(CatalogCodec.decode("not json").isEmpty())
     }
 
+    @Test fun formatDefaultsToEpubAndFlibustaTakesFb2() {
+        assertEquals("FB2", CatalogPresets.preset("flibusta")!!.catalog.format)
+        assertEquals("EPUB", CatalogPresets.preset("gutenberg")!!.catalog.format)
+        val rows = CatalogCodec.decode("""[{"id":"a","title":"A","address":"https://a.org/opds"},{"id":"b","title":"B","address":"https://b.org/opds","format":"PDF"}]""")
+        assertEquals(listOf("EPUB", "EPUB"), rows.map { it.format })
+        assertTrue("format" !in CatalogCodec.encode(rows))
+    }
+
     @Test fun flibustaStyleKeepsTheOldAddressesAndDropsASameHostMirror() {
         val c = CatalogPresets.flibustaStyle("f", "Флибуста", "https://flibusta.is", downloads = "https://flibusta.is")
         assertEquals("https://flibusta.is/opds", c.address)

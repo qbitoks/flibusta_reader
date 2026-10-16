@@ -62,6 +62,7 @@ import app.folio.core.designsystem.components.FolioSheet
 import app.folio.core.designsystem.components.GroupHeader
 import app.folio.core.designsystem.components.GroupedCard
 import app.folio.core.designsystem.components.GroupedRow
+import app.folio.core.designsystem.components.SegmentedControl
 import app.folio.core.designsystem.components.SheetHeader
 import kotlinx.coroutines.launch
 
@@ -231,7 +232,7 @@ private fun CatalogRow(
     }
 }
 
-/** Name and feed address, a download mirror under «Дополнительно»; × goes back, ✓ saves. */
+/** Name and feed address, the format «Скачать» takes, a download mirror under «Дополнительно»; × goes back, ✓ saves. */
 @Composable
 private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> Unit, onSaved: () -> Unit) {
     val c = Folio.colors
@@ -251,6 +252,7 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
         }
     }
     var downloads by remember { mutableStateOf(catalog?.downloads.orEmpty()) }
+    var format by remember { mutableStateOf(catalog?.format ?: Catalog.DEFAULT_FORMAT) }
     var error by remember { mutableStateOf<String?>(null) }
     SheetHeader(
         stringResource(if (catalog == null) R.string.catalog_add_address else R.string.catalog_edit_title),
@@ -266,7 +268,7 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
                 Icons.Rounded.Check, stringResource(R.string.catalog_save),
                 {
                     val base = catalog ?: Catalog(vm.newCatalogId(), "", "")
-                    val edited = base.copy(title = title, address = address.trim().replaceFirst(Regex("^http://"), "https://"), downloads = downloads)
+                    val edited = base.copy(title = title, address = address.trim().replaceFirst(Regex("^http://"), "https://"), downloads = downloads, format = format)
                     error = vm.saveCatalog(edited)
                     if (error == null) onSaved()
                 },
@@ -291,6 +293,12 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
             }
             Footnote(stringResource(R.string.catalog_directory_text))
         }
+        GroupedCard(Modifier.padding(top = 16.dp)) {
+            GroupedRow(stringResource(R.string.catalog_field_format), showDivider = false, trailing = {
+                SegmentedControl(Catalog.FORMATS, Catalog.FORMATS.indexOf(format), { format = Catalog.FORMATS[it] }, Modifier.width(150.dp))
+            })
+        }
+        Footnote(stringResource(R.string.catalog_format_text))
         GroupHeader(stringResource(R.string.catalog_advanced))
         GroupedCard {
             Field(stringResource(R.string.catalog_source_downloads), downloads, KeyboardType.Uri, placeholder = stringResource(R.string.catalog_field_optional)) { downloads = it; error = null }

@@ -49,7 +49,7 @@ data class CatalogPage(
 )
 
 object OpdsParser {
-    /** MIME fragment → format name, in order of preference: FB2 is the catalog's own format, the rest are conversions. */
+    /** MIME fragment → format name. */
     private val readable = listOf(
         "fb2" to "FB2",
         "epub" to "EPUB",
@@ -61,7 +61,8 @@ object OpdsParser {
         "text/plain" to "TXT",
         "pdf" to "PDF",
     )
-    private val preference = readable.map { it.second }.distinct()
+    /** Download order: EPUB and FB2 are real books (the catalog's format goes first in the sheet), then conversions, PDF last. */
+    private val preference = listOf("EPUB", "FB2", "MOBI", "DOCX", "RTF", "HTML", "TXT", "PDF")
     private val coverRels = listOf(
         "http://opds-spec.org/image/thumbnail",
         "http://opds-spec.org/thumbnail",

@@ -70,3 +70,6 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | catalog | Not presets: Maxima (DNS), E-reading (login), Самиздат via OPDS Home (no answer) | checked from dev host
 2026-10-16 | catalog | One «Каталоги» list (★ favorites, presets by language, own), no «Добавить» page | user-approved plan
 2026-10-16 | catalog | Presets stored only when starred or edited; rows without `favorite` decode as favorites | keeps old lists
+2026-10-16 | catalog | Book sheet: one best-format capsule (EPUB first) + ••• menu of all formats | user-approved design
+2026-10-16 | catalog | Extra formats stay separate library books | merging would change book ids and storage
+2026-10-16 | catalog | Per-catalog download format (EPUB/FB2; Flibusta FB2); old rows decode as EPUB | user decision, no migration

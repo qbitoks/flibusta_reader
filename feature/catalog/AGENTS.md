@@ -20,13 +20,21 @@ downloads live in `core/data/.../catalog/` (`CatalogRepository`, `DownloadManage
 - Layout follows `.agents/design/design-system.md`: `LargeTitleHeader`, `SectionBand`, `SectionTitle`
   from `core/designsystem` (shared with «Главная»); plain rows with 32 dp inset; sheets via `FolioSheet`.
 - Errors travel as `NetworkErrors` codes and become text in `errorText()`; no raw exception text for known cases.
-- Download formats come ordered from `OpdsParser`; the sheet shows FB2/EPUB and folds conversions into «Другие форматы».
-- PDF downloads last and sits in «Другие форматы». Books the app can't open (DJVU-only) are hidden from lists with a count note, never shown as downloadable.
+- Book sheet texts stay catalog-neutral (no «сервер готовит EPUB», no warnings from past refusals); a real failure shows
+  its error under the capsule.
+- Download formats come ordered from `OpdsParser` (EPUB, FB2, conversions, PDF last); `CatalogViewModel.formatsOf` puts
+  the open catalog's `Catalog.format` (EPUB/FB2, Flibusta FB2) first. The book sheet keeps at most two
+  controls: one capsule (best format → progress → «Читать») and a ••• `PullDownMenu` with every format; another format
+  can be taken after the first and lands as a separate library book (book id = file hash). While the capsule's download
+  is pending, × (`vm.cancel`) replaces •••; once a copy is in, only «Читать» (catalog's format, else latest; «Читать · FB2»
+  when several) and ••• show, other downloads live in the menu with «Отменить загрузку».
+- Books the app can't open (DJVU-only) are hidden from lists with a count note, never shown as downloadable.
 - Show only what the catalog declares (`CatalogPage.search/newBooks/popular/facets`); a `Catalog` field overrides it
   (Flibusta: its `/opds/new` is a menu and authors are searched separately). «Все/Книги/Авторы» only with `searchAuthors`.
 - A book with no downloads but a `web` page (Open Library loans) is listed and offers «Открыть на сайте».
-- Refusals (`NetworkErrors.isUnavailable`: sign-in, another site, 4xx, HTML page) are final: the VM tries the next
-  FB2/EPUB, then the sheet offers «Открыть на сайте»; `CatalogRepository.downloadIssues` marks the catalog until a success.
+- Refusals (`NetworkErrors.isUnavailable`: sign-in, another site, 4xx, HTML page) are final: the capsule's download
+  tries the next EPUB/FB2 (a format picked in the menu does not), then the sheet offers «Открыть на сайте»;
+  `CatalogRepository.downloadIssues` marks the catalog until a success.
 - «Каталоги»: tap opens any catalog (no add step), ★ toggles favorite, long press edits. Favorites feed the switcher
   menu under the title; presets are never deleted, only unstarred or reset; only own catalogs are removed.
 - Downloads open nothing by themselves: the book sheet and «Загрузки» show «Читать» when done.

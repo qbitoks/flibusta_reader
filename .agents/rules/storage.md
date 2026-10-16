@@ -25,7 +25,7 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   Store margins as 0–15 percent of viewport width on each side; do not migrate old dp margins or linked text presets.
 - Store book warmth/contrast as separate `warmth`/`contrast` fields and inherit untouched controls.
 - Ignore obsolete footer-style, page-turn aliases and book settings-version markers; do not rewrite unopened books on shared edits.
-- `shared_prefs/catalog.xml`: `catalogs` — JSON array of `{id,title,address,downloads?,searchBooks?,searchAuthors?,newBooks?,favorite?}`
+- `shared_prefs/catalog.xml`: `catalogs` — JSON array of `{id,title,address,downloads?,searchBooks?,searchAuthors?,newBooks?,format?,favorite?}`
   (`CatalogCodec`; missing `favorite` = true, so pre-favorites rows stay starred). Holds favorites, own catalogs and
   edited presets only; an unstarred unedited preset is not stored (`CatalogDirectory`). `current` — selected id, a saved
   row or a preset; `recent` — catalog searches, newline-joined;
