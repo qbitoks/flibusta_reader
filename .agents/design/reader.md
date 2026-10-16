@@ -78,7 +78,7 @@
   finish with «Поиск завершен / Найдено N совпадений». Highlight the jumped-to match blue on the page.
 
 ## Themes and customization
-- Use a fixed dialog for «Темы и настройки», with X/Back dismissal and no drag or outside dismissal.
+- Show «Темы и настройки» in a full-height `FolioSheet` without grabber or half detent: X, Back or strict drag-to-close.
   Keep the header and «Основные / Дополнительно» tabs fixed; scroll each tab independently.
 - Pin a fixed sample text above controls (beside them in landscape), the same in every book; reuse `Paginator`
   and `PageView`. Keep it short (heading, dialogue, long words, digits) so it re-paginates at once off-thread.

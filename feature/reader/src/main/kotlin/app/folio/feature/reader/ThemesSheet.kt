@@ -30,8 +30,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.folio.core.designsystem.*
@@ -83,9 +81,7 @@ internal fun ReadingSettingsSheet(
     val c = Folio.colors
     val settings = editor.settings
     val palette = animatedPalette(readerPalette(settings))
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(
-        usePlatformDefaultWidth = false, dismissOnClickOutside = false, decorFitsSystemWindows = false,
-    )) {
+    FolioSheet(onDismiss = onDismiss, containerColor = c.groupedBackground, contentColor = c.label) {
         if (brightness != null) {
             val window = (LocalView.current.parent as? DialogWindowProvider)?.window
             DisposableEffect(window, brightness.value) {
@@ -93,9 +89,7 @@ internal fun ReadingSettingsSheet(
                 onDispose { }
             }
         }
-        Surface(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
-            shape = RoundedCornerShape(topStart = 23.dp, topEnd = 23.dp), color = c.groupedBackground) {
-        Column(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().navigationBarsPadding()) {
             Box(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Column(Modifier.align(Alignment.Center).padding(horizontal = 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(title, style = FolioType.headline, color = c.label, maxLines = 1, textAlign = TextAlign.Center)
@@ -131,7 +125,6 @@ internal fun ReadingSettingsSheet(
                     }
                 }
             }
-        }
         }
     }
 }

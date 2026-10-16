@@ -76,3 +76,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | catalog | Optional per-catalog sign-in; password AES-GCM with a non-exportable Keystore key in `catalog_auth` prefs | user confirmed relaxing «no accounts» for Librusec
 2026-10-16 | opds | Basic auth sent preemptively, only over HTTPS to the catalog host + mirror, checked per redirect hop | no challenge round-trip; other hosts never get it
 2026-10-16 | catalog | Capsule = last picked format (download `createdAt`); ••• stays, × gone; «Другие форматы» group | user decision; no new storage
+2026-10-16 | designsystem | Own `FolioSheet` instead of `ModalBottomSheet`: close at 35 % pull or fast 80 dp swipe; content scroll never closes | M3 closed sheets on stray flicks
+2026-10-16 | reader | Settings sheet drags to close (reverses «never drag»); half detent, grabber and book strip tried and dropped | user decision

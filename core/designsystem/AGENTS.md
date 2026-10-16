@@ -17,6 +17,8 @@
 - Reader UI colours derive from the page in `ReaderUiColors.kt`; `ReaderUiColorsTest` (feature/reader) guards 4.5:1 label contrast.
 - Keep reader font keys stable; coordinate new families with settings and both Compose previews and Android typefaces.
 - Supply local cover files to `BookCover`; catalog network loading belongs to `core/data/`.
+- Build sheets on `FolioSheet` (`components/Sheet.kt`), not `ModalBottomSheet`: its fling and
+  scroll handoff close it by accident. Dismissal math is in `SheetMath` (`SheetMathTest`).
 - Provide `GlassScope` and its source modifier for backdrop blur; preserve fallback fills for separate popup windows.
 - Keep navigation actions and repository mutations in callers; shared components expose callbacks.
 - Use `IosSlider(enabled = false)` for inactive controls; omit adjustable accessibility actions at the caller.

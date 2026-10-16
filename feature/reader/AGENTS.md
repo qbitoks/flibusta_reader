@@ -15,8 +15,8 @@
 - `ChapterProgress` — shared TOC rows, titles and remaining pages; `GuideNavigation` — line state after successful turns.
 - Settings: `core/data/src/main/kotlin/app/folio/core/data/settings/SettingsRepository.kt`.
 
-- Use the fixed `ThemesSheet` dialog (`ReadingSettingsSheet`, also `ReadingDefaultsSheet` from the library) for
-  settings; close with X/Back, never drag. Edit through `SettingsEditor`; `vm.settings` = shared + `ownSettings`.
+- Settings: `ThemesSheet` → `ReadingSettingsSheet` (also `ReadingDefaultsSheet`) in a full-height `FolioSheet`, no grabber.
+  Edit through `SettingsEditor`; `vm.settings` = shared + `ownSettings`.
 - Pin `PageSettingsPreview` (a `PreviewSource`) outside per-tab scrolling; use `Paginator`/`PageView` with `samplePreviewSource()`, even in a book (book numbers flicker on re-pagination).
 - Preview taps only step the guide (turning at its ends); tabs/manual scroll navigate settings. Keep «Прокрутка» scroll; paged modes swipe via `HorizontalPageTurner`.
 - Apply settings immediately; use `SettingsSegments` (labels shrink; `SettingsOptions` only above 130 % text) for short choices, `SettingsChoice` for fonts. See `.agents/design/reader.md`.

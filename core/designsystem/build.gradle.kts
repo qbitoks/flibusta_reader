@@ -34,4 +34,5 @@ dependencies {
     api(libs.haze)
     api(libs.haze.blur)
     implementation(libs.androidx.core.ktx)
+    testImplementation(libs.junit)
 }

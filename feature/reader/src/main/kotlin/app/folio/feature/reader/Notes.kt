@@ -20,9 +20,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.folio.core.designsystem.ReaderPalette
 import app.folio.core.designsystem.UiSans
+import app.folio.core.designsystem.components.FolioSheet
 import app.folio.core.designsystem.labelColor
 import app.folio.core.layout.TextSpan
 import kotlin.math.pow
@@ -161,13 +160,7 @@ internal fun NoteSheet(
         DateUtils.formatDateTime(context, target.createdAt, flags)
     }
     val sheet = palette.sheet()
-    ModalBottomSheet(
-        onDismissRequest = { onDone(text) },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = sheet,
-        contentColor = palette.labelColor(),
-        dragHandle = null,
-    ) {
+    FolioSheet(onDismiss = { onDone(text) }, containerColor = sheet, contentColor = palette.labelColor()) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.93f).imePadding().padding(start = 28.dp, end = 16.dp, top = 16.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.note_title), color = palette.labelColor(), fontFamily = UiSans, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)

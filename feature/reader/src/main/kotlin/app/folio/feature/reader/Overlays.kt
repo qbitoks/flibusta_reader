@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,7 +20,6 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -51,6 +51,7 @@ import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import app.folio.core.designsystem.ReaderPalette
 import app.folio.core.designsystem.UiSans
+import app.folio.core.designsystem.components.FolioSheet
 import app.folio.core.model.Block
 import app.folio.core.model.Span
 import coil3.compose.AsyncImage
@@ -59,15 +60,12 @@ import java.io.File
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FootnoteSheet(blocks: List<Block>, palette: ReaderPalette, onDismiss: () -> Unit) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = palette.chrome,
-        contentColor = palette.text,
-    ) {
+    FolioSheet(onDismiss = onDismiss, containerColor = palette.chrome, contentColor = palette.text, handle = true) {
         Column(
             Modifier
                 .verticalScroll(rememberScrollState())
-                .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
+                .navigationBarsPadding()
+                .padding(start = 24.dp, end = 24.dp, top = 28.dp, bottom = 32.dp),
         ) {
             Text(stringResource(R.string.footnote), color = palette.secondary, fontSize = 13.sp, modifier = Modifier.padding(bottom = 8.dp))
             blocks.forEach { block ->
