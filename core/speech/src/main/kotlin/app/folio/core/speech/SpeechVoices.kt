@@ -28,8 +28,12 @@ data class VoiceChoice(
 /** An installed text-to-speech engine app (Folio Piper, Folio Silero, Google, RHVoice…). */
 data class TtsEngine(val packageName: String, val label: String)
 
-/** One voice of an engine, as `TextToSpeech.getVoices()` lists it. */
-data class TtsVoice(val name: String, val locale: Locale, val title: String, val needsNetwork: Boolean)
+/**
+ * One voice of an engine, as `TextToSpeech.getVoices()` lists it. [title] is the speaker's name for Folio engines;
+ * other engines name voices by codes (`ru-ru-x-dfc-network`), so they get [speaker], a number per distinct speaker
+ * (its `-local` and `-network` variants share one).
+ */
+data class TtsVoice(val name: String, val locale: Locale, val title: String?, val speaker: Int, val needsNetwork: Boolean)
 
 @Singleton
 class SpeechVoices @Inject constructor(@ApplicationContext private val context: Context) {
@@ -78,9 +82,11 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
         try {
             if (withTimeoutOrNull(5_000) { ready.await() } != true) return@withContext emptyList()
             val all = withContext(Dispatchers.IO) { tts.voices.orEmpty() }
-            all.filter { it.locale.language == locale.language && TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features }
-                .sortedWith(compareByDescending<android.speech.tts.Voice> { it.locale.country == locale.country }.thenBy { it.isNetworkConnectionRequired }.thenBy { it.name })
-                .map { TtsVoice(it.name, it.locale, voiceTitle(it.name, it.locale), it.isNetworkConnectionRequired) }
+            describeVoices(
+                all.filter { it.locale.language == locale.language && TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features }
+                    .map { Triple(it.name, it.locale, it.isNetworkConnectionRequired) },
+                locale,
+            )
         } finally {
             tts.shutdown()
         }
@@ -112,14 +118,22 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
 }
 
 /**
- * A readable name for an engine's voice: Folio engines' `piper-ru_RU-irina-medium` / `silero-ru_dmitriy` give
- * «Irina» / «Dmitriy»; other engines' names are shown with their region.
+ * [voices] (name, locale, needs network) for the reader's list: the book's region first, then by speaker,
+ * on-device before online. Folio engines' `piper-ru_RU-irina-medium` / `silero-ru_dmitriy` are titled «Irina» /
+ * «Dmitriy»; other voices are numbered by speaker, the name without its `-local`/`-network` ending.
  */
-fun voiceTitle(name: String, locale: Locale): String {
+fun describeVoices(voices: List<Triple<String, Locale, Boolean>>, book: Locale): List<TtsVoice> {
     fun cap(s: String) = s.replaceFirstChar { it.titlecase(Locale.ROOT) }
-    return when {
-        name.startsWith("piper-") -> cap(name.removePrefix("piper-").split('-').getOrNull(1)?.replace('_', ' ') ?: name)
+    fun title(name: String) = when {
+        name.startsWith("piper-") -> name.removePrefix("piper-").split('-').getOrNull(1)?.replace('_', ' ')?.let(::cap)
         name.startsWith("silero-") -> cap(name.removePrefix("silero-").substringAfter('_'))
-        else -> "${locale.getDisplayCountry(Locale.getDefault()).ifEmpty { locale.toLanguageTag() }} · $name"
+        else -> null
     }
+    fun speaker(name: String) = name.lowercase().removeSuffix("-local").removeSuffix("-network")
+    val sorted = voices.sortedWith(
+        compareByDescending<Triple<String, Locale, Boolean>> { it.second.country.equals(book.country, ignoreCase = true) }
+            .thenBy { speaker(it.first) }.thenBy { it.third },
+    )
+    val numbers = sorted.map { speaker(it.first) }.distinct().withIndex().associate { (i, key) -> key to i + 1 }
+    return sorted.map { (name, locale, network) -> TtsVoice(name, locale, title(name), numbers.getValue(speaker(name)), network) }
 }

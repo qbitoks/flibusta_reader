@@ -80,7 +80,12 @@ internal fun VoiceSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismiss: 
                 else -> GroupedCard {
                     val chosen = choice.voices[locale.language]?.takeIf { name -> list.any { it.name == name } }
                     list.forEachIndexed { i, v ->
-                        GroupedRow(v.title, value = if (v.needsNetwork) stringResource(R.string.speech_voice_online) else null,
+                        GroupedRow(v.title ?: stringResource(R.string.speech_voice_number, v.speaker),
+                            value = when {
+                                v.title != null -> null
+                                v.needsNetwork -> stringResource(R.string.speech_voice_online)
+                                else -> stringResource(R.string.speech_voice_local)
+                            },
                             trailing = { if (v.name == chosen) Check() }, showDivider = i != list.lastIndex,
                             onClick = { vm.setSpeechVoice(v) })
                     }

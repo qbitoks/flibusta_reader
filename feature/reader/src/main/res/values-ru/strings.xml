@@ -323,4 +323,6 @@
     <string name="speech_module_failed">Ошибка</string>
     <string name="speech_module_install">Установить</string>
     <string name="speech_module_update">Обновить</string>
+    <string name="speech_voice_number">Голос %1$d</string>
+    <string name="speech_voice_local">на устройстве</string>
 </resources>

@@ -315,4 +315,6 @@
     <string name="speech_module_failed">Failed</string>
     <string name="speech_module_install">Install</string>
     <string name="speech_module_update">Update</string>
+    <string name="speech_voice_number">Voice %1$d</string>
+    <string name="speech_voice_local">on device</string>
 </resources>
