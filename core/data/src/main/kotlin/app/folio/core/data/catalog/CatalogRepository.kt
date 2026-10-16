@@ -29,7 +29,8 @@ import javax.inject.Singleton
 
 /**
  * OPDS catalog over HTTPS: feeds (cached for a few minutes, retried once on a transient failure),
- * cover thumbnails, recent searches and the user's [Catalog] list (JSON in the `catalog` prefs).
+ * cover thumbnails, recent searches and the saved [Catalog] rows (JSON in the `catalog` prefs) over
+ * [CatalogPresets], see [CatalogDirectory].
  * Downloads live in [DownloadManager].
  */
 @Singleton
@@ -49,17 +50,18 @@ class CatalogRepository @Inject constructor(
     val recent: StateFlow<List<String>> = _recent.asStateFlow()
 
     private val _catalogs = MutableStateFlow(loadCatalogs())
-    /** The user's catalogs in their order. */
+    /** Saved rows in their order: favorites, the user's own catalogs and edited presets. */
     val catalogs: StateFlow<List<Catalog>> = _catalogs.asStateFlow()
 
-    private val _current = MutableStateFlow(_catalogs.value.firstOrNull { it.id == prefs.getString(KEY_CURRENT, null) } ?: _catalogs.value.firstOrNull())
-    /** The catalog the tab shows; null when the list is empty. */
+    private val _current = MutableStateFlow(find(prefs.getString(KEY_CURRENT, null)) ?: fallback())
+    /** The catalog the tab shows: a saved row or a preset. */
     val current: StateFlow<Catalog?> = _current.asStateFlow()
 
     private val searchTemplates = Collections.synchronizedMap(HashMap<String, String?>())
 
+    /** Opens a saved catalog or a preset; it needn't be a favorite. */
     fun select(id: String) {
-        val catalog = _catalogs.value.firstOrNull { it.id == id } ?: return
+        val catalog = find(id) ?: return
         _current.value = catalog
         prefs.edit().putString(KEY_CURRENT, id).apply()
     }
@@ -77,15 +79,27 @@ class CatalogRepository @Inject constructor(
         val list = _catalogs.value
         val index = list.indexOfFirst { it.id == checked.id }
         store(if (index >= 0) list.toMutableList().also { it[index] = checked } else list + checked)
-        if (index < 0 || _current.value?.id == checked.id) select(checked.id)
+        if (index < 0) select(checked.id)
         feeds.clear()
         return checked
     }
 
+    fun setFavorite(id: String, favorite: Boolean) {
+        val catalog = find(id) ?: return
+        store(CatalogDirectory.setFavorite(_catalogs.value, catalog, favorite))
+    }
+
+    /** Puts a preset back to its own addresses. */
+    fun reset(id: String) {
+        store(CatalogDirectory.reset(_catalogs.value, id))
+        feeds.clear()
+    }
+
+    /** Deletes the user's own catalog; a preset only loses its star and edits. */
     fun remove(id: String) {
         store(_catalogs.value.filterNot { it.id == id })
-        if (_current.value?.id == id) {
-            _current.value = _catalogs.value.firstOrNull()
+        if (_current.value?.id == id && find(id) == null) {
+            _current.value = fallback()
             prefs.edit().putString(KEY_CURRENT, _current.value?.id).apply()
         }
     }
@@ -97,6 +111,10 @@ class CatalogRepository @Inject constructor(
         store(list)
     }
 
+    private fun find(id: String?): Catalog? = CatalogDirectory.all(_catalogs.value).firstOrNull { it.id == id }
+
+    private fun fallback(): Catalog? = _catalogs.value.firstOrNull { it.favorite } ?: CatalogDirectory.all(_catalogs.value).firstOrNull()
+
     private val _downloadIssues = MutableStateFlow(decodeIssues(prefs.getString(KEY_ISSUES, null)))
     /** Catalog host → [NetworkErrors] code of its last download that the site refused; cleared by a success. */
     val downloadIssues: StateFlow<Map<String, String>> = _downloadIssues.asStateFlow()
@@ -104,7 +122,7 @@ class CatalogRepository @Inject constructor(
     /** Records how a download from [link] ended: a refusal marks its catalog, a success clears the mark. */
     fun reportDownload(link: String, code: String?) {
         val host = runCatching { URL(link).host }.getOrNull() ?: return
-        val owner = _catalogs.value.firstOrNull { c -> runCatching { URL(c.address).host }.getOrNull() == host || c.downloads?.let { URL(it).host } == host }
+        val owner = CatalogDirectory.all(_catalogs.value).firstOrNull { c -> runCatching { URL(c.address).host }.getOrNull() == host || c.downloads?.let { URL(it).host } == host }
             ?.let { URL(it.address).host } ?: host
         val next = if (code != null && NetworkErrors.isUnavailable(code)) _downloadIssues.value + (owner to code) else _downloadIssues.value - owner
         if (next == _downloadIssues.value) return
@@ -121,7 +139,7 @@ class CatalogRepository @Inject constructor(
     /** A book link rewritten to its catalog's download mirror, if that catalog has one. */
     fun downloadAddress(link: String): String {
         val url = URL(link)
-        val owner = _catalogs.value.firstOrNull { it.downloads != null && runCatching { URL(it.address).host }.getOrNull() == url.host } ?: return link
+        val owner = CatalogDirectory.all(_catalogs.value).firstOrNull { it.downloads != null && runCatching { URL(it.address).host }.getOrNull() == url.host } ?: return link
         return URL(URL(owner.downloads), url.file).toString()
     }
 
@@ -229,9 +247,11 @@ class CatalogRepository @Inject constructor(
         block()
     }
 
+    /** Saves the rows; the current catalog follows its edits (or its preset once the row is gone). */
     private fun store(list: List<Catalog>) {
         _catalogs.value = list
         prefs.edit().putString(KEY_CATALOGS, CatalogCodec.encode(list)).apply()
+        _current.value?.let { current -> find(current.id)?.let { _current.value = it } }
     }
 
     /** Saved list; on first run, the former single source (kept as a Flibusta-style catalog) or the starter set. */

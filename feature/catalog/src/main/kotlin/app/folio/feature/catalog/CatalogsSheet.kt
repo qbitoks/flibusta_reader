@@ -1,9 +1,12 @@
 package app.folio.feature.catalog
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,30 +23,36 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBackIos
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.ContentPaste
-import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.folio.core.data.catalog.Catalog
+import app.folio.core.data.catalog.CatalogDirectory
 import app.folio.core.data.catalog.CatalogPresets
 import app.folio.core.designsystem.Folio
 import app.folio.core.designsystem.FolioType
@@ -53,17 +63,17 @@ import app.folio.core.designsystem.components.GroupHeader
 import app.folio.core.designsystem.components.GroupedCard
 import app.folio.core.designsystem.components.GroupedRow
 import app.folio.core.designsystem.components.SheetHeader
+import kotlinx.coroutines.launch
 
 private sealed interface CatalogsPage {
     data object List : CatalogsPage
-    data object Add : CatalogsPage
     /** [catalog] is null for a catalog added by address. */
     data class Edit(val catalog: Catalog?) : CatalogsPage
 }
 
 /**
- * «Каталоги»: the user's catalogs (tap to switch, «Изменить» to edit or remove), and «Добавить»
- * with the known catalogs, an address field and OPDS Home, a directory of catalogs.
+ * «Каталоги»: one list of every catalog — favorites first, then the known ones by language and the
+ * user's own. Tap opens, ★ keeps it at the top, touch and hold edits; «Добавить по адресу» ends «Мои».
  */
 @Composable
 internal fun CatalogsSheet(vm: CatalogViewModel, onDismiss: () -> Unit) {
@@ -71,141 +81,192 @@ internal fun CatalogsSheet(vm: CatalogViewModel, onDismiss: () -> Unit) {
     var page by remember { mutableStateOf<CatalogsPage>(CatalogsPage.List) }
     FolioSheet(onDismiss = onDismiss, containerColor = c.groupedBackground) {
         when (val p = page) {
-            CatalogsPage.List -> CatalogList(vm, onDismiss, onAdd = { page = CatalogsPage.Add }, onEdit = { page = CatalogsPage.Edit(it) })
-            CatalogsPage.Add -> AddCatalog(vm, onBack = { page = CatalogsPage.List }, onAdded = onDismiss, onAddress = { page = CatalogsPage.Edit(null) })
-            is CatalogsPage.Edit -> EditCatalog(vm, p.catalog, onBack = { page = CatalogsPage.List }, onSaved = { page = CatalogsPage.List })
+            CatalogsPage.List -> CatalogList(vm, onDismiss, onEdit = { page = CatalogsPage.Edit(it) })
+            is CatalogsPage.Edit -> EditCatalog(
+                vm, p.catalog,
+                onBack = { page = CatalogsPage.List },
+                onSaved = { if (p.catalog == null) onDismiss() else page = CatalogsPage.List },
+            )
         }
     }
 }
 
 @Composable
-private fun CatalogList(vm: CatalogViewModel, onDismiss: () -> Unit, onAdd: () -> Unit, onEdit: (Catalog) -> Unit) {
-    val c = Folio.colors
-    val catalogs by vm.catalogs.collectAsStateWithLifecycle()
+private fun CatalogList(vm: CatalogViewModel, onDismiss: () -> Unit, onEdit: (Catalog?) -> Unit) {
+    val saved by vm.catalogs.collectAsStateWithLifecycle()
     val issues by vm.downloadIssues.collectAsStateWithLifecycle()
-    var editing by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    val all = CatalogDirectory.all(saved).filter { it.matches(query) }
+    val rest = all.filterNot { it.favorite }
+    val open = { catalog: Catalog -> vm.select(catalog); onDismiss() }
+    @Composable
+    fun Group(title: String, catalogs: List<Catalog>, footer: @Composable () -> Unit = {}) {
+        if (catalogs.isEmpty()) return
+        GroupHeader(title)
+        GroupedCard {
+            catalogs.forEachIndexed { i, catalog ->
+                CatalogRow(
+                    catalog,
+                    issue = issues[catalog.host] != null,
+                    current = catalog.id == vm.catalog?.id,
+                    divider = i < catalogs.lastIndex,
+                    onOpen = { open(catalog) },
+                    onStar = { vm.setFavorite(catalog, !catalog.favorite) },
+                    onEdit = { onEdit(catalog) },
+                )
+            }
+        }
+        footer()
+    }
     SheetHeader(
         stringResource(R.string.catalog_catalogs),
         leading = { CircleButton(Icons.Rounded.Close, stringResource(R.string.catalog_close), onDismiss, style = CircleButtonStyle.Light) },
-        trailing = {
-            if (catalogs.isNotEmpty()) {
-                Text(
-                    stringResource(if (editing) R.string.catalog_done else R.string.catalog_edit),
-                    style = FolioType.body, color = c.label,
-                    modifier = Modifier.padding(end = 8.dp).clickableText { editing = !editing },
-                )
-            }
-        },
     )
-    Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(bottom = 24.dp)) {
-        if (catalogs.isNotEmpty()) {
-            GroupedCard(Modifier.padding(top = 8.dp)) {
-                catalogs.forEachIndexed { i, catalog ->
-                    GroupedRow(
-                        catalog.title,
-                        value = (if (issues[catalog.host] != null) stringResource(R.string.catalog_issue_short) else catalog.host).takeIf { !editing },
-                        valueStyle = FolioType.footnote,
-                        showDivider = i < catalogs.lastIndex,
-                        editing = editing,
-                        onRemove = { vm.removeCatalog(catalog) },
-                        trailing = {
-                            if (catalog.id == vm.catalog?.id) Icon(Icons.Rounded.Check, null, tint = c.label, modifier = Modifier.padding(start = 10.dp).size(20.dp))
-                            Icon(
-                                Icons.Rounded.Info, stringResource(R.string.catalog_edit), tint = c.tertiaryLabel,
-                                modifier = Modifier.padding(start = 10.dp).size(22.dp).clickableText { onEdit(catalog) },
-                            )
-                        },
-                        onClick = { vm.select(catalog); onDismiss() },
-                    )
-                }
-            }
+    Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().imePadding().padding(bottom = 24.dp)) {
+        FindField(query) { query = it }
+        val favorites = all.filter { it.favorite }
+        Group(stringResource(R.string.catalog_favorites), favorites) {
+            Footnote(stringResource(R.string.catalog_catalogs_text))
         }
-        GroupedCard(Modifier.padding(top = 16.dp)) {
-            GroupedRow(stringResource(R.string.catalog_add), icon = Icons.Rounded.Add, showDivider = false, chevron = true, onClick = onAdd)
-        }
-        Footnote(stringResource(R.string.catalog_catalogs_text))
-    }
-}
-
-@Composable
-private fun AddCatalog(vm: CatalogViewModel, onBack: () -> Unit, onAdded: () -> Unit, onAddress: () -> Unit) {
-    val catalogs by vm.catalogs.collectAsStateWithLifecycle()
-    val uri = LocalUriHandler.current
-    var error by remember { mutableStateOf<String?>(null) }
-    val known = catalogs.map { it.address }.toSet()
-    val presets = CatalogPresets.all.filter { it.catalog.address !in known }
-    SheetHeader(
-        stringResource(R.string.catalog_add),
-        leading = { CircleButton(Icons.AutoMirrored.Rounded.ArrowBackIos, stringResource(R.string.catalog_back), onBack, style = CircleButtonStyle.Light) },
-    )
-    Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(bottom = 24.dp)) {
-        GroupedCard(Modifier.padding(top = 8.dp)) {
-            GroupedRow(stringResource(R.string.catalog_add_address), icon = Icons.Rounded.ContentPaste, chevron = true, onClick = onAddress)
-            GroupedRow(
-                stringResource(R.string.catalog_directory), icon = Icons.AutoMirrored.Rounded.OpenInNew, showDivider = false,
-                onClick = { runCatching { uri.openUri(CatalogPresets.DIRECTORY) } },
-            )
-        }
-        Footnote(stringResource(R.string.catalog_directory_text))
-        if (presets.isNotEmpty()) {
-            GroupHeader(stringResource(R.string.catalog_presets))
-            GroupedCard {
-                presets.forEachIndexed { i, preset ->
-                    PresetRow(preset.catalog.title, preset.description, preset.note, divider = i < presets.lastIndex) {
-                        error = vm.saveCatalog(preset.catalog.copy(id = if (catalogs.any { it.id == preset.catalog.id }) vm.newCatalogId() else preset.catalog.id))
-                        if (error == null) onAdded()
-                    }
-                }
-            }
-            error?.let { Footnote(it, destructive = true) }
+        Group(stringResource(R.string.catalog_group_russian), rest.filter { CatalogPresets.preset(it.id)?.russian == true })
+        Group(stringResource(R.string.catalog_group_other), rest.filter { CatalogPresets.preset(it.id)?.russian == false }) {
             Footnote(stringResource(R.string.catalog_presets_text))
         }
+        val mine = rest.filterNot { CatalogDirectory.isPreset(it) }
+        GroupHeader(stringResource(R.string.catalog_group_mine))
+        GroupedCard {
+            mine.forEach { catalog ->
+                CatalogRow(
+                    catalog,
+                    issue = issues[catalog.host] != null,
+                    current = catalog.id == vm.catalog?.id,
+                    divider = true,
+                    onOpen = { open(catalog) },
+                    onStar = { vm.setFavorite(catalog, true) },
+                    onEdit = { onEdit(catalog) },
+                )
+            }
+            GroupedRow(stringResource(R.string.catalog_add_address), icon = Icons.Rounded.Add, showDivider = false, chevron = true, onClick = { onEdit(null) })
+        }
+        if (favorites.isEmpty() && query.isBlank()) Footnote(stringResource(R.string.catalog_catalogs_text))
     }
 }
 
+private fun Catalog.matches(query: String): Boolean {
+    val q = query.trim()
+    if (q.isEmpty()) return true
+    return title.contains(q, ignoreCase = true) || host.contains(q, ignoreCase = true) ||
+        CatalogPresets.preset(id)?.description?.contains(q, ignoreCase = true) == true
+}
+
 @Composable
-private fun PresetRow(title: String, description: String, note: String?, divider: Boolean, onAdd: () -> Unit) {
+private fun FindField(value: String, onChange: (String) -> Unit) {
     val c = Folio.colors
+    Row(
+        Modifier.padding(horizontal = 16.dp).padding(top = 4.dp).fillMaxWidth().height(40.dp)
+            .clip(RoundedCornerShape(12.dp)).background(c.fill).padding(horizontal = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Rounded.Search, null, tint = c.secondaryLabel, modifier = Modifier.size(20.dp))
+        BasicTextField(
+            value = value,
+            onValueChange = onChange,
+            singleLine = true,
+            textStyle = FolioType.body.copy(color = c.label),
+            cursorBrush = SolidColor(c.label),
+            modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+            decorationBox = { inner ->
+                if (value.isEmpty()) Text(stringResource(R.string.catalog_find), style = FolioType.body, color = c.secondaryLabel)
+                inner()
+            },
+        )
+        if (value.isNotEmpty()) {
+            Icon(
+                Icons.Rounded.Cancel, stringResource(R.string.catalog_search_clear), tint = c.tertiaryLabel,
+                modifier = Modifier.size(20.dp).clip(CircleShape).clickable { onChange("") },
+            )
+        }
+    }
+}
+
+/** Title, what it is (a preset's description or the host) and a warning; ✓ marks the open one. */
+@Composable
+private fun CatalogRow(
+    catalog: Catalog,
+    issue: Boolean,
+    current: Boolean,
+    divider: Boolean,
+    onOpen: () -> Unit,
+    onStar: () -> Unit,
+    onEdit: () -> Unit,
+) {
+    val c = Folio.colors
+    val haptic = LocalHapticFeedback.current
+    val preset = CatalogPresets.preset(catalog.id)
+    val note = if (issue) stringResource(R.string.catalog_issue_short) else preset?.note
     Column {
         Row(
-            Modifier.fillMaxWidth().clickableText(onAdd).padding(start = 18.dp, end = 16.dp, top = 11.dp, bottom = 11.dp),
+            Modifier.fillMaxWidth()
+                .combinedClickable(onClick = onOpen, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onEdit() })
+                .padding(start = 18.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(title, style = FolioType.body, color = c.label)
-                Text(description, style = FolioType.footnote, color = c.secondaryLabel)
+                Text(catalog.title, style = FolioType.body, color = c.label)
+                Text(
+                    if (preset != null && !CatalogDirectory.isEdited(catalog)) preset.description else catalog.host,
+                    style = FolioType.footnote, color = c.secondaryLabel,
+                )
                 if (note != null) Text(note, style = FolioType.footnote, color = c.tertiaryLabel)
             }
-            Icon(Icons.Rounded.Add, stringResource(R.string.catalog_add), tint = c.label, modifier = Modifier.padding(start = 10.dp).size(22.dp))
+            if (current) Icon(Icons.Rounded.Check, null, tint = c.label, modifier = Modifier.padding(start = 10.dp).size(20.dp))
+            Icon(
+                if (catalog.favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                stringResource(if (catalog.favorite) R.string.catalog_favorite_remove else R.string.catalog_favorite_add),
+                tint = if (catalog.favorite) c.accent else c.tertiaryLabel,
+                modifier = Modifier.padding(start = 4.dp).clip(CircleShape).clickable(onClick = onStar).padding(8.dp).size(22.dp),
+            )
         }
         if (divider) HorizontalDivider(color = c.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 18.dp, end = 16.dp))
     }
 }
 
-/** Name, feed address and an optional download mirror; × goes back, ✓ saves. */
+/** Name and feed address, a download mirror under «Дополнительно»; × goes back, ✓ saves. */
 @Composable
 private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> Unit, onSaved: () -> Unit) {
     val c = Folio.colors
     val clipboard = LocalClipboard.current
+    val uri = LocalUriHandler.current
+    val scope = rememberCoroutineScope()
     var title by remember { mutableStateOf(catalog?.title.orEmpty()) }
     var address by remember { mutableStateOf(catalog?.address.orEmpty()) }
     if (catalog == null) {
-        // An address copied from OPDS Home or a website fills the field.
-        LaunchedEffect(Unit) {
-            val copied = clipboard.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()?.trim().orEmpty()
-            if (address.isEmpty() && (copied.startsWith("https://") || copied.startsWith("http://"))) address = copied
+        // An address copied on OPDS Home or a website fills the empty field when the user comes back.
+        LifecycleResumeEffect(Unit) {
+            scope.launch {
+                val copied = clipboard.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()?.trim().orEmpty()
+                if (address.isEmpty() && (copied.startsWith("https://") || copied.startsWith("http://"))) address = copied
+            }
+            onPauseOrDispose { }
         }
     }
     var downloads by remember { mutableStateOf(catalog?.downloads.orEmpty()) }
     var error by remember { mutableStateOf<String?>(null) }
     SheetHeader(
         stringResource(if (catalog == null) R.string.catalog_add_address else R.string.catalog_edit_title),
-        leading = { CircleButton(Icons.Rounded.Close, stringResource(R.string.catalog_cancel), onBack, style = CircleButtonStyle.Light) },
+        leading = {
+            CircleButton(
+                if (catalog == null) Icons.AutoMirrored.Rounded.ArrowBackIos else Icons.Rounded.Close,
+                stringResource(if (catalog == null) R.string.catalog_back else R.string.catalog_cancel),
+                onBack, style = CircleButtonStyle.Light,
+            )
+        },
         trailing = {
             CircleButton(
                 Icons.Rounded.Check, stringResource(R.string.catalog_save),
                 {
-                    val edited = (catalog ?: Catalog(vm.newCatalogId(), "", "")).copy(title = title, address = address.trim().replaceFirst(Regex("^http://"), "https://"), downloads = downloads)
+                    val base = catalog ?: Catalog(vm.newCatalogId(), "", "")
+                    val edited = base.copy(title = title, address = address.trim().replaceFirst(Regex("^http://"), "https://"), downloads = downloads)
                     error = vm.saveCatalog(edited)
                     if (error == null) onSaved()
                 },
@@ -218,14 +279,30 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
             Field(stringResource(R.string.catalog_field_title), title, KeyboardType.Text) { title = it; error = null }
             HorizontalDivider(color = c.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 18.dp))
             Field(stringResource(R.string.catalog_field_address), address, KeyboardType.Uri) { address = it; error = null }
-            HorizontalDivider(color = c.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 18.dp))
-            Field(stringResource(R.string.catalog_source_downloads), downloads, KeyboardType.Uri, placeholder = stringResource(R.string.catalog_field_optional)) { downloads = it; error = null }
         }
         error?.let { Footnote(it, destructive = true) }
         Footnote(stringResource(R.string.catalog_sources_text))
-        if (catalog != null) {
+        if (catalog == null) {
             GroupedCard(Modifier.padding(top = 16.dp)) {
+                GroupedRow(
+                    stringResource(R.string.catalog_directory), icon = Icons.AutoMirrored.Rounded.OpenInNew, showDivider = false,
+                    onClick = { runCatching { uri.openUri(CatalogPresets.DIRECTORY) } },
+                )
+            }
+            Footnote(stringResource(R.string.catalog_directory_text))
+        }
+        GroupHeader(stringResource(R.string.catalog_advanced))
+        GroupedCard {
+            Field(stringResource(R.string.catalog_source_downloads), downloads, KeyboardType.Uri, placeholder = stringResource(R.string.catalog_field_optional)) { downloads = it; error = null }
+        }
+        Footnote(stringResource(R.string.catalog_mirror_text))
+        when {
+            catalog == null -> Unit
+            !CatalogDirectory.isPreset(catalog) -> GroupedCard(Modifier.padding(top = 16.dp)) {
                 GroupedRow(stringResource(R.string.catalog_remove_catalog), titleColor = c.destructive, showDivider = false, onClick = { vm.removeCatalog(catalog); onBack() })
+            }
+            CatalogDirectory.isEdited(catalog) -> GroupedCard(Modifier.padding(top = 16.dp)) {
+                GroupedRow(stringResource(R.string.catalog_reset), titleColor = c.destructive, showDivider = false, onClick = { vm.resetCatalog(catalog); onBack() })
             }
         }
     }
@@ -260,5 +337,3 @@ private fun Footnote(text: String, destructive: Boolean = false) {
         modifier = Modifier.padding(start = 36.dp, end = 36.dp, top = 10.dp),
     )
 }
-
-private fun Modifier.clickableText(onClick: () -> Unit): Modifier = clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick)

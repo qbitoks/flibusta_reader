@@ -466,19 +466,29 @@ private fun MoreMenu(vm: CatalogViewModel, onCatalogs: () -> Unit) {
     }
 }
 
-/** The current catalog's name under the title; opens the catalog list. */
+/** The current catalog's name under the title: a menu of favorites and «Все каталоги…» (the sheet). */
 @Composable
 private fun CatalogSwitcher(vm: CatalogViewModel, onOpen: () -> Unit) {
     val c = Folio.colors
-    Row(
-        Modifier.padding(start = 26.dp, bottom = 12.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onOpen).padding(horizontal = 6.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            vm.catalog?.title ?: stringResource(R.string.catalog_none),
-            style = FolioType.headline, color = c.secondaryLabel, maxLines = 1, overflow = TextOverflow.Ellipsis,
-        )
-        Icon(Icons.Rounded.UnfoldMore, stringResource(R.string.catalog_catalogs), tint = c.secondaryLabel, modifier = Modifier.padding(start = 2.dp).size(20.dp))
+    val saved by vm.catalogs.collectAsStateWithLifecycle()
+    val favorites = saved.filter { it.favorite }
+    var menu by remember { mutableStateOf(false) }
+    Box(Modifier.padding(start = 26.dp, bottom = 12.dp)) {
+        Row(
+            Modifier.clip(RoundedCornerShape(10.dp)).clickable { if (favorites.isEmpty()) onOpen() else menu = true }.padding(horizontal = 6.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                vm.catalog?.title ?: stringResource(R.string.catalog_none),
+                style = FolioType.headline, color = c.secondaryLabel, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+            Icon(Icons.Rounded.UnfoldMore, stringResource(R.string.catalog_catalogs), tint = c.secondaryLabel, modifier = Modifier.padding(start = 2.dp).size(20.dp))
+        }
+        PullDownMenu(menu, { menu = false }, checkColumn = true) {
+            favorites.forEach { catalog -> Item(catalog.title, { vm.select(catalog) }, checked = catalog.id == vm.catalog?.id) }
+            Divider()
+            Item(stringResource(R.string.catalog_all_catalogs), onOpen, icon = Icons.Rounded.Dns)
+        }
     }
 }
 

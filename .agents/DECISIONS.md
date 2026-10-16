@@ -77,3 +77,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | catalog | OPDS Home opens in the browser + paste-by-address: site unreachable, no known feed | user-approved plan
 2026-10-16 | catalog | Not presets: Всенаука (expired cert), ФантЛаб (404), FBSearch/Gallica/LITLIB (403) | checked from dev host
 2026-10-16 | catalog | Not presets: Maxima (DNS), E-reading (login), Самиздат via OPDS Home (no answer) | checked from dev host
+2026-10-16 | catalog | One «Каталоги» list (★ favorites, presets by language, own), no «Добавить» page | user-approved plan
+2026-10-16 | catalog | Presets stored only when starred or edited; rows without `favorite` decode as favorites | keeps old lists

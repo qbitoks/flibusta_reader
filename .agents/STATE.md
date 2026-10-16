@@ -17,6 +17,7 @@ status: active
 
 - Verify text-file import on a phone: txt/conf/no-extension, windows-1251, open-with and folder scan.
 - Verify multi-catalog on a phone: migration of old sources, switching, Open Library web links, Gutenberg search.
+- Verify the unified «Каталоги» list on a phone: stars, switcher menu, long-press edit, add by address, preset reset.
 - Verify real Flibusta MOBI/RTF/HTML/TXT downloads and a DOCX on a phone; parsers are tested only on synthetic files.
 - Verify themed scrubber, five-page history arrows, exact position sheet, bottom search and corner bookmark on a phone.
 

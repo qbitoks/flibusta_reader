@@ -84,7 +84,7 @@
     <string name="catalog_error_import">Не удалось открыть скачанный файл</string>
 
     <!-- Sources -->
-    <string name="catalog_source_downloads">Скачивание</string>
+    <string name="catalog_source_downloads">Зеркало</string>
     <string name="catalog_clear_history">Очистить историю поиска</string>
 
     <!-- Catalogs -->
@@ -94,25 +94,22 @@
     <string name="catalog_web_only">Каталог не отдаёт файл книги: её можно взять почитать или купить на сайте.</string>
     <string name="catalog_catalogs">Каталоги</string>
     <string name="catalog_catalogs_menu">Каталоги…</string>
-    <string name="catalog_catalogs_text">Нажмите на каталог, чтобы открыть его. Поиск, новинки и фильтры появляются, если каталог их поддерживает.</string>
+    <string name="catalog_catalogs_text">Нажмите на каталог, чтобы открыть его, ★ закрепляет его наверху. Удерживайте каталог, чтобы изменить адрес или зеркало.</string>
     <string name="catalog_none">Нет каталогов</string>
     <string name="catalog_none_text">Добавьте OPDS-каталог из списка известных или по адресу.</string>
     <string name="catalog_add">Добавить каталог</string>
     <string name="catalog_add_address">Добавить по адресу</string>
     <string name="catalog_add_folder">Добавить как каталог</string>
-    <string name="catalog_added">Добавлено в каталоги</string>
+    <string name="catalog_added">Добавлено в избранное</string>
     <string name="catalog_directory">Найти каталоги на OPDS Home</string>
-    <string name="catalog_directory_text">OPDS Home собирает адреса других каталогов. Скопируйте адрес и выберите «Добавить по адресу»: он подставится из буфера обмена.</string>
-    <string name="catalog_presets">Известные каталоги</string>
+    <string name="catalog_directory_text">OPDS Home собирает адреса других каталогов. Скопируйте адрес и вернитесь: он подставится в пустое поле.</string>
     <string name="catalog_presets_text">Часть библиотек размещает книги без разрешения правообладателей: бесплатный доступ не всегда значит разрешённое распространение.</string>
-    <string name="catalog_edit">Изменить</string>
-    <string name="catalog_done">Готово</string>
     <string name="catalog_edit_title">Каталог</string>
     <string name="catalog_save">Сохранить</string>
     <string name="catalog_field_title">Название</string>
     <string name="catalog_field_address">Адрес OPDS</string>
     <string name="catalog_field_optional">необязательно</string>
-    <string name="catalog_sources_text">Адрес OPDS — полный HTTPS-адрес ленты, например https://example.org/opds. Сервер скачивания нужен, только если книги отдаёт зеркало: адрес сайта без пути.</string>
+    <string name="catalog_sources_text">Полный HTTPS-адрес ленты, например https://example.org/opds.</string>
     <string name="catalog_remove_catalog">Удалить каталог</string>
     <string name="catalog_error_login">Сайт отдаёт эту книгу только после входа</string>
     <string name="catalog_error_elsewhere">Ссылка ведёт на %1$s, и он не отдаёт файл</string>
@@ -121,4 +118,15 @@
     <string name="catalog_open_web_hint">Скачайте книгу в браузере (если нужно, войдите на сайт), затем откройте файл в Folio через «Открыть с помощью».</string>
     <string name="catalog_issue_note">Этот каталог недавно не отдал книгу: %1$s.</string>
     <string name="catalog_issue_short">не отдаёт файлы</string>
+    <string name="catalog_favorites">Избранное</string>
+    <string name="catalog_group_russian">На русском</string>
+    <string name="catalog_group_other">На других языках</string>
+    <string name="catalog_group_mine">Мои каталоги</string>
+    <string name="catalog_find">Поиск по каталогам</string>
+    <string name="catalog_favorite_add">В избранное</string>
+    <string name="catalog_favorite_remove">Убрать из избранного</string>
+    <string name="catalog_advanced">Дополнительно</string>
+    <string name="catalog_mirror_text">Нужен, только если книги отдаёт зеркало: адрес сайта без пути.</string>
+    <string name="catalog_reset">Вернуть исходные адреса</string>
+    <string name="catalog_all_catalogs">Все каталоги…</string>
 </resources>

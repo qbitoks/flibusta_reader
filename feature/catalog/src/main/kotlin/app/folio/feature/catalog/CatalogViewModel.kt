@@ -159,6 +159,10 @@ class CatalogViewModel @Inject constructor(
 
     fun removeCatalog(catalog: Catalog) = repository.remove(catalog.id)
 
+    fun setFavorite(catalog: Catalog, favorite: Boolean) = repository.setFavorite(catalog.id, favorite)
+
+    fun resetCatalog(catalog: Catalog) = repository.reset(catalog.id)
+
     fun moveCatalog(from: Int, to: Int) = repository.move(from, to)
 
     fun newCatalogId(): String = repository.newId()
