@@ -5,7 +5,7 @@ status: active
 
 ## Current focus
 - Work from the user's task; follow-ups below need an explicit task, not autonomous implementation.
-- 0.3.x (now 0.3.16) uses the prototype engine; OPDS is the «Каталог» tab. No data migration from 0.2.x (user decision).
+- 0.3.x–0.4.x (now 0.4.0) uses the prototype engine; OPDS is the «Каталог» tab. No data migration from 0.2.x (user decision).
 - Checked on an emulator: live OPDS browse/search, EPUB/FB2 downloads, Range resume; upgrade/restart, presets,
   menu palettes and guide landings in Slide/Curl/Fade.
 

@@ -124,5 +124,5 @@
 ./scripts/build.ps1
 ```
 
-Нужны JDK 17 и Android SDK (платформа 37). APK: `artifacts/Folio-0.3.16-release.apk`.
+Нужны JDK 17 и Android SDK (платформа 37). APK: `artifacts/Folio-0.4.0-release.apk`.
 Подробности для разработчиков и агентов — `AGENTS.md`.
