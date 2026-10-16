@@ -19,7 +19,6 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-12 | repo | Adopted agent_template; Russian AGENTS.md contract moved into root AGENTS.md (English) + .agents/rules (since archived) | one entry point for all agents
 2026-10-12 | docs | docs/ dissolved: module AGENTS.md (core, app, scripts) + .agents/rules (storage, release) + STATE | one doc system, loaded on demand
 2026-10-12 | docs | Dated reports, review, plans/specs moved to .agents/archive/ | history, not instructions; kept out of search
-2026-10-12 | docs | README.md stays the Russian user-facing product description | humans read it; agents read AGENTS.md
 2026-10-12 | cursor | Removed .cursor/rules/project.mdc | Cursor reads AGENTS.md natively
 2026-10-12 | git | Template .gitattributes (`* text=auto eol=lf`) adopted as is | index was already all-LF; stops CRLF drift on Windows
 2026-10-12 | repo | Prototype codebase replaces the Readium app; OPDS kept in core/opds + «Каталог» tab | user chose the prototype as base | .agents/decisions/0004-prototype-engine.md
@@ -78,3 +77,4 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | catalog | Capsule = last picked format (download `createdAt`); ••• stays, × gone; «Другие форматы» group | user decision; no new storage
 2026-10-16 | designsystem | Own `FolioSheet` instead of `ModalBottomSheet`: close at 35 % pull or fast 80 dp swipe; content scroll never closes | M3 closed sheets on stray flicks
 2026-10-16 | reader | Settings sheet drags to close (reverses «never drag»); half detent, grabber and book strip tried and dropped | user decision
+2026-10-16 | docs | README.md is a Russian promo-style overview of what Folio does, not a feature spec; behaviour details live in area AGENTS.md | user decision; GitHub visitors want a pitch

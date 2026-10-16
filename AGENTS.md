@@ -94,7 +94,7 @@ Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGE
   no DTD or external XML entities. Don't relax them to make a sample pass.
 - Coroutine cancellation is not a user error. No blocking I/O on the UI thread.
 - Publish, push, release and deleting user data only on explicit user request.
-- Behaviour change → update the affected `AGENTS.md`/rule and, if user-visible, `README.md` (Russian).
+- Behaviour change → update the affected `AGENTS.md`/rule and, if it changes the pitch, `README.md` (Russian promo overview, not a spec).
   Long rationale → `.agents/decisions/NNNN-title.md` + one line in `.agents/DECISIONS.md`.
 - Don't commit `local.properties`, `.tools/`, `.gradle/`, `**/build/`, `artifacts/`, personal books, keys.
 - UI: use the topic linked by the area's `AGENTS.md`; `.agents/design/apple-books-guidelines.md` is the index.
