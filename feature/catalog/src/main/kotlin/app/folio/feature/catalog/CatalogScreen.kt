@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBackIos
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Dns
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.UnfoldMore
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -58,6 +60,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,6 +77,8 @@ import app.folio.core.designsystem.components.SectionTitle
 import app.folio.core.designsystem.components.SegmentedControl
 import app.folio.core.designsystem.components.glass
 import app.folio.core.opds.CatalogEntry
+import app.folio.core.opds.Facet
+import app.folio.core.opds.FacetGroup
 import java.io.File
 
 /**
@@ -87,7 +92,7 @@ fun CatalogScreen(vm: CatalogViewModel, contentPadding: PaddingValues, onOpen: (
     val byLink = remember(downloads) { downloads.byLink() }
     var searchActive by rememberSaveable { mutableStateOf(vm.results != null) }
     var downloadsOpen by rememberSaveable { mutableStateOf(false) }
-    var sourcesOpen by rememberSaveable { mutableStateOf(false) }
+    var catalogsOpen by rememberSaveable { mutableStateOf(false) }
     val focus = LocalFocusManager.current
     val homeList = rememberLazyListState()
     val loader = remember(vm) { val load: suspend (String) -> File? = { vm.cover(it) }; load }
@@ -110,21 +115,24 @@ fun CatalogScreen(vm: CatalogViewModel, contentPadding: PaddingValues, onOpen: (
                     SectionBand(first = true) {
                         LargeTitleHeader(stringResource(R.string.catalog_title)) {
                             DownloadsButton(downloads) { downloadsOpen = true }
-                            MoreMenu(vm, onSources = { sourcesOpen = true })
+                            MoreMenu(vm, onCatalogs = { catalogsOpen = true })
                         }
-                        SearchField(
-                            vm,
-                            active = searchActive,
-                            onActivate = { searchActive = true },
-                            onCancel = {
-                                searchActive = false
-                                vm.closeSearch()
-                                focus.clearFocus()
-                            },
-                            onSearch = { focus.clearFocus(); vm.search() },
-                        )
+                        CatalogSwitcher(vm, onOpen = { catalogsOpen = true })
+                        if (vm.bookSearch != null || vm.results != null) {
+                            SearchField(
+                                vm,
+                                active = searchActive,
+                                onActivate = { searchActive = true },
+                                onCancel = {
+                                    searchActive = false
+                                    vm.closeSearch()
+                                    focus.clearFocus()
+                                },
+                                onSearch = { focus.clearFocus(); vm.search() },
+                            )
+                        }
                         val results = vm.results
-                        if (results != null) {
+                        if (results?.authors != null) {
                             SegmentedControl(
                                 options = listOf(
                                     stringResource(R.string.catalog_scope_all),
@@ -143,7 +151,8 @@ fun CatalogScreen(vm: CatalogViewModel, contentPadding: PaddingValues, onOpen: (
                 when {
                     results != null -> searchResults(vm, results, byLink)
                     searchActive -> recentSearches(vm, onPick = { focus.clearFocus(); vm.search(it) })
-                    else -> homeSections(vm, byLink, onSources = { sourcesOpen = true })
+                    vm.catalog == null -> item(key = "no-catalog") { NoCatalogBlock(onAdd = { catalogsOpen = true }) }
+                    else -> homeSections(vm, byLink, onCatalogs = { catalogsOpen = true })
                 }
             }
         }
@@ -154,7 +163,7 @@ fun CatalogScreen(vm: CatalogViewModel, contentPadding: PaddingValues, onOpen: (
         if (downloadsOpen) {
             DownloadsSheet(vm, downloads, onOpen = { id -> downloadsOpen = false; onOpen(id) }, onDismiss = { downloadsOpen = false })
         }
-        if (sourcesOpen) SourcesSheet(vm, onDismiss = { sourcesOpen = false })
+        if (catalogsOpen) CatalogsSheet(vm, onDismiss = { catalogsOpen = false })
     }
 }
 
@@ -168,8 +177,10 @@ private fun FeedScreen(vm: CatalogViewModel, feed: Feed, downloads: Map<String, 
         contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
     ) {
         item(key = "header") {
-            Box(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 CircleButton(Icons.AutoMirrored.Rounded.ArrowBackIos, stringResource(R.string.catalog_back), { vm.back() })
+                Spacer(Modifier.weight(1f))
+                FolderMenu(vm, feed)
             }
             Text(
                 feed.title,
@@ -180,34 +191,61 @@ private fun FeedScreen(vm: CatalogViewModel, feed: Feed, downloads: Map<String, 
                 modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 4.dp, bottom = 12.dp),
             )
         }
+        feed.page?.facets?.takeIf { it.isNotEmpty() }?.let { groups -> item(key = "facets") { FacetRow(groups, vm::openFacet) } }
         feedItems(feed, downloads, onOpen = vm::open, onMore = { vm.more(feed) }, onRetry = { vm.retry(feed) })
     }
 }
 
-private fun LazyListScope.homeSections(vm: CatalogViewModel, downloads: Map<String, DownloadItem>, onSources: () -> Unit) {
-    item(key = "new") {
-        SectionBand {
-            val title = stringResource(R.string.catalog_new)
-            SectionTitle(title, subtitle = stringResource(R.string.catalog_new_subtitle), onClick = { vm.openNewBooks(title) })
-            NewBooksShelf(vm, vm.newBooks, downloads)
-            Spacer(Modifier.height(28.dp))
+private fun LazyListScope.homeSections(vm: CatalogViewModel, downloads: Map<String, DownloadItem>, onCatalogs: () -> Unit) {
+    vm.newBooks?.let { feed ->
+        item(key = "new") {
+            SectionBand {
+                val title = stringResource(R.string.catalog_new)
+                SectionTitle(title, onClick = { vm.openShelf(feed, title) })
+                BooksShelf(vm, feed, downloads)
+                Spacer(Modifier.height(28.dp))
+            }
+        }
+    }
+    vm.popular?.let { feed ->
+        item(key = "popular") {
+            SectionBand {
+                val title = stringResource(R.string.catalog_popular)
+                SectionTitle(title, onClick = { vm.openShelf(feed, title) })
+                BooksShelf(vm, feed, downloads)
+                Spacer(Modifier.height(28.dp))
+            }
         }
     }
     item(key = "sections") {
         SectionBand {
             SectionTitle(stringResource(R.string.catalog_sections))
             val root = vm.root
+            root.page?.facets?.takeIf { it.isNotEmpty() }?.let { FacetRow(it, vm::openFacet) }
             val sections = root.entries.filter { !it.isBook && !requiresLogin(it) }
+            val books = readableEntries(root.entries).first.filter { it.isBook }
             when {
-                root.page == null && root.error != null -> ErrorBlock(root.error, onRetry = { vm.retry(root) })
+                root.page == null && root.error != null -> ErrorBlock(root.error, onRetry = { vm.retry(root) }, site = root.address)
                 root.page == null -> LoadingBlock()
-                else -> sections.forEach { entry -> FolderRow(entry, { vm.open(entry) }, divider = entry !== sections.last()) }
+                sections.isEmpty() && books.isEmpty() -> EmptyBlock(stringResource(R.string.catalog_empty_folder), null)
+                else -> {
+                    sections.forEach { entry -> FolderRow(entry, { vm.open(entry) }, divider = entry !== sections.last() || books.isNotEmpty()) }
+                    // A root that lists books itself (Gutenberg) opens them like a folder does.
+                    if (books.isNotEmpty()) {
+                        val title = root.page?.title.orEmpty().ifBlank { vm.catalog?.title.orEmpty() }
+                        Text(
+                            stringResource(R.string.catalog_root_books, books.size),
+                            style = FolioType.body, color = Folio.colors.label,
+                            modifier = Modifier.fillMaxWidth().clickable { vm.openShelf(root, title) }.padding(horizontal = 32.dp, vertical = 14.dp),
+                        )
+                    }
+                }
             }
             Text(
-                stringResource(R.string.catalog_source_footer, vm.catalogBase.removePrefix("https://")),
+                stringResource(R.string.catalog_source_footer, vm.catalog?.host.orEmpty()),
                 style = FolioType.footnote,
                 color = Folio.colors.secondaryLabel,
-                modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 20.dp).clip(RoundedCornerShape(6.dp)).clickable(onClick = onSources),
+                modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 20.dp).clip(RoundedCornerShape(6.dp)).clickable(onClick = onCatalogs),
             )
         }
     }
@@ -217,9 +255,9 @@ private fun LazyListScope.homeSections(vm: CatalogViewModel, downloads: Map<Stri
 private fun requiresLogin(entry: CatalogEntry): Boolean =
     entry.summary.contains("логин", ignoreCase = true) || entry.summary.contains("login", ignoreCase = true)
 
-/** «Новинки» as large covers, like «Хочу прочесть» on «Главная». */
+/** A shelf of large covers («Новинки», «Популярное»), like «Хочу прочесть» on «Главная». */
 @Composable
-private fun NewBooksShelf(vm: CatalogViewModel, feed: Feed, downloads: Map<String, DownloadItem>) {
+private fun BooksShelf(vm: CatalogViewModel, feed: Feed, downloads: Map<String, DownloadItem>) {
     val c = Folio.colors
     val books = remember(feed.page) { readableEntries(feed.entries).first.filter { it.isBook }.take(24) }
     when {
@@ -334,6 +372,17 @@ private fun LazyListScope.recentSearches(vm: CatalogViewModel, onPick: (String) 
 private fun LazyListScope.searchResults(vm: CatalogViewModel, results: SearchResults, downloads: Map<String, DownloadItem>) {
     val books = results.books
     val authors = results.authors
+    if (authors == null) {
+        val found = readableEntries(books.entries).first
+        when {
+            books.page == null && books.error == null -> item(key = "books-loading") { LoadingBlock(stringResource(R.string.catalog_searching, results.query)) }
+            books.page != null && found.isEmpty() && books.page?.next == null -> item(key = "nothing") {
+                EmptyBlock(stringResource(R.string.catalog_nothing_found), stringResource(R.string.catalog_nothing_found_text))
+            }
+            else -> feedItems(books, downloads, vm::open, { vm.more(books) }, { vm.retry(books) })
+        }
+        return
+    }
     val ranked = rankAuthors(authors.entries, results.query)
     when (results.scope) {
         SearchScope.Books -> feedItems(books, downloads, vm::open, { vm.more(books) }, { vm.retry(books) })
@@ -401,18 +450,89 @@ private fun DownloadsButton(downloads: List<DownloadItem>, onClick: () -> Unit) 
 }
 
 @Composable
-private fun MoreMenu(vm: CatalogViewModel, onSources: () -> Unit) {
+private fun MoreMenu(vm: CatalogViewModel, onCatalogs: () -> Unit) {
     var open by remember { mutableStateOf(false) }
     val recent by vm.recent.collectAsStateWithLifecycle()
     Box {
         CircleButton(Icons.Rounded.MoreHoriz, stringResource(R.string.catalog_more_actions), { open = true })
         PullDownMenu(open, { open = false }) {
-            Item(stringResource(R.string.catalog_sources_menu), onSources, icon = Icons.Rounded.Dns)
+            Item(stringResource(R.string.catalog_catalogs_menu), onCatalogs, icon = Icons.Rounded.Dns)
             Item(stringResource(R.string.catalog_refresh), { vm.loadHome(fresh = true) }, icon = Icons.Rounded.Refresh)
             if (recent.isNotEmpty()) {
                 Divider()
                 Item(stringResource(R.string.catalog_clear_history), vm::clearRecent, icon = Icons.Rounded.History, destructive = true)
             }
         }
+    }
+}
+
+/** The current catalog's name under the title; opens the catalog list. */
+@Composable
+private fun CatalogSwitcher(vm: CatalogViewModel, onOpen: () -> Unit) {
+    val c = Folio.colors
+    Row(
+        Modifier.padding(start = 26.dp, bottom = 12.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onOpen).padding(horizontal = 6.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            vm.catalog?.title ?: stringResource(R.string.catalog_none),
+            style = FolioType.headline, color = c.secondaryLabel, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        )
+        Icon(Icons.Rounded.UnfoldMore, stringResource(R.string.catalog_catalogs), tint = c.secondaryLabel, modifier = Modifier.padding(start = 2.dp).size(20.dp))
+    }
+}
+
+/** Feed-level filters as capsules; the active one is filled. */
+@Composable
+private fun FacetRow(groups: List<FacetGroup>, onPick: (Facet) -> Unit) {
+    val c = Folio.colors
+    Column(Modifier.padding(bottom = 8.dp)) {
+        groups.forEach { group ->
+            if (group.title.isNotBlank()) {
+                Text(group.title, style = FolioType.footnote, color = c.secondaryLabel, modifier = Modifier.padding(start = 32.dp, top = 6.dp, bottom = 6.dp))
+            }
+            LazyRow(contentPadding = PaddingValues(horizontal = 28.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(group.facets, key = { it.href + it.title }) { facet ->
+                    Text(
+                        facet.title,
+                        style = FolioType.subheadline,
+                        color = if (facet.active) c.background else c.label,
+                        maxLines = 1,
+                        modifier = Modifier.clip(CircleShape).background(if (facet.active) c.label else c.fill)
+                            .clickable(enabled = !facet.active) { onPick(facet) }.padding(horizontal = 14.dp, vertical = 7.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** ••• on a folder: add it as a catalog of its own (a directory like OPDS Home lists whole catalogs). */
+@Composable
+private fun FolderMenu(vm: CatalogViewModel, feed: Feed) {
+    var open by remember { mutableStateOf(false) }
+    var added by remember(feed) { mutableStateOf(false) }
+    Box {
+        CircleButton(Icons.Rounded.MoreHoriz, stringResource(R.string.catalog_more_actions), { open = true })
+        PullDownMenu(open, { open = false }) {
+            Item(
+                stringResource(if (added) R.string.catalog_added else R.string.catalog_add_folder),
+                { if (!added) added = vm.addAsCatalog(feed) == null },
+                icon = Icons.Rounded.Add,
+                checked = added,
+            )
+        }
+    }
+}
+
+@Composable
+private fun NoCatalogBlock(onAdd: () -> Unit) {
+    Column {
+        EmptyBlock(stringResource(R.string.catalog_none), stringResource(R.string.catalog_none_text))
+        Text(
+            stringResource(R.string.catalog_add),
+            style = FolioType.headline, color = Folio.colors.label, textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onAdd).padding(vertical = 12.dp),
+        )
     }
 }

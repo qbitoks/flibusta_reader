@@ -14,7 +14,9 @@ class DownloadException(val code: String, message: String) : IOException(message
 
 /**
  * Stable error codes shown by the UI (mapped to strings there) and stored with downloads:
- * `offline`, `timeout`, `dropped`, `http:<code>`, `not_book`, `too_big`, `import`, `other:<message>`.
+ * `offline`, `timeout`, `dropped`, `http:<code>`, `not_book`, `too_big`, `import`, `other:<message>`;
+ * for answers the catalog can't fix by retrying: `login` (401 or a sign-in page), `elsewhere:<host>`
+ * (the link led to another site that refused it, e.g. iKnigi → LitRes), `not_feed` (an error page instead of a feed).
  */
 object NetworkErrors {
     const val OFFLINE = "offline"
@@ -23,6 +25,22 @@ object NetworkErrors {
     const val NOT_BOOK = "not_book"
     const val TOO_BIG = "too_big"
     const val IMPORT = "import"
+    const val LOGIN = "login"
+    const val ELSEWHERE = "elsewhere:"
+    const val NOT_FEED = "not_feed"
+
+    /** The catalog itself won't give this file: the user may get it on the website instead. */
+    fun isUnavailable(code: String?): Boolean =
+        code == NOT_BOOK || code == LOGIN || code?.startsWith(ELSEWHERE) == true ||
+            code?.removePrefix("http:")?.takeIf { code.startsWith("http:") }?.toIntOrNull() in setOf(401, 402, 403, 404, 410, 451)
+
+    /** 401, or 4xx from another host than the link's: a sign-in or a different site, not a broken link. */
+    fun classify(e: HttpStatusException, requested: String): String {
+        if (e.code == 401) return LOGIN
+        val host = runCatching { java.net.URL(e.url).host }.getOrNull()
+        val from = runCatching { java.net.URL(requested).host }.getOrNull()
+        return if (e.code in 400..499 && host != null && from != null && host != from) ELSEWHERE + host else "http:${e.code}"
+    }
 
     fun code(e: Throwable): String = when (e) {
         is DownloadException -> e.code

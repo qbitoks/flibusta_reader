@@ -53,4 +53,10 @@ object DownloadCheck {
         return text.startsWith("<!doctype html") || text.startsWith("<html") ||
             (text.contains("<html") && !text.contains("fictionbook"))
     }
+
+    /** An HTML page with a password field: the site wants a sign-in before it gives the file (Librusec). */
+    fun asksToSignIn(page: ByteArray): Boolean {
+        val text = page.toString(Charsets.ISO_8859_1).lowercase()
+        return Regex("""<input[^>]+type\s*=\s*["']?password""").containsMatchIn(text)
+    }
 }

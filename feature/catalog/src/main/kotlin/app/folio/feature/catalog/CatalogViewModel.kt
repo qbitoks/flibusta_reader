@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,9 +14,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import app.folio.core.data.catalog.Catalog
 import app.folio.core.data.catalog.CatalogRepository
 import app.folio.core.data.catalog.DownloadItem
 import app.folio.core.data.catalog.DownloadManager
@@ -24,6 +28,8 @@ import app.folio.core.data.db.DownloadState
 import app.folio.core.opds.CatalogEntry
 import app.folio.core.opds.CatalogLink
 import app.folio.core.opds.CatalogPage
+import app.folio.core.opds.Facet
+import app.folio.core.opds.SearchTemplate
 import java.io.File
 import javax.inject.Inject
 
@@ -45,15 +51,17 @@ class Feed(val address: String, title: String) {
 
 enum class SearchScope { All, Books, Authors }
 
+/** [authors] only when the catalog searches authors separately (Flibusta). */
 @Stable
-class SearchResults(val query: String, val books: Feed, val authors: Feed) {
+class SearchResults(val query: String, val books: Feed, val authors: Feed?) {
     var scope by mutableStateOf(SearchScope.All)
 }
 
 /**
- * Catalog state: the home (root sections and this week's books), a stack of opened folders,
- * book + author search, and the download list. Open folders and the last search survive process
- * death through [SavedStateHandle]; their pages are re-fetched (the repository caches them).
+ * Catalog state for the current [Catalog]: the home (root sections and the new/popular shelves the
+ * feed declares), a stack of opened folders, search when the catalog has one, and the download list.
+ * Open folders and the last search survive process death through [SavedStateHandle]; their pages are
+ * re-fetched (the repository caches them). Switching catalogs resets all of it.
  */
 @HiltViewModel
 class CatalogViewModel @Inject constructor(
@@ -61,10 +69,22 @@ class CatalogViewModel @Inject constructor(
     private val downloadManager: DownloadManager,
     private val saved: SavedStateHandle,
 ) : ViewModel() {
-    var root by mutableStateOf(Feed(repository.rootAddress(), ""))
+    val catalogs: StateFlow<List<Catalog>> = repository.catalogs
+    var catalog by mutableStateOf(repository.current.value)
         private set
-    var newBooks by mutableStateOf(Feed(repository.newBooksAddress(), ""))
+    var root by mutableStateOf(Feed(catalog?.address.orEmpty(), ""))
         private set
+    /** Shelves shown only when the catalog has them: a preset address, or a link the root feed declares. */
+    var newBooks by mutableStateOf<Feed?>(null)
+        private set
+    var popular by mutableStateOf<Feed?>(null)
+        private set
+    /** Search templates; null until the root feed is read, or when the catalog has no OPDS search. */
+    var bookSearch by mutableStateOf(catalog?.searchBooks)
+        private set
+    var authorSearch by mutableStateOf(catalog?.searchAuthors)
+        private set
+    private var capabilitiesJob: Job? = null
     val stack = mutableStateListOf<Feed>()
     var results by mutableStateOf<SearchResults?>(null)
         private set
@@ -75,18 +95,33 @@ class CatalogViewModel @Inject constructor(
     var downloadError by mutableStateOf<String?>(null)
 
     val recent: StateFlow<List<String>> = repository.recent
+    val downloadIssues: StateFlow<Map<String, String>> = repository.downloadIssues
+    /** Entry id → the book and the formats still to try if the current one is refused. */
+    private val fallbacks = mutableMapOf<String, Pair<CatalogEntry, List<String>>>()
     val downloads: StateFlow<List<DownloadItem>> =
         downloadManager.downloads.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val catalogBase: String get() = repository.catalogBase
-    val downloadBase: String get() = repository.downloadBase
     val canGoBack: Boolean get() = stack.isNotEmpty() || results != null
 
     init {
         loadHome()
+        viewModelScope.launch { downloads.collect(::fallBack) }
+        viewModelScope.launch {
+            repository.current.collect { next ->
+                val previous = catalog
+                if (next != previous) {
+                    catalog = next
+                    if (next?.address != previous?.address || next?.searchBooks != previous?.searchBooks || next?.newBooks != previous?.newBooks) reset()
+                }
+            }
+        }
         saved.get<String>(KEY_SEARCH)?.let { submitted ->
-            search(submitted, remember = false)
-            saved.get<String>(KEY_SCOPE)?.let { scope -> results?.scope = SearchScope.valueOf(scope) }
+            viewModelScope.launch {
+                // A declared search is known only once the root feed is read.
+                snapshotFlow { bookSearch }.filterNotNull().first()
+                search(submitted, remember = false, keepStack = true)
+                saved.get<String>(KEY_SCOPE)?.let { scope -> results?.scope = SearchScope.valueOf(scope) }
+            }
         }
         val addresses = saved.get<ArrayList<String>>(KEY_STACK).orEmpty()
         val titles = saved.get<ArrayList<String>>(KEY_TITLES).orEmpty()
@@ -94,28 +129,64 @@ class CatalogViewModel @Inject constructor(
     }
 
     fun loadHome(fresh: Boolean = false) {
+        val current = catalog ?: return
         load(root, fresh = fresh)
-        load(newBooks, fresh = fresh, fill = SHELF_BOOKS)
+        current.newBooks?.let { address -> if (newBooks?.address != address) newBooks = Feed(address, "") }
+        newBooks?.let { load(it, fresh = fresh, fill = SHELF_BOOKS) }
+        popular?.let { load(it, fresh = fresh, fill = SHELF_BOOKS) }
+        capabilitiesJob?.cancel()
+        capabilitiesJob = viewModelScope.launch {
+            val page = snapshotFlow { root.page }.filterNotNull().first()
+            if (newBooks == null) page.newBooks?.let { newBooks = Feed(it, "").also { feed -> load(feed, fill = SHELF_BOOKS) } }
+            if (popular == null) page.popular?.takeIf { it != newBooks?.address }?.let { popular = Feed(it, "").also { feed -> load(feed, fill = SHELF_BOOKS) } }
+            if (bookSearch == null) {
+                bookSearch = page.search?.let { link ->
+                    try { repository.searchTemplate(link) } catch (e: CancellationException) { throw e } catch (e: Exception) { null }
+                }
+            }
+        }
     }
+
+    fun select(catalog: Catalog) = repository.select(catalog.id)
+
+    /** Returns an error message, or null when saved. */
+    fun saveCatalog(catalog: Catalog): String? = try {
+        repository.save(catalog)
+        null
+    } catch (e: IllegalArgumentException) {
+        e.message
+    }
+
+    fun removeCatalog(catalog: Catalog) = repository.remove(catalog.id)
+
+    fun moveCatalog(from: Int, to: Int) = repository.move(from, to)
+
+    fun newCatalogId(): String = repository.newId()
+
+    /** Adds the opened folder (a catalog listed by a directory such as OPDS Home) as a catalog. */
+    fun addAsCatalog(feed: Feed): String? = saveCatalog(Catalog(repository.newId(), feed.title, feed.address))
 
     fun updateQuery(value: String) { query = value; saved[KEY_QUERY] = value }
 
-    fun search(text: String = query, remember: Boolean = true) {
+    fun search(text: String = query, remember: Boolean = true, keepStack: Boolean = false) {
         val value = text.trim()
         if (value.isEmpty()) return
         updateQuery(value)
         if (remember) repository.rememberSearch(value)
-        results?.let { cancel(it.books); cancel(it.authors) }
+        val template = bookSearch ?: return
+        results?.let { cancel(it.books); it.authors?.let(::cancel) }
         val next = SearchResults(
             value,
-            books = Feed(repository.searchAddress(value, authors = false), value),
-            authors = Feed(repository.searchAddress(value, authors = true), value),
+            books = Feed(SearchTemplate.fill(template, value), value),
+            authors = authorSearch?.let { Feed(SearchTemplate.fill(it, value), value) },
         )
         results = next
-        stack.forEach(::cancel)
-        stack.clear()
+        if (!keepStack) {
+            stack.forEach(::cancel)
+            stack.clear()
+        }
         load(next.books)
-        load(next.authors)
+        next.authors?.let(::load)
         syncSaved()
     }
 
@@ -125,7 +196,7 @@ class CatalogViewModel @Inject constructor(
     }
 
     fun closeSearch() {
-        results?.let { cancel(it.books); cancel(it.authors) }
+        results?.let { cancel(it.books); it.authors?.let(::cancel) }
         results = null
         updateQuery("")
         syncSaved()
@@ -150,7 +221,17 @@ class CatalogViewModel @Inject constructor(
         push(link.href, link.title)
     }
 
-    fun openNewBooks(title: String) = push(newBooks.address, newBooks.page?.title?.ifBlank { null } ?: title)
+    fun openShelf(feed: Feed, title: String) = push(feed.address, feed.page?.title?.ifBlank { null } ?: title)
+
+    /** A facet replaces the folder it filters; on the home it opens as a folder. */
+    fun openFacet(facet: Facet) {
+        val top = stack.lastOrNull()
+        if (top != null) {
+            stack.removeAt(stack.lastIndex)
+            cancel(top)
+        }
+        push(facet.href, top?.title ?: facet.title)
+    }
 
     /** Pops the top folder, or leaves search results; false when there is nothing to go back to. */
     fun back(): Boolean {
@@ -170,7 +251,37 @@ class CatalogViewModel @Inject constructor(
 
     fun retry(feed: Feed) = load(feed, fresh = true)
 
+    /** The last refusal from this book's catalog, to warn before a download that will likely fail. */
+    fun issueFor(entry: CatalogEntry): String? {
+        val host = entry.downloads.values.firstOrNull()?.let { runCatching { java.net.URL(it).host }.getOrNull() } ?: return null
+        return downloadIssues.value[host] ?: downloadIssues.value[catalog?.host]?.takeIf { catalog?.host == host }
+    }
+
+    /** Starts [format]; if the catalog refuses it (sign-in, another site), the next main format is tried. */
     fun download(entry: CatalogEntry, format: String) {
+        val rest = entry.downloads.keys.dropWhile { it != format }.drop(1).filter { it in mainFormats }
+        fallbacks[entry.id] = entry to rest
+        enqueue(entry, format)
+    }
+
+    private fun fallBack(items: List<DownloadItem>) {
+        val byLink = items.byLink()
+        fallbacks.entries.toList().forEach { (id, pair) ->
+            val (entry, rest) = pair
+            val failed = entry.downloads.values.mapNotNull { byLink[it] }.filter { it.state == DownloadState.Failed && NetworkErrors.isUnavailable(it.entity.error) }
+            val active = entry.downloads.values.mapNotNull { byLink[it] }.any { it.active || it.state == DownloadState.Done }
+            if (active) return@forEach
+            val next = rest.firstOrNull { f -> byLink[entry.downloads[f]] == null }
+            if (failed.isNotEmpty() && next != null) {
+                fallbacks[id] = entry to rest.drop(rest.indexOf(next) + 1)
+                enqueue(entry, next)
+            } else if (failed.isNotEmpty()) {
+                fallbacks.remove(id)
+            }
+        }
+    }
+
+    private fun enqueue(entry: CatalogEntry, format: String) {
         downloadError = null
         viewModelScope.launch {
             try {
@@ -193,19 +304,18 @@ class CatalogViewModel @Inject constructor(
 
     suspend fun cover(url: String): File? = repository.cover(url)
 
-    /** Returns an error message, or null when saved. */
-    fun saveSources(catalog: String, downloads: String): String? = try {
-        repository.saveSources(catalog, downloads)
+    private fun reset() {
         stack.forEach(::cancel)
         stack.clear()
-        cancel(root); cancel(newBooks)
-        root = Feed(repository.rootAddress(), "")
-        newBooks = Feed(repository.newBooksAddress(), "")
+        cancel(root); newBooks?.let(::cancel); popular?.let(::cancel)
+        capabilitiesJob?.cancel()
+        root = Feed(catalog?.address.orEmpty(), "")
+        newBooks = null
+        popular = null
+        bookSearch = catalog?.searchBooks
+        authorSearch = catalog?.searchAuthors
         closeSearch()
         loadHome()
-        null
-    } catch (e: IllegalArgumentException) {
-        e.message
     }
 
     private fun push(address: String, title: String) {
@@ -305,6 +415,6 @@ internal fun rankAuthors(entries: List<CatalogEntry>, query: String): List<Catal
 
 /** Books this app can open, and how many others the feed listed. */
 internal fun readableEntries(entries: List<CatalogEntry>): Pair<List<CatalogEntry>, Int> {
-    val shown = entries.filter { !it.isBook || it.downloads.isNotEmpty() }
+    val shown = entries.filter { !it.isBook || it.downloads.isNotEmpty() || it.web != null }
     return shown to entries.size - shown.size
 }

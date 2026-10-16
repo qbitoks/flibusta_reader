@@ -10,7 +10,6 @@
 
     <!-- Home -->
     <string name="catalog_new">New arrivals</string>
-    <string name="catalog_new_subtitle">Added this week</string>
     <string name="catalog_sections">Browse</string>
     <string name="catalog_source_footer">Source: %1$s</string>
     <string name="catalog_refresh">Refresh</string>
@@ -83,10 +82,41 @@
     <string name="catalog_error_import">The downloaded file can\'t be opened</string>
 
     <!-- Sources -->
-    <string name="catalog_sources">Sources</string>
-    <string name="catalog_sources_menu">Sources…</string>
-    <string name="catalog_sources_text">The catalog and the download server are set separately. HTTPS site addresses only, without a path, e.g. https://example.org.</string>
-    <string name="catalog_source_catalog">Catalog</string>
     <string name="catalog_source_downloads">Downloads</string>
     <string name="catalog_clear_history">Clear search history</string>
+
+    <!-- Catalogs -->
+    <string name="catalog_popular">Popular</string>
+    <string name="catalog_root_books">Catalog books (%1$d)</string>
+    <string name="catalog_open_web">Open on website</string>
+    <string name="catalog_web_only">The catalog doesn\'t serve the book file: borrow or buy it on the website.</string>
+    <string name="catalog_catalogs">Catalogs</string>
+    <string name="catalog_catalogs_menu">Catalogs…</string>
+    <string name="catalog_catalogs_text">Tap a catalog to open it. Search, new books and filters appear when the catalog supports them.</string>
+    <string name="catalog_none">No catalogs</string>
+    <string name="catalog_none_text">Add an OPDS catalog from the known ones or by address.</string>
+    <string name="catalog_add">Add catalog</string>
+    <string name="catalog_add_address">Add by address</string>
+    <string name="catalog_add_folder">Add as catalog</string>
+    <string name="catalog_added">Added to catalogs</string>
+    <string name="catalog_directory">Find catalogs on OPDS Home</string>
+    <string name="catalog_directory_text">OPDS Home lists other catalogs. Copy an address and choose «Add by address»: it is filled in from the clipboard.</string>
+    <string name="catalog_presets">Known catalogs</string>
+    <string name="catalog_presets_text">Some libraries host books without the rights holders\' permission: free access doesn\'t always mean lawful distribution.</string>
+    <string name="catalog_edit">Edit</string>
+    <string name="catalog_done">Done</string>
+    <string name="catalog_edit_title">Catalog</string>
+    <string name="catalog_save">Save</string>
+    <string name="catalog_field_title">Name</string>
+    <string name="catalog_field_address">OPDS address</string>
+    <string name="catalog_field_optional">optional</string>
+    <string name="catalog_sources_text">OPDS address is the feed\'s full HTTPS address, e.g. https://example.org/opds. A download server is needed only when a mirror serves the books: a site address without a path.</string>
+    <string name="catalog_remove_catalog">Remove catalog</string>
+    <string name="catalog_error_login">The site gives this book only after signing in</string>
+    <string name="catalog_error_elsewhere">The link leads to %1$s, which doesn\'t give the file</string>
+    <string name="catalog_error_not_feed">The catalog server answered with an error page instead of a section</string>
+    <string name="catalog_open_site">Open website</string>
+    <string name="catalog_open_web_hint">Download the book in the browser (sign in if needed), then open the file in Folio with «Open with».</string>
+    <string name="catalog_issue_note">This catalog recently refused a book: %1$s.</string>
+    <string name="catalog_issue_short">refuses files</string>
 </resources>

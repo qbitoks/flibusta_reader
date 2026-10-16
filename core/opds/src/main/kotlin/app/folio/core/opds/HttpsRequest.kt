@@ -7,7 +7,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /** Non-2xx answer. An [IOException], so callers can tell transient codes (5xx, 429) from the rest. */
-class HttpStatusException(val code: Int) : IOException("Сервер ответил HTTP $code. Повторите попытку или смените источник.")
+class HttpStatusException(val code: Int, val url: String = "") : IOException("Сервер ответил HTTP $code. Повторите попытку или смените источник.")
 
 /** The final (non-redirect) response; [stream] is closed when the consumer returns. */
 class HttpsResponse(
@@ -50,7 +50,7 @@ class HttpsRequest(
                     url = URL(url, connection.getHeaderField("Location") ?: error("Пустое перенаправление"))
                 } else {
                     val rangeMiss = ranged && code == 416
-                    if (code !in 200..299 && !rangeMiss) throw HttpStatusException(code)
+                    if (code !in 200..299 && !rangeMiss) throw HttpStatusException(code, url.toString())
                     val stream = if (rangeMiss) connection.errorStream ?: ByteArrayInputStream(ByteArray(0)) else connection.inputStream
                     return stream.use { consume(HttpsResponse(code, it, connection.contentLengthLong, url.toString(), connection::getHeaderField)) }
                 }

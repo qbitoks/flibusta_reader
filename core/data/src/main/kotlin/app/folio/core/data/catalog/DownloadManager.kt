@@ -41,6 +41,7 @@ import app.folio.core.data.db.FolioDatabase
 import app.folio.core.data.library.LibraryRepository
 import app.folio.core.opds.CatalogEntry
 import app.folio.core.opds.DownloadCheck
+import app.folio.core.opds.HttpStatusException
 import app.folio.core.opds.HttpsRequest
 import app.folio.core.opds.Resume
 import java.io.File
@@ -176,11 +177,14 @@ class DownloadManager @Inject constructor(
             var quickRetries = 0
             while (true) {
                 val before = withContext(Dispatchers.IO) { part.length() }
+                val address = catalog.downloadAddress(row.link)
                 try {
-                    transfer(id, catalog.downloadAddress(row.link), part, meta)
+                    transfer(id, address, part, meta)
                     break
                 } catch (e: CancellationException) {
                     throw e
+                } catch (e: HttpStatusException) {
+                    throw DownloadException(NetworkErrors.classify(e, address), e.message.orEmpty()).takeIf { NetworkErrors.isUnavailable(it.code) } ?: e
                 } catch (e: Exception) {
                     currentCoroutineContext().ensureActive()
                     val progressed = withContext(Dispatchers.IO) { part.length() } > before
@@ -188,8 +192,13 @@ class DownloadManager @Inject constructor(
                 }
             }
             val head = withContext(Dispatchers.IO) { part.inputStream().use { it.readNBytes(1024) } }
-            if (DownloadCheck.looksLikeHtml(head)) throw DownloadException(NetworkErrors.NOT_BOOK, "Сервер вернул страницу вместо книги")
+            if (DownloadCheck.looksLikeHtml(head)) {
+                val page = withContext(Dispatchers.IO) { part.inputStream().use { it.readNBytes(256 * 1024) } }
+                val code = if (DownloadCheck.asksToSignIn(page)) NetworkErrors.LOGIN else NetworkErrors.NOT_BOOK
+                throw DownloadException(code, "Сервер вернул страницу вместо книги")
+            }
             val result = library.import(Uri.fromFile(part), sourceUri = row.link)
+            catalog.reportDownload(row.link, null)
             val size = withContext(Dispatchers.IO) { part.length().also { part.delete() } }
             live.update { it - id }
             update(id) { it.copy(state = DownloadState.Done.name, bookId = result.bookId, bytes = size, total = size, error = null) }
@@ -204,6 +213,7 @@ class DownloadManager @Inject constructor(
                 throw CancellationException("Download stopped").apply { initCause(e) }
             }
             val retry = NetworkErrors.isTransient(e) && attempt + 1 < MAX_ATTEMPTS
+            if (!retry) catalog.reportDownload(row.link, NetworkErrors.code(e))
             Log.w(TAG, "Download ${row.format} ${row.link} failed (attempt $attempt, retry $retry)", e)
             val keepPart = NetworkErrors.isTransient(e)
             val bytes = withContext(Dispatchers.IO) { if (!keepPart) part.delete(); part.length() }

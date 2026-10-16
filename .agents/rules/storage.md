@@ -25,7 +25,10 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   Store margins as 0–15 percent of viewport width on each side; do not migrate old dp margins or linked text presets.
 - Store book warmth/contrast as separate `warmth`/`contrast` fields and inherit untouched controls.
 - Ignore obsolete footer-style, page-turn aliases and book settings-version markers; do not rewrite unopened books on shared edits.
-- `shared_prefs/catalog.xml`: `catalog`, `downloads` HTTPS origins; `recent` — catalog searches, newline-joined.
+- `shared_prefs/catalog.xml`: `catalogs` — JSON array of `{id,title,address,downloads?,searchBooks?,searchAuthors?,newBooks?}`
+  (`CatalogCodec`), `current` — selected catalog id; `recent` — catalog searches, newline-joined;
+  `download_issues` — `host<TAB>code` lines of catalogs whose last download was refused. The old `catalog`/`downloads`
+  origins migrate once into a Flibusta-style catalog and are removed; with neither key the starter set is seeded.
 
 ## Changing any of this
 - Preserve books and database contents; unsupported old schemas must fail instead of silently resetting data.

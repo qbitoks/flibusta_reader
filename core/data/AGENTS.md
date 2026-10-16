@@ -16,7 +16,8 @@
 - Import through `LibraryRepository.import`; retain its mutex and byte-based deduplication for concurrent imports.
 - Rebuild parsed caches through `LibraryRepository.load` from retained originals; caches are disposable.
 - Model new persisted mutations after repository suspend functions and DAO flows, rather than screen-owned files or tables.
-- Validate both catalog origins before saving either; route network requests through `core/opds` HTTPS helpers.
+- Validate a catalog's feed address and optional download origin before saving; route network requests through `core/opds` HTTPS helpers.
+- A download mirror rewrites only links whose host is its own catalog's (`downloadAddress`); other catalogs' links go as is.
 - Keep acquisition IDs distinct from imported book IDs; download rows use link hashes and retain the returned `bookId`.
 - Preserve unique worker scheduling and partial files for pause/resume; removing a download keeps the imported book.
 - Keep want-to-read/finished shelves as book flags; user collection membership belongs to Room cross-reference rows.

@@ -70,3 +70,10 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | format | PDF needs its own page viewer (later); DJVU (GPL native lib) and binary DOC are out | user-approved plan
 2026-10-16 | catalog | Order FB2, EPUB, MOBI, DOCX, RTF, HTML, TXT; fold conversions into «Другие форматы» | user-approved plan
 2026-10-16 | reader | PDF via platform PdfRenderer in its own pager viewer, not reflowed; no new deps | user-approved plan
+2026-10-16 | catalog | Many catalogs as JSON in `catalog` prefs, not Room | user-approved plan
+2026-10-16 | catalog | UI shows search/new/popular/facets only when the feed declares them; Flibusta keeps preset templates | user-approved plan
+2026-10-16 | opds | OPDS 2 JSON parsed with kotlinx-serialization-json (JsonElement, no plugin); `http://` feed links are upgraded to HTTPS, never fetched as HTTP | user-approved plan
+2026-10-16 | catalog | All catalogs from the user's list are presets, unverified ones with a note | user decision
+2026-10-16 | catalog | OPDS Home opens in the browser + paste-by-address: site unreachable, no known feed | user-approved plan
+2026-10-16 | catalog | Not presets: Всенаука (expired cert), ФантЛаб (404), FBSearch/Gallica/LITLIB (403) | checked from dev host
+2026-10-16 | catalog | Not presets: Maxima (DNS), E-reading (login), Самиздат via OPDS Home (no answer) | checked from dev host

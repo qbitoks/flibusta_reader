@@ -1,7 +1,5 @@
 package app.folio.core.opds
 
-import java.net.URI
-
 /** A titled link to another feed: «Все книги автора …», «Книги автора по сериям». */
 data class CatalogLink(val title: String, val href: String)
 
@@ -25,11 +23,30 @@ data class CatalogEntry(
     val size: Long? = null,
     /** Offered formats this app can't open («DJVU», «DOC»). */
     val otherFormats: List<String> = emptyList(),
+    /** The book's web page, for catalogs that only lend or sell (Open Library). */
+    val web: String? = null,
 ) {
     val isBook: Boolean get() = navigation == null
 }
 
-data class CatalogPage(val title: String, val entries: List<CatalogEntry>, val next: String?)
+/** A feed-level filter, like «Язык: Русский»; [active] marks the one this page shows. */
+data class Facet(val title: String, val href: String, val active: Boolean)
+
+data class FacetGroup(val title: String, val facets: List<Facet>)
+
+/** Declared search: a URL template with `{searchTerms}` (or `{?query}`), or an OpenSearch description to fetch first. */
+data class SearchLink(val href: String, val isDescription: Boolean)
+
+/** One feed page and what it declares about its catalog; the UI shows only what is there. */
+data class CatalogPage(
+    val title: String,
+    val entries: List<CatalogEntry>,
+    val next: String?,
+    val search: SearchLink? = null,
+    val newBooks: String? = null,
+    val popular: String? = null,
+    val facets: List<FacetGroup> = emptyList(),
+)
 
 object OpdsParser {
     /** MIME fragment → format name, in order of preference: FB2 is the catalog's own format, the rest are conversions. */
@@ -53,8 +70,12 @@ object OpdsParser {
         "x-stanza-cover-image",
     )
 
-    fun parse(xml: String, base: String): CatalogPage {
-        val root = Xml.parse(xml.toByteArray()).documentElement
+    /** An Atom (OPDS 1) or JSON (OPDS 2) feed. */
+    fun parse(text: String, base: String): CatalogPage =
+        if (text.trimStart().startsWith("{")) Opds2Parser.parse(text, base) else parseAtom(text, base)
+
+    private fun parseAtom(xml: String, base: String): CatalogPage {
+        val root = (runCatching { Xml.parse(xml.toByteArray()) }.getOrNull() ?: Xml.parse(repairQuotes(xml).toByteArray())).documentElement
         require(root.localName == "feed") { "Источник вернул не OPDS каталог" }
         fun resolve(link: org.w3c.dom.Element): String? {
             val href = link.getAttribute("href")
@@ -62,13 +83,11 @@ object OpdsParser {
             val ancestry = mutableListOf<org.w3c.dom.Element>()
             var node: org.w3c.dom.Node? = link
             while (node is org.w3c.dom.Element) { ancestry += node; node = node.parentNode }
-            fun relative(uri: String, value: String) = if (value.startsWith("?")) uri.substringBefore('#').substringBefore('?') + value else URI(uri).resolve(value).toString()
             var effective = base
             ancestry.asReversed().forEach { element ->
-                element.getAttributeNS("http://www.w3.org/XML/1998/namespace", "base").takeIf { it.isNotBlank() }?.let { effective = relative(effective, it) }
+                element.getAttributeNS("http://www.w3.org/XML/1998/namespace", "base").takeIf { it.isNotBlank() }?.let { effective = Links.resolve(effective, it) ?: effective }
             }
-            val address = runCatching { relative(effective, href) }.getOrNull() ?: return null
-            return address.takeIf { runCatching { URI(it).scheme == "https" }.getOrDefault(false) }
+            return Links.resolve(effective, href)
         }
         val entries = Xml.children(root, "entry").map { entry ->
             val links = Xml.children(entry, "link")
@@ -87,6 +106,9 @@ object OpdsParser {
                 ?.let(::resolve)
                 ?: links.firstOrNull { it.getAttribute("type").contains("atom+xml") && it.getAttribute("rel") !in listOf("related", "alternate") && !it.getAttribute("rel").contains("facet") }
                     ?.let(::resolve)
+                // OpenEdition links its publishers' feeds only as an Atom `alternate`.
+                ?: links.firstOrNull { it.getAttribute("type").contains("atom+xml") && it.getAttribute("rel") == "alternate" }
+                    ?.let(::resolve)
             val cover = coverRels.firstNotNullOfOrNull { rel -> links.firstOrNull { it.getAttribute("rel") == rel }?.let(::resolve) }
             val related = links
                 .filter { it.getAttribute("type").contains("atom+xml") && (it.getAttribute("rel") == "related" || it.getAttribute("rel").contains("facet")) }
@@ -94,6 +116,7 @@ object OpdsParser {
                 .filter { it.title.isNotBlank() }
             fun text(name: String) = Xml.children(entry, name).firstOrNull()?.textContent.orEmpty().trim()
             val content = Description.parse(text("content").ifBlank { text("summary") })
+            val web = links.firstOrNull { it.getAttribute("rel") == "alternate" && it.getAttribute("type").startsWith("text/html") }?.let(::resolve)
             CatalogEntry(
                 id = text("id").ifBlank { downloads.values.firstOrNull() ?: navigation ?: text("title") },
                 title = text("title"),
@@ -108,14 +131,54 @@ object OpdsParser {
                 year = text("issued").ifBlank { content.details["Год издания"].orEmpty() }.takeIf { it.isNotBlank() },
                 size = content.details["Размер"]?.let(::parseSize),
                 otherFormats = otherFormats.toList(),
+                web = web.takeIf { downloads.isEmpty() && navigation == null },
             )
         }
-        val next = Xml.children(root, "link").firstOrNull { it.getAttribute("rel") == "next" }?.let(::resolve)
-        return CatalogPage(Xml.children(root, "title").firstOrNull()?.textContent.orEmpty().trim(), entries, next)
+        val feedLinks = Xml.children(root, "link")
+        /** Feed-level link, or a home entry's own link with that rel (iknigi puts «Новинки» there). */
+        fun rel(value: String) = (feedLinks + Xml.children(root, "entry").flatMap { Xml.children(it, "link") })
+            .firstOrNull { it.getAttribute("rel") == value }?.let(::resolve)
+        val searches = feedLinks.filter { it.getAttribute("rel") == "search" }
+        val search = searches.firstOrNull { it.getAttribute("href").contains("{searchTerms}") }?.let(::resolve)?.let { SearchLink(it, isDescription = false) }
+            ?: searches.firstOrNull { it.getAttribute("type").contains("opensearchdescription") }?.let(::resolve)?.let { SearchLink(it, isDescription = true) }
+        val facets = feedLinks.filter { it.getAttribute("rel") == "http://opds-spec.org/facet" }
+            .mapNotNull { link ->
+                val href = resolve(link) ?: return@mapNotNull null
+                val group = link.getAttributeNS(OPDS_NS, "facetGroup").ifBlank { link.getAttribute("opds:facetGroup") }.trim()
+                group to Facet(link.getAttribute("title").trim(), href, link.getAttributeNS(OPDS_NS, "activeFacet") == "true")
+            }
+            .filter { it.second.title.isNotEmpty() }
+            .groupBy({ it.first }, { it.second })
+            .map { (title, list) -> FacetGroup(title, list) }
+        return CatalogPage(
+            title = Xml.children(root, "title").firstOrNull()?.textContent.orEmpty().trim(),
+            entries = entries,
+            next = feedLinks.firstOrNull { it.getAttribute("rel") == "next" }?.let(::resolve),
+            search = search,
+            newBooks = rel("http://opds-spec.org/sort/new"),
+            popular = rel("http://opds-spec.org/sort/popular"),
+            facets = facets,
+        )
     }
 
+    /**
+     * Librusec writes raw quotes inside a link's last attribute (`title="Книги серии "Метро""`);
+     * escape quotes between that attribute's opening quote and the tag's end.
+     */
+    internal fun repairQuotes(xml: String): String =
+        Regex("""(<link\b[^<>]*\s[\w:]+=")([^<>]*)("\s*/?>)""").replace(xml) { m ->
+            m.groupValues[1] + m.groupValues[2].replace("\"", "&quot;") + m.groupValues[3]
+        }
+
+    internal fun formatOf(type: String): String? = readable.firstOrNull { (key, _) -> type.contains(key) }?.second
+
+    internal fun sortFormats(downloads: Map<String, String>): Map<String, String> =
+        downloads.entries.sortedBy { preference.indexOf(it.key) }.associate { it.key to it.value }
+
+    private const val OPDS_NS = "http://opds-spec.org/2010/catalog"
+
     /** «application/x-mobipocket-ebook» → «MOBI», «application/rtf+zip» → «RTF». */
-    private fun formatName(type: String): String? {
+    internal fun formatName(type: String): String? {
         val subtype = type.substringAfter('/', "").substringBefore(';').removeSuffix("+zip").removePrefix("x-").trim()
         if (subtype.isEmpty() || subtype.contains("atom")) return null
         return when {

@@ -10,7 +10,6 @@
 
     <!-- Home -->
     <string name="catalog_new">Новинки</string>
-    <string name="catalog_new_subtitle">Поступления за неделю</string>
     <string name="catalog_sections">Разделы</string>
     <string name="catalog_source_footer">Источник: %1$s</string>
     <string name="catalog_refresh">Обновить</string>
@@ -85,10 +84,41 @@
     <string name="catalog_error_import">Не удалось открыть скачанный файл</string>
 
     <!-- Sources -->
-    <string name="catalog_sources">Источники</string>
-    <string name="catalog_sources_menu">Источники…</string>
-    <string name="catalog_sources_text">Каталог и сервер скачивания настраиваются отдельно. Только HTTPS-адреса сайтов без пути, например https://example.org.</string>
-    <string name="catalog_source_catalog">Каталог</string>
     <string name="catalog_source_downloads">Скачивание</string>
     <string name="catalog_clear_history">Очистить историю поиска</string>
+
+    <!-- Catalogs -->
+    <string name="catalog_popular">Популярное</string>
+    <string name="catalog_root_books">Книги каталога (%1$d)</string>
+    <string name="catalog_open_web">Открыть на сайте</string>
+    <string name="catalog_web_only">Каталог не отдаёт файл книги: её можно взять почитать или купить на сайте.</string>
+    <string name="catalog_catalogs">Каталоги</string>
+    <string name="catalog_catalogs_menu">Каталоги…</string>
+    <string name="catalog_catalogs_text">Нажмите на каталог, чтобы открыть его. Поиск, новинки и фильтры появляются, если каталог их поддерживает.</string>
+    <string name="catalog_none">Нет каталогов</string>
+    <string name="catalog_none_text">Добавьте OPDS-каталог из списка известных или по адресу.</string>
+    <string name="catalog_add">Добавить каталог</string>
+    <string name="catalog_add_address">Добавить по адресу</string>
+    <string name="catalog_add_folder">Добавить как каталог</string>
+    <string name="catalog_added">Добавлено в каталоги</string>
+    <string name="catalog_directory">Найти каталоги на OPDS Home</string>
+    <string name="catalog_directory_text">OPDS Home собирает адреса других каталогов. Скопируйте адрес и выберите «Добавить по адресу»: он подставится из буфера обмена.</string>
+    <string name="catalog_presets">Известные каталоги</string>
+    <string name="catalog_presets_text">Часть библиотек размещает книги без разрешения правообладателей: бесплатный доступ не всегда значит разрешённое распространение.</string>
+    <string name="catalog_edit">Изменить</string>
+    <string name="catalog_done">Готово</string>
+    <string name="catalog_edit_title">Каталог</string>
+    <string name="catalog_save">Сохранить</string>
+    <string name="catalog_field_title">Название</string>
+    <string name="catalog_field_address">Адрес OPDS</string>
+    <string name="catalog_field_optional">необязательно</string>
+    <string name="catalog_sources_text">Адрес OPDS — полный HTTPS-адрес ленты, например https://example.org/opds. Сервер скачивания нужен, только если книги отдаёт зеркало: адрес сайта без пути.</string>
+    <string name="catalog_remove_catalog">Удалить каталог</string>
+    <string name="catalog_error_login">Сайт отдаёт эту книгу только после входа</string>
+    <string name="catalog_error_elsewhere">Ссылка ведёт на %1$s, и он не отдаёт файл</string>
+    <string name="catalog_error_not_feed">Сервер каталога ответил страницей ошибки вместо раздела</string>
+    <string name="catalog_open_site">Открыть сайт</string>
+    <string name="catalog_open_web_hint">Скачайте книгу в браузере (если нужно, войдите на сайт), затем откройте файл в Folio через «Открыть с помощью».</string>
+    <string name="catalog_issue_note">Этот каталог недавно не отдал книгу: %1$s.</string>
+    <string name="catalog_issue_short">не отдаёт файлы</string>
 </resources>

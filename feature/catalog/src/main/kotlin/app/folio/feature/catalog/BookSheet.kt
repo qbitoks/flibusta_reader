@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Pause
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -127,6 +129,18 @@ internal fun BookSheet(
                         Text(errorText(item.entity.error), style = FolioType.footnote, color = c.destructive, modifier = Modifier.padding(horizontal = 12.dp))
                     }
                 }
+                // Every format the catalog refused: the website may still give the book (after a sign-in).
+                val refused = main.isNotEmpty() && main.all { (_, item) -> item?.state == DownloadState.Failed && NetworkErrors.isUnavailable(item.entity.error) }
+                if (readable == null && refused) {
+                    val uri = LocalUriHandler.current
+                    val page = entry.web ?: entry.downloads.values.first()
+                    CapsuleButton(
+                        stringResource(R.string.catalog_open_web), { runCatching { uri.openUri(page) } },
+                        modifier = Modifier.fillMaxWidth(),
+                        leading = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, tint = c.label, modifier = Modifier.padding(end = 8.dp).size(20.dp)) },
+                    )
+                    Note(stringResource(R.string.catalog_open_web_hint))
+                }
                 if (readable == null && extra.isNotEmpty() && !showExtra) {
                     Text(
                         stringResource(R.string.catalog_other_formats, extra.joinToString(", ") { it.first }),
@@ -137,9 +151,20 @@ internal fun BookSheet(
                             .clickable(role = Role.Button) { showExtra = true }.padding(vertical = 10.dp),
                     )
                 }
+                val web = entry.web
+                if (entry.downloads.isEmpty() && web != null) {
+                    val uri = LocalUriHandler.current
+                    CapsuleButton(
+                        stringResource(R.string.catalog_open_web), { runCatching { uri.openUri(web) } },
+                        modifier = Modifier.fillMaxWidth(), container = c.label, contentColor = c.background,
+                        leading = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, tint = c.background, modifier = Modifier.padding(end = 8.dp).size(20.dp)) },
+                    )
+                }
                 vm.downloadError?.let { Text(errorText(it), style = FolioType.footnote, color = c.destructive, modifier = Modifier.padding(horizontal = 12.dp)) }
                 when {
                     entry.downloads.isEmpty() && entry.otherFormats.isNotEmpty() -> Note(stringResource(R.string.catalog_unreadable, entry.otherFormats.joinToString(", ")))
+                    entry.downloads.isEmpty() && entry.web != null -> Note(stringResource(R.string.catalog_web_only))
+                    readable == null && vm.issueFor(entry) != null -> Note(stringResource(R.string.catalog_issue_note, errorText(vm.issueFor(entry))))
                     entry.downloads.isEmpty() -> Note(stringResource(R.string.catalog_no_downloads))
                     main.count { it.first in mainFormats } > 1 && readable == null -> Note(stringResource(R.string.catalog_formats_hint))
                 }
@@ -254,4 +279,4 @@ private fun DownloadCapsule(
     }
 }
 
-private val mainFormats = setOf("FB2", "EPUB")
+internal val mainFormats = setOf("FB2", "EPUB")

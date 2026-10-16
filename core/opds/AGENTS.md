@@ -6,6 +6,8 @@ downloads, files or UI (`core/data/.../catalog/CatalogRepository.kt`, `feature/c
 ## Entry points
 - `core/opds/src/main/kotlin/app/folio/core/opds/OpdsParser.kt` — entries, navigation, EPUB/FB2 downloads,
   cover, related links, genres/year/size, `next`; server HTML `<content>` → plain paragraphs (`Description`)
+- `core/opds/src/main/kotlin/app/folio/core/opds/Opds2Parser.kt` — OPDS 2 JSON → the same `CatalogPage`; `OpdsParser.parse` picks it for `{`
+- `core/opds/src/main/kotlin/app/folio/core/opds/Links.kt` — link resolving (http→https), `SearchTemplate.fill`, `OpenSearch.template`
 - `core/opds/src/main/kotlin/app/folio/core/opds/HttpsRequest.kt` — manual redirects (HTTPS only, max 6),
   timeouts (connect 20 s, read 30 s by default), request headers, `HttpStatusException` for non-2xx
 - `core/opds/src/main/kotlin/app/folio/core/opds/Resume.kt` — resume plan for `Range` downloads; HTML-instead-of-book check
@@ -13,7 +15,8 @@ downloads, files or UI (`core/data/.../catalog/CatalogRepository.kt`, `feature/c
 
 ## Conventions
 - No Android or Compose imports.
-- Inherit `xml:base` from feed down to link; resolve against the final response URL; keep only HTTPS links.
+- Inherit `xml:base` from feed down to link; resolve against the final response URL; `http` links become `https`, other schemes are dropped.
+- Feed capabilities (search, sort/new, sort/popular, facets) come from feed-level links; sort links also from home entries (iknigi).
 - Feed size limit (5 MiB) is enforced by `CatalogRepository`, book limit (50 MiB) by `DownloadManager`.
 - A book entry has `navigation == null`; PDF-only books have empty `downloads` and non-empty `otherFormats`.
 

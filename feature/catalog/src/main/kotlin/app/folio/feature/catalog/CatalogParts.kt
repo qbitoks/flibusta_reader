@@ -1,5 +1,7 @@
 package app.folio.feature.catalog
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalUriHandler
 import android.text.format.Formatter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -106,6 +108,9 @@ internal fun errorText(code: String?): String {
         code == NetworkErrors.NOT_BOOK -> stringResource(R.string.catalog_error_not_book)
         code == NetworkErrors.TOO_BIG -> stringResource(R.string.catalog_error_too_big)
         code == NetworkErrors.IMPORT -> stringResource(R.string.catalog_error_import)
+        code == NetworkErrors.LOGIN -> stringResource(R.string.catalog_error_login)
+        code == NetworkErrors.NOT_FEED -> stringResource(R.string.catalog_error_not_feed)
+        code.startsWith(NetworkErrors.ELSEWHERE) -> stringResource(R.string.catalog_error_elsewhere, code.removePrefix(NetworkErrors.ELSEWHERE))
         http != null && http >= 500 -> stringResource(R.string.catalog_error_server, http)
         http != null -> stringResource(R.string.catalog_error_http, http)
         else -> code.removePrefix("other:")
@@ -235,12 +240,21 @@ internal fun LoadingBlock(text: String? = null, modifier: Modifier = Modifier) {
 
 /** A failed load: what went wrong and «Повторить». */
 @Composable
-internal fun ErrorBlock(code: String?, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ErrorBlock(code: String?, onRetry: () -> Unit, modifier: Modifier = Modifier, site: String? = null) {
     val c = Folio.colors
+    val uri = LocalUriHandler.current
     Column(modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(Icons.Rounded.ErrorOutline, null, tint = c.secondaryLabel, modifier = Modifier.size(28.dp))
         Text(errorText(code), style = FolioType.subheadline, color = c.secondaryLabel, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp, bottom = 14.dp))
         CapsuleButton(stringResource(R.string.catalog_retry), onRetry)
+        // A sign-in or an error page won't go away on retry; the website may still work.
+        val origin = site?.let { runCatching { java.net.URL(it).let { u -> "${u.protocol}://${u.authority}/" } }.getOrNull() }
+        if (origin != null && (code == NetworkErrors.LOGIN || code == NetworkErrors.NOT_FEED || NetworkErrors.isUnavailable(code))) {
+            Text(
+                stringResource(R.string.catalog_open_site), style = FolioType.subheadline, color = c.label,
+                modifier = Modifier.padding(top = 10.dp).clip(RoundedCornerShape(8.dp)).clickable { runCatching { uri.openUri(origin) } }.padding(8.dp),
+            )
+        }
     }
 }
 
@@ -274,7 +288,7 @@ internal fun LazyListScope.feedItems(
     val books = shown.filter { it.isBook }
     if (feed.page == null) {
         when {
-            feed.error != null -> item(key = "error") { ErrorBlock(feed.error, onRetry) }
+            feed.error != null -> item(key = "error") { ErrorBlock(feed.error, onRetry, site = feed.address) }
             else -> item(key = "loading") { LoadingBlock(loadingText) }
         }
         return
