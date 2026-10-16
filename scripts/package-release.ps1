@@ -1,5 +1,5 @@
 param(
-    [string]$Apk = 'app/build/outputs/apk/debug/app-debug.apk',
+    [string]$Apk = 'app/build/outputs/apk/release/app-release.apk',
     [string]$OutDir = 'artifacts/release',
     [string]$Tag = '',
     [ValidateSet('preview','ci')][string]$SigningKind = 'ci',
@@ -44,7 +44,7 @@ $notes = @"
 
 **Файл:** ``$($metadata.apkName)``.
 
-**Для кого:** телефоны и планшеты с Android $($metadata.minimumAndroid)+ (API $($metadata.minSdk)+). Универсальная debug-сборка; отдельные APK для архитектур не нужны. Для технического тестирования прототипа, не для Google Play. Для iPhone/iPad, Windows и более старого Android не подходит.
+**Для кого:** телефоны и планшеты с Android $($metadata.minimumAndroid)+ (API $($metadata.minSdk)+). Универсальная release-сборка; отдельные APK для архитектур не нужны. Для технического тестирования прототипа, не для Google Play. Для iPhone/iPad, Windows и более старого Android не подходит.
 
 **Установка:** разрешите установку APK приложению, которым открываете файл. $upgrade
 
