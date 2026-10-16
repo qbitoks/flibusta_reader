@@ -281,7 +281,7 @@ class DownloadManager @Inject constructor(
             }
         }
         val request = HttpsRequest(readTimeoutMs = READ_TIMEOUT_MS) { url -> (url.openConnection() as HttpURLConnection).also(connection::set) }
-        return request.open(address, headers) { response ->
+        return request.open(address, headers, catalog.auth(address)) { response ->
             val validator = response.header("ETag")?.takeUnless { it.startsWith("W/") } ?: response.header("Last-Modified")
             val (append, total) = when (val plan = Resume.plan(have, response.code, response.header("Content-Range"), response.contentLength)) {
                 Resume.Complete -> { meta.total = have; return@open true }

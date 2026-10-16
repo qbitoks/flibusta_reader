@@ -66,7 +66,8 @@ Put knowledge in the deepest file whose scope covers it. This file holds only re
 <!-- PROJECT-OWNED BELOW: filled by bootstrap; template upgrades never touch it (.agents/playbooks/upgrade.md). -->
 ## Project
 
-- What: Folio, a native Android e-reader with an OPDS catalog. No app server, no accounts.
+- What: Folio, a native Android e-reader with an OPDS catalog. No app server or Folio accounts; optional
+  per-catalog sign-in (HTTP Basic, `core/data/.../catalog/CatalogCredentials.kt`).
 - Stack: Kotlin 2.4, Jetpack Compose, Hilt, Room; AGP 9.4, Gradle 9.8; minSdk 34, compileSdk/targetSdk 37.
   Own FB2/EPUB parser and page layout (no Readium), Apple Books–style UI. Areas: `.agents/MAP.md`.
   User-facing product description: `README.md`. Why this stack: `.agents/decisions/0004-prototype-engine.md`.

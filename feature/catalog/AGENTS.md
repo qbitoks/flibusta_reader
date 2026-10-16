@@ -38,6 +38,9 @@ downloads live in `core/data/.../catalog/` (`CatalogRepository`, `DownloadManage
 - «Каталоги»: tap opens any catalog (no add step), ★ toggles favorite, long press edits. Favorites feed the switcher
   menu under the title; presets are never deleted, only unstarred or reset; only own catalogs are removed.
 - Downloads open nothing by themselves: the book sheet and «Загрузки» show «Читать» when done.
+- Sign-in: «Логин»/«Пароль» in `EditCatalog` (`vm.saveCatalog(catalog, login, password)`; empty password keeps the
+  saved one, blank login signs out). A `LOGIN` error offers «Войти» via `LocalSignIn`, which opens that sheet.
+  Never prefill or show the saved password. Agents don't type real passwords; the user tests sign-in on the phone.
 
 ## Gotchas
 - `Feed` objects hold Compose state and their `LazyListState`; keep them in the ViewModel, not in composables.

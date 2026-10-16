@@ -31,6 +31,9 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   row or a preset; `recent` — catalog searches, newline-joined;
   `download_issues` — `host<TAB>code` lines of catalogs whose last download was refused. The old `catalog`/`downloads`
   origins migrate once into a Flibusta-style catalog and are removed; with neither key the starter set is seeded.
+- `shared_prefs/catalog_auth.xml` (`CatalogCredentials`): catalog id → `login\n<base64 IV+AES-GCM ciphertext>`, key
+  `catalog_auth` in AndroidKeyStore. Never store the password in plain text; an undecryptable one reads as absent.
+  Removing an own catalog removes its row; presets keep it. `allowBackup` stays false (the key doesn't travel).
 
 ## Changing any of this
 - Preserve books and database contents; unsupported old schemas must fail instead of silently resetting data.

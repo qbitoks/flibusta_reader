@@ -69,6 +69,9 @@ import java.io.File
 /** Loads (and caches) catalog images; provided by [CatalogScreen]. */
 internal val LocalCoverLoader = staticCompositionLocalOf<suspend (String) -> File?> { { null } }
 
+/** Opens the current catalog's sign-in, offered where a feed or download answered «нужен вход». */
+internal val LocalSignIn = staticCompositionLocalOf<(() -> Unit)?> { null }
+
 /** A catalog cover: the generated cover until the image arrives, then the image. */
 @Composable
 internal fun RemoteCover(
@@ -246,6 +249,11 @@ internal fun ErrorBlock(code: String?, onRetry: () -> Unit, modifier: Modifier =
     Column(modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(Icons.Rounded.ErrorOutline, null, tint = c.secondaryLabel, modifier = Modifier.size(28.dp))
         Text(errorText(code), style = FolioType.subheadline, color = c.secondaryLabel, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp, bottom = 14.dp))
+        val signIn = LocalSignIn.current
+        if (code == NetworkErrors.LOGIN && signIn != null) {
+            CapsuleButton(stringResource(R.string.catalog_sign_in), signIn)
+            Spacer(Modifier.height(8.dp))
+        }
         CapsuleButton(stringResource(R.string.catalog_retry), onRetry)
         // A sign-in or an error page won't go away on retry; the website may still work.
         val origin = site?.let { runCatching { java.net.URL(it).let { u -> "${u.protocol}://${u.authority}/" } }.getOrNull() }

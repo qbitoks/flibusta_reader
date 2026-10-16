@@ -18,6 +18,7 @@
 - Model new persisted mutations after repository suspend functions and DAO flows, rather than screen-owned files or tables.
 - Validate a catalog's feed address and optional download origin before saving; route network requests through `core/opds` HTTPS helpers.
 - A download mirror rewrites only links whose host is its own catalog's (`downloadAddress`); other catalogs' links go as is.
+- Catalog requests pass `CatalogRepository.auth(link)` to `HttpsRequest`: it scopes a sign-in to the catalog host and mirror.
 - Keep acquisition IDs distinct from imported book IDs; download rows use link hashes and retain the returned `bookId`.
 - Preserve unique worker scheduling and partial files for pause/resume; removing a download keeps the imported book.
 - Keep want-to-read/finished shelves as book flags; user collection membership belongs to Room cross-reference rows.

@@ -48,6 +48,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -77,16 +79,16 @@ private sealed interface CatalogsPage {
  * user's own. Tap opens, ★ keeps it at the top, touch and hold edits; «Добавить по адресу» ends «Мои».
  */
 @Composable
-internal fun CatalogsSheet(vm: CatalogViewModel, onDismiss: () -> Unit) {
+internal fun CatalogsSheet(vm: CatalogViewModel, onDismiss: () -> Unit, edit: Catalog? = null) {
     val c = Folio.colors
-    var page by remember { mutableStateOf<CatalogsPage>(CatalogsPage.List) }
+    var page by remember { mutableStateOf<CatalogsPage>(edit?.let { CatalogsPage.Edit(it) } ?: CatalogsPage.List) }
     FolioSheet(onDismiss = onDismiss, containerColor = c.groupedBackground) {
         when (val p = page) {
             CatalogsPage.List -> CatalogList(vm, onDismiss, onEdit = { page = CatalogsPage.Edit(it) })
             is CatalogsPage.Edit -> EditCatalog(
                 vm, p.catalog,
-                onBack = { page = CatalogsPage.List },
-                onSaved = { if (p.catalog == null) onDismiss() else page = CatalogsPage.List },
+                onBack = { if (edit != null) onDismiss() else page = CatalogsPage.List },
+                onSaved = { if (p.catalog == null || edit != null) onDismiss() else page = CatalogsPage.List },
             )
         }
     }
@@ -232,7 +234,10 @@ private fun CatalogRow(
     }
 }
 
-/** Name and feed address, the format «Скачать» takes, a download mirror under «Дополнительно»; × goes back, ✓ saves. */
+/**
+ * Name and feed address, the format «Скачать» takes, an optional sign-in, a download mirror under
+ * «Дополнительно»; × goes back, ✓ saves. A saved password is never shown: an empty field keeps it.
+ */
 @Composable
 private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> Unit, onSaved: () -> Unit) {
     val c = Folio.colors
@@ -253,6 +258,10 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
     }
     var downloads by remember { mutableStateOf(catalog?.downloads.orEmpty()) }
     var format by remember { mutableStateOf(catalog?.format ?: Catalog.DEFAULT_FORMAT) }
+    val logins by vm.logins.collectAsStateWithLifecycle()
+    val savedLogin = catalog?.let { logins[it.id] }
+    var login by remember { mutableStateOf(savedLogin.orEmpty()) }
+    var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     SheetHeader(
         stringResource(if (catalog == null) R.string.catalog_add_address else R.string.catalog_edit_title),
@@ -269,7 +278,7 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
                 {
                     val base = catalog ?: Catalog(vm.newCatalogId(), "", "")
                     val edited = base.copy(title = title, address = address.trim().replaceFirst(Regex("^http://"), "https://"), downloads = downloads, format = format)
-                    error = vm.saveCatalog(edited)
+                    error = vm.saveCatalog(edited, login, password.ifEmpty { null })
                     if (error == null) onSaved()
                 },
                 style = CircleButtonStyle.Confirm,
@@ -299,6 +308,17 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
             })
         }
         Footnote(stringResource(R.string.catalog_format_text))
+        GroupHeader(stringResource(R.string.catalog_sign_in_group))
+        GroupedCard {
+            Field(stringResource(R.string.catalog_field_login), login, KeyboardType.Email, placeholder = stringResource(R.string.catalog_field_optional)) { login = it; error = null }
+            HorizontalDivider(color = c.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 18.dp))
+            Field(
+                stringResource(R.string.catalog_field_password), password, KeyboardType.Password,
+                placeholder = stringResource(if (savedLogin != null && login.trim() == savedLogin) R.string.catalog_password_saved else R.string.catalog_field_optional),
+                secret = true,
+            ) { password = it; error = null }
+        }
+        Footnote(stringResource(R.string.catalog_sign_in_text))
         GroupHeader(stringResource(R.string.catalog_advanced))
         GroupedCard {
             Field(stringResource(R.string.catalog_source_downloads), downloads, KeyboardType.Uri, placeholder = stringResource(R.string.catalog_field_optional)) { downloads = it; error = null }
@@ -317,7 +337,7 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
 }
 
 @Composable
-private fun Field(label: String, value: String, type: KeyboardType, placeholder: String? = null, onChange: (String) -> Unit) {
+private fun Field(label: String, value: String, type: KeyboardType, placeholder: String? = null, secret: Boolean = false, onChange: (String) -> Unit) {
     val c = Folio.colors
     Row(Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = FolioType.body, color = c.label, modifier = Modifier.width(118.dp))
@@ -327,7 +347,8 @@ private fun Field(label: String, value: String, type: KeyboardType, placeholder:
             singleLine = true,
             textStyle = FolioType.body.copy(color = c.secondaryLabel),
             cursorBrush = SolidColor(c.label),
-            keyboardOptions = KeyboardOptions(keyboardType = type),
+            keyboardOptions = KeyboardOptions(keyboardType = type, autoCorrectEnabled = false),
+            visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
             modifier = Modifier.weight(1f).padding(vertical = 13.dp),
             decorationBox = { inner ->
                 if (value.isEmpty() && placeholder != null) Text(placeholder, style = FolioType.body, color = c.tertiaryLabel)

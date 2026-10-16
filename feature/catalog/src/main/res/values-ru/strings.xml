@@ -132,4 +132,10 @@
     <string name="catalog_mirror_text">Нужен, только если книги отдаёт зеркало: адрес сайта без пути.</string>
     <string name="catalog_reset">Вернуть исходные адреса</string>
     <string name="catalog_all_catalogs">Все каталоги…</string>
+    <string name="catalog_sign_in">Войти</string>
+    <string name="catalog_sign_in_group">Вход</string>
+    <string name="catalog_field_login">Логин</string>
+    <string name="catalog_field_password">Пароль</string>
+    <string name="catalog_password_saved">сохранён</string>
+    <string name="catalog_sign_in_text">Только если каталог просит войти. Пароль хранится зашифрованным на этом телефоне и уходит только по HTTPS на этот каталог и его сервер скачивания.</string>
 </resources>

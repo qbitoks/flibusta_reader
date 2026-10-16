@@ -38,4 +38,34 @@ class HttpsRequestTest {
             fail("Redirect loop accepted")
         } catch (_: IllegalStateException) { assertEquals(6, calls) }
     }
+    @Test fun signInGoesOnlyToCatalogHostsAcrossRedirects() {
+        val sent = mutableListOf<Pair<String, String?>>()
+        val hops = listOf("https://mirror.example/b/1", "https://elsewhere.example/b/1", "https://books.example/b/2", null)
+        val request = HttpsRequest { url ->
+            val i = sent.size
+            object : HttpURLConnection(url) {
+                override fun connect() {}
+                override fun disconnect() {}
+                override fun usingProxy() = false
+                override fun getResponseCode(): Int {
+                    sent += url.host to getRequestProperty("Authorization")
+                    return if (hops[i] != null) 302 else 200
+                }
+                override fun getHeaderField(name: String?) = if (name == "Location") hops[i] else null
+                override fun getInputStream() = ByteArray(0).inputStream()
+            }
+        }
+        val auth = BasicAuth("reader", "secret", listOf("Books.example", "mirror.example"))
+        request.open("https://books.example/b/1", headers = mapOf("Authorization" to "Basic forged"), auth = auth) { }
+        assertEquals(listOf("books.example", "mirror.example", "elsewhere.example", "books.example"), sent.map { it.first })
+        val header = "Basic " + java.util.Base64.getEncoder().encodeToString("reader:secret".toByteArray())
+        assertEquals(listOf(header, header, null, header), sent.map { it.second })
+    }
+    @Test fun signInNeverGoesOverPlainHttp() {
+        val auth = BasicAuth("reader", "secret", listOf("books.example"))
+        assertTrue(auth.appliesTo(URL("https://books.example/opds")))
+        assertFalse(auth.appliesTo(URL("http://books.example/opds")))
+        assertFalse(auth.appliesTo(URL("https://books.example.evil/opds")))
+        assertFalse(auth.toString().contains("secret"))
+    }
 }

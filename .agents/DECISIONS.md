@@ -73,3 +73,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | catalog | Book sheet: one best-format capsule (EPUB first) + ••• menu of all formats | user-approved design
 2026-10-16 | catalog | Extra formats stay separate library books | merging would change book ids and storage
 2026-10-16 | catalog | Per-catalog download format (EPUB/FB2; Flibusta FB2); old rows decode as EPUB | user decision, no migration
+2026-10-16 | catalog | Optional per-catalog sign-in; password AES-GCM with a non-exportable Keystore key in `catalog_auth` prefs | user confirmed relaxing «no accounts» for Librusec
+2026-10-16 | opds | Basic auth sent preemptively, only over HTTPS to the catalog host + mirror, checked per redirect hop | no challenge round-trip; other hosts never get it

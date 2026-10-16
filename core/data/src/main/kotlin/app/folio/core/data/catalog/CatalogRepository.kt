@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import app.folio.core.opds.BasicAuth
 import app.folio.core.opds.CatalogPage
 import app.folio.core.opds.DownloadCheck
 import app.folio.core.opds.HttpStatusException
@@ -30,12 +31,13 @@ import javax.inject.Singleton
 /**
  * OPDS catalog over HTTPS: feeds (cached for a few minutes, retried once on a transient failure),
  * cover thumbnails, recent searches and the saved [Catalog] rows (JSON in the `catalog` prefs) over
- * [CatalogPresets], see [CatalogDirectory].
- * Downloads live in [DownloadManager].
+ * [CatalogPresets], see [CatalogDirectory]. A catalog with a saved sign-in ([CatalogCredentials]) gets
+ * HTTP Basic auth on its own hosts only ([auth]). Downloads live in [DownloadManager].
  */
 @Singleton
 class CatalogRepository @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val credentials: CatalogCredentials,
 ) {
     private val prefs = context.getSharedPreferences("catalog", Context.MODE_PRIVATE)
     private val feeds = Collections.synchronizedMap(object : LinkedHashMap<String, Pair<Long, CatalogPage>>(16, 0.75f, true) {
@@ -95,8 +97,35 @@ class CatalogRepository @Inject constructor(
         feeds.clear()
     }
 
-    /** Deletes the user's own catalog; a preset only loses its star and edits. */
+    /** Catalog id → login of the catalogs the user signed in to. */
+    val logins: StateFlow<Map<String, String>> = credentials.logins
+
+    /** Saves or (blank [login]) forgets the catalog's sign-in; a null [password] keeps the saved one. */
+    fun signIn(id: String, login: String, password: String?) {
+        credentials.save(id, login, password)
+        feeds.clear()
+        searchTemplates.clear()
+    }
+
+    /**
+     * Sign-in for [link]: the saved login of the catalog whose feed or download mirror is on [link]'s host,
+     * scoped to just those two hosts so a redirect elsewhere never carries it.
+     */
+    fun auth(link: String): BasicAuth? {
+        val host = runCatching { URL(link).host }.getOrNull() ?: return null
+        val logins = credentials.logins.value
+        if (logins.isEmpty()) return null
+        return CatalogDirectory.all(_catalogs.value).firstNotNullOfOrNull { c ->
+            val hosts = listOfNotNull(c.host, c.downloads?.let { runCatching { URL(it).host }.getOrNull() })
+            val login = logins[c.id]
+            if (login == null || hosts.none { it.equals(host, ignoreCase = true) }) return@firstNotNullOfOrNull null
+            credentials.password(c.id)?.let { BasicAuth(login, it, hosts) }
+        }
+    }
+
+    /** Deletes the user's own catalog with its sign-in; a preset only loses its star and edits. */
     fun remove(id: String) {
+        if (CatalogPresets.preset(id) == null) credentials.remove(id)
         store(_catalogs.value.filterNot { it.id == id })
         if (_current.value?.id == id && find(id) == null) {
             _current.value = fallback()
@@ -152,7 +181,7 @@ class CatalogRepository @Inject constructor(
         if (searchTemplates.containsKey(declared.href)) return searchTemplates[declared.href]
         val template = withRetry {
             runInterruptible(Dispatchers.IO) {
-                HttpsRequest().read(declared.href) { stream, _, finalUrl ->
+                HttpsRequest().read(declared.href, auth(declared.href)) { stream, _, finalUrl ->
                     OpenSearch.template(bounded(stream, MAX_COVER_BYTES).toString(Charsets.UTF_8), finalUrl)
                 }
             }
@@ -173,7 +202,7 @@ class CatalogRepository @Inject constructor(
     private suspend fun fetchPage(address: String): CatalogPage {
         val page = withRetry {
             runInterruptible(Dispatchers.IO) {
-                HttpsRequest(readTimeoutMs = FEED_READ_TIMEOUT_MS).read(address) { stream, _, finalUrl ->
+                HttpsRequest(readTimeoutMs = FEED_READ_TIMEOUT_MS).read(address, auth(address)) { stream, _, finalUrl ->
                     val text = bounded(stream, MAX_FEED_BYTES).toString(Charsets.UTF_8)
                     try {
                         OpdsParser.parse(text, finalUrl)

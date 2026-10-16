@@ -9,7 +9,8 @@ downloads, files or UI (`core/data/.../catalog/CatalogRepository.kt`, `feature/c
 - `core/opds/src/main/kotlin/app/folio/core/opds/Opds2Parser.kt` — OPDS 2 JSON → the same `CatalogPage`; `OpdsParser.parse` picks it for `{`
 - `core/opds/src/main/kotlin/app/folio/core/opds/Links.kt` — link resolving (http→https), `SearchTemplate.fill`, `OpenSearch.template`
 - `core/opds/src/main/kotlin/app/folio/core/opds/HttpsRequest.kt` — manual redirects (HTTPS only, max 6),
-  timeouts (connect 20 s, read 30 s by default), request headers, `HttpStatusException` for non-2xx
+  timeouts (connect 20 s, read 30 s by default), request headers, `HttpStatusException` for non-2xx;
+  `BasicAuth` goes only on hops whose host it lists (`appliesTo`), a caller's `Authorization` header is dropped
 - `core/opds/src/main/kotlin/app/folio/core/opds/Resume.kt` — resume plan for `Range` downloads; HTML-instead-of-book check
 - `core/opds/src/main/kotlin/app/folio/core/opds/Xml.kt` — namespace-aware XML; rejects DTD and external entities
 

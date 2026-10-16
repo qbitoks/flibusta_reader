@@ -91,6 +91,9 @@ class CatalogViewModel @Inject constructor(
     var query by mutableStateOf(saved.get<String>(KEY_QUERY).orEmpty())
         private set
     var selected by mutableStateOf<CatalogEntry?>(null)
+    /** The current catalog's sign-in sheet is open (after a «нужен вход» answer). */
+    var signInRequested by mutableStateOf(false)
+    val logins: StateFlow<Map<String, String>> = repository.logins
     /** One-off error of a download request, shown in the book sheet. */
     var downloadError by mutableStateOf<String?>(null)
 
@@ -155,6 +158,24 @@ class CatalogViewModel @Inject constructor(
         null
     } catch (e: IllegalArgumentException) {
         e.message
+    }
+
+    /**
+     * Saves the catalog and its sign-in ([password] null keeps the saved one, a blank [login] signs out);
+     * the open catalog then reloads what it couldn't read.
+     */
+    fun saveCatalog(catalog: Catalog, login: String, password: String?): String? {
+        saveCatalog(catalog)?.let { return it }
+        try {
+            repository.signIn(catalog.id, login, password)
+        } catch (e: IllegalArgumentException) {
+            return e.message
+        }
+        if (catalog.id == this.catalog?.id) {
+            loadHome(fresh = true)
+            stack.filter { it.error != null }.forEach(::retry)
+        }
+        return null
     }
 
     fun removeCatalog(catalog: Catalog) = repository.remove(catalog.id)

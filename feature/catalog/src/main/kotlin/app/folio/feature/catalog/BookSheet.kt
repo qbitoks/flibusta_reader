@@ -141,6 +141,10 @@ internal fun BookSheet(
                 val failed = current?.second?.takeIf { readable == null && it.state == DownloadState.Failed }
                 if (failed != null) {
                     Text(errorText(failed.entity.error), style = FolioType.footnote, color = c.destructive, modifier = Modifier.padding(horizontal = 12.dp))
+                    val signIn = LocalSignIn.current
+                    if (failed.entity.error == NetworkErrors.LOGIN && signIn != null) {
+                        CapsuleButton(stringResource(R.string.catalog_sign_in), { onDismiss(); signIn() }, modifier = Modifier.fillMaxWidth())
+                    }
                 }
                 // Every format the catalog refused: the website may still give the book (after a sign-in).
                 val refused = main.isNotEmpty() && main.all { (_, item) -> item?.state == DownloadState.Failed && NetworkErrors.isUnavailable(item.entity.error) }

@@ -106,7 +106,8 @@ fun CatalogScreen(vm: CatalogViewModel, contentPadding: PaddingValues, onOpen: (
         vm.back()
     }
 
-    CompositionLocalProvider(LocalCoverLoader provides loader) {
+    val signIn = remember(vm) { { vm.signInRequested = true } }
+    CompositionLocalProvider(LocalCoverLoader provides loader, LocalSignIn provides signIn) {
         if (top != null) {
             FeedScreen(vm, top, byLink, contentPadding)
         } else {
@@ -164,6 +165,9 @@ fun CatalogScreen(vm: CatalogViewModel, contentPadding: PaddingValues, onOpen: (
             DownloadsSheet(vm, downloads, onOpen = { id -> downloadsOpen = false; onOpen(id) }, onDismiss = { downloadsOpen = false })
         }
         if (catalogsOpen) CatalogsSheet(vm, onDismiss = { catalogsOpen = false })
+        vm.catalog?.takeIf { vm.signInRequested }?.let { catalog ->
+            CatalogsSheet(vm, onDismiss = { vm.signInRequested = false }, edit = catalog)
+        }
     }
 }
 
@@ -222,7 +226,8 @@ private fun LazyListScope.homeSections(vm: CatalogViewModel, downloads: Map<Stri
             SectionTitle(stringResource(R.string.catalog_sections))
             val root = vm.root
             root.page?.facets?.takeIf { it.isNotEmpty() }?.let { FacetRow(it, vm::openFacet) }
-            val sections = root.entries.filter { !it.isBook && !requiresLogin(it) }
+            val signedIn = vm.catalog?.id in vm.logins.collectAsStateWithLifecycle().value
+            val sections = root.entries.filter { !it.isBook && (signedIn || !requiresLogin(it)) }
             val books = readableEntries(root.entries).first.filter { it.isBook }
             when {
                 root.page == null && root.error != null -> ErrorBlock(root.error, onRetry = { vm.retry(root) }, site = root.address)
@@ -251,7 +256,7 @@ private fun LazyListScope.homeSections(vm: CatalogViewModel, downloads: Map<Stri
     }
 }
 
-/** Shelves like «Моя полка» need an account, which this app doesn't have. */
+/** Shelves like «Моя полка» need an account; hidden until the catalog has a sign-in. */
 private fun requiresLogin(entry: CatalogEntry): Boolean =
     entry.summary.contains("логин", ignoreCase = true) || entry.summary.contains("login", ignoreCase = true)
 

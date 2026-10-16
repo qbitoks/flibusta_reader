@@ -130,4 +130,10 @@
     <string name="catalog_mirror_text">Only when a mirror serves the books: a site address without a path.</string>
     <string name="catalog_reset">Restore original addresses</string>
     <string name="catalog_all_catalogs">All catalogs…</string>
+    <string name="catalog_sign_in">Sign in</string>
+    <string name="catalog_sign_in_group">Sign-in</string>
+    <string name="catalog_field_login">Login</string>
+    <string name="catalog_field_password">Password</string>
+    <string name="catalog_password_saved">saved</string>
+    <string name="catalog_sign_in_text">Only for catalogs that ask you to sign in. The password is stored encrypted on this phone and sent only over HTTPS to this catalog and its download server.</string>
 </resources>
