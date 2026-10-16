@@ -112,7 +112,8 @@ class DownloadManager @Inject constructor(
                     dao.upsert(
                         existing.copy(
                             state = DownloadState.Queued.name, error = offlineCode(), attempts = 0, bookId = null, updatedAt = now,
-                            createdAt = if (restart) now else existing.createdAt,
+                            // Picked again: the book sheet's capsule follows the latest pick.
+                            createdAt = now,
                             bytes = if (restart) 0 else existing.bytes, total = if (restart) -1 else existing.total,
                         ),
                     )

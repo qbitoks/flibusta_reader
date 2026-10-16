@@ -57,7 +57,7 @@ jobs:
           done
           exit 1
       - name: Build and check
-        run: bash ./gradlew :core:opds:test :core:format:test :core:layout:testDebugUnitTest :core:data:testDebugUnitTest :feature:reader:testDebugUnitTest :app:assembleDebug :app:lintDebug --console=plain
+        run: bash ./gradlew :core:opds:test :core:format:test :core:layout:testDebugUnitTest :core:data:testDebugUnitTest :feature:reader:testDebugUnitTest :feature:catalog:testDebugUnitTest :app:assembleDebug :app:lintDebug --console=plain
       - name: Package APK with compatibility notes and checksums
         shell: pwsh
         env:

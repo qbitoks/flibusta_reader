@@ -60,8 +60,9 @@ import app.folio.core.designsystem.components.PullDownMenu
 import app.folio.core.opds.CatalogEntry
 
 /**
- * A catalog book: cover, title, author, genres and details, one download capsule for the best format
- * that fills with progress and turns into «Читать», a ••• menu with every format, the description
+ * A catalog book: cover, title, author, genres and details, one download capsule for the last picked format
+ * (else the catalog's) that fills with progress and turns into «Читать», a ••• menu with the other formats
+ * and cancels, the description
  * and links to the author's other books or the series.
  */
 @Composable
@@ -74,15 +75,12 @@ internal fun BookSheet(
 ) {
     val c = Folio.colors
     val formats = vm.formatsOf(entry).map { format -> format to downloads[entry.downloads.getValue(format)] }
-    // Each format is a book of its own in the library: «Читать» opens the catalog's format, else the latest copy.
-    val copies = formats.filter { (_, item) -> item?.readable == true }
-    val read = copies.firstOrNull { it.first == formats.first().first } ?: copies.maxByOrNull { it.second!!.entity.updatedAt }
-    val readable = read?.second
+    val choice = bookFormats(formats)
+    val current = choice?.capsule
+    // Each format is a book of its own in the library: the capsule reads the copy of the last picked format.
+    val readable = current?.second?.takeIf { it.readable }
+    val anyReadable = formats.any { (_, item) -> item?.readable == true }
     val main = formats.filter { it.first in mainFormats }.ifEmpty { formats }
-    // The capsule follows the download in progress (or the last failed one), else offers the best format.
-    val started = formats.filter { (_, item) -> item != null && item.state != DownloadState.Done }
-    val current = started.filter { it.second!!.state != DownloadState.Failed }.ifEmpty { started }
-        .maxByOrNull { it.second!!.entity.updatedAt } ?: formats.firstOrNull()
     FolioSheet(onDismiss = onDismiss) {
         Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), contentAlignment = Alignment.CenterEnd) {
             CircleButton(Icons.Rounded.Close, stringResource(R.string.catalog_close), onDismiss)
@@ -113,32 +111,31 @@ internal fun BookSheet(
             }
 
             Column(Modifier.padding(start = 21.dp, end = 21.dp, top = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (formats.isNotEmpty()) {
+                if (choice != null && current != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f)) {
                             if (readable != null) {
+                                // The format shows when it isn't the catalog's or another copy is in the library too.
+                                val named = current.first != formats.first().first || formats.count { it.second?.readable == true } > 1
                                 CapsuleButton(
-                                    if (copies.size > 1) stringResource(R.string.catalog_read_copy, read.first) else stringResource(R.string.catalog_read),
+                                    if (named) stringResource(R.string.catalog_read_copy, current.first) else stringResource(R.string.catalog_read),
                                     { onOpen(readable.entity.bookId!!) },
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp), container = c.label, contentColor = c.background,
                                     leading = { Icon(Icons.AutoMirrored.Rounded.MenuBook, null, tint = c.background, modifier = Modifier.padding(end = 8.dp).size(20.dp)) },
                                 )
-                            } else if (current != null) {
+                            } else {
                                 DownloadCapsule(current.first, current.second, primary = true, { vm.download(entry, current.first) }, vm::pause, vm::resume)
                             }
                         }
-                        val pending = current?.second?.takeIf { readable == null && it.state != DownloadState.Done }
-                        when {
-                            // One download at a time: × cancels it and brings back «Скачать» and •••.
-                            pending != null -> RoundButton(Icons.Rounded.Close, stringResource(R.string.catalog_download_cancel, current.first)) { vm.cancel(entry, pending.id) }
-                            formats.size > 1 -> FormatsMenu(
-                                formats, { onOpen(it.entity.bookId!!) }, { vm.download(entry, it, fallBack = false) },
+                        if (choice.hasMenu) {
+                            FormatsMenu(
+                                choice, { onOpen(it.entity.bookId!!) }, { vm.download(entry, it, fallBack = false) },
                                 vm::pause, vm::resume, { vm.cancel(entry, it) },
                             )
                         }
                     }
                 }
-                val failed = current?.second?.takeIf { readable == null && it.state == DownloadState.Failed }
+                val failed = current?.second?.takeIf { it.state == DownloadState.Failed }
                 if (failed != null) {
                     Text(errorText(failed.entity.error), style = FolioType.footnote, color = c.destructive, modifier = Modifier.padding(horizontal = 12.dp))
                     val signIn = LocalSignIn.current
@@ -148,7 +145,7 @@ internal fun BookSheet(
                 }
                 // Every format the catalog refused: the website may still give the book (after a sign-in).
                 val refused = main.isNotEmpty() && main.all { (_, item) -> item?.state == DownloadState.Failed && NetworkErrors.isUnavailable(item.entity.error) }
-                if (readable == null && refused) {
+                if (!anyReadable && refused) {
                     val uri = LocalUriHandler.current
                     val page = entry.web ?: entry.downloads.values.first()
                     CapsuleButton(
@@ -225,7 +222,7 @@ private fun Description(text: String) {
     }
 }
 
-/** The round capsule-coloured button next to the main capsule: ••• or ×. */
+/** The round capsule-coloured ••• button next to the main capsule. */
 @Composable
 private fun RoundButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     val c = Folio.colors
@@ -239,12 +236,12 @@ private fun RoundButton(icon: ImageVector, label: String, onClick: () -> Unit) {
 }
 
 /**
- * Every format of the book: «Читать» for copies in the library, otherwise the same states as the capsule;
- * downloads in progress get «Отменить загрузку» at the bottom.
+ * The book's other formats: «Читать» for copies in the library, otherwise the same states as the capsule;
+ * conversions under «Другие форматы», and «Отменить загрузку» for every download in progress at the bottom.
  */
 @Composable
 private fun FormatsMenu(
-    formats: List<Pair<String, DownloadItem?>>,
+    choice: BookFormats,
     onRead: (DownloadItem) -> Unit,
     onDownload: (String) -> Unit,
     onPause: (String) -> Unit,
@@ -252,12 +249,16 @@ private fun FormatsMenu(
     onCancel: (String) -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
+    // While the menu fades out it keeps what it showed: the download just picked would flash in a red «Отменить» row.
+    val shown = remember { mutableStateOf(choice) }
+    if (open && shown.value !== choice) shown.value = choice
     val label = stringResource(R.string.catalog_formats)
     Box {
         RoundButton(Icons.Rounded.MoreHoriz, label) { open = true }
         PullDownMenu(open, { open = false }, width = 260.dp) {
-            Header(label)
-            formats.forEach { (format, item) ->
+            val choice = shown.value
+            @Composable
+            fun FormatItem(format: String, item: DownloadItem?) {
                 if (item != null && item.readable) {
                     Item(stringResource(R.string.catalog_read_format, format), { onRead(item) }, icon = Icons.AutoMirrored.Rounded.MenuBook)
                 } else {
@@ -265,9 +266,17 @@ private fun FormatsMenu(
                     Item(text, action, icon = icon)
                 }
             }
-            val started = formats.filter { (_, item) -> item != null && item.state != DownloadState.Done }
-            if (started.isNotEmpty()) Divider()
-            started.forEach { (format, item) ->
+            if (choice.rest.isNotEmpty()) {
+                Header(label)
+                choice.rest.forEach { (format, item) -> FormatItem(format, item) }
+            }
+            if (choice.conversions.isNotEmpty()) {
+                if (choice.rest.isNotEmpty()) Divider()
+                Header(stringResource(R.string.catalog_other_formats))
+                choice.conversions.forEach { (format, item) -> FormatItem(format, item) }
+            }
+            if (choice.started.isNotEmpty() && (choice.rest.isNotEmpty() || choice.conversions.isNotEmpty())) Divider()
+            choice.started.forEach { (format, item) ->
                 Item(stringResource(R.string.catalog_download_cancel, format), { onCancel(item!!.id) }, icon = Icons.Rounded.Close, destructive = true)
             }
         }
@@ -336,6 +345,3 @@ private fun DownloadCapsule(
         }
     }
 }
-
-/** The real books; MOBI, DOCX, RTF, HTML, TXT and PDF (fixed pages) are conversions, never tried on a refusal. */
-internal val mainFormats = setOf("EPUB", "FB2")

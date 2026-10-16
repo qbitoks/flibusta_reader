@@ -4,8 +4,8 @@ Trigger: changing `.github/workflows/android.yml`, release scripts, version, sig
 Push tags and publish releases only on explicit user request.
 
 ## Workflow `.github/workflows/android.yml`
-- Push/PR to main: JDK 17, SDK platform 37 + build-tools 36.0.0, `:core:opds:test :core:format:test :feature:reader:testDebugUnitTest
-  :app:assembleDebug :app:lintDebug`, metadata tests.
+- Push/PR to main: JDK 17, SDK platform 37 + build-tools 36.0.0, `:core:opds:test :core:format:test :core:layout:testDebugUnitTest
+  :core:data:testDebugUnitTest :feature:reader:testDebugUnitTest :feature:catalog:testDebugUnitTest :app:assembleDebug :app:lintDebug`, metadata tests.
   APK signed with a throwaway CI key, labelled `ci-debug`; reports kept 14 days. No ADB regressions.
 - Manual run: same with the permanent preview key; by default `scripts/ci-emulator.ps1` on API 35
   (install, launch, rotation, restart, no crash). No Release.

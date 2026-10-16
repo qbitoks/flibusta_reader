@@ -40,6 +40,7 @@
     <string name="catalog_read_copy">Read · %1$s</string>
     <string name="catalog_download_cancel">Cancel %1$s download</string>
     <string name="catalog_formats">Formats</string>
+    <string name="catalog_other_formats">Other formats</string>
     <string name="catalog_download">Download %1$s</string>
     <string name="catalog_download_queued">%1$s · queued</string>
     <string name="catalog_download_waiting">%1$s · waiting for network</string>

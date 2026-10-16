@@ -23,11 +23,13 @@ downloads live in `core/data/.../catalog/` (`CatalogRepository`, `DownloadManage
 - Book sheet texts stay catalog-neutral (no «сервер готовит EPUB», no warnings from past refusals); a real failure shows
   its error under the capsule.
 - Download formats come ordered from `OpdsParser` (EPUB, FB2, conversions, PDF last); `CatalogViewModel.formatsOf` puts
-  the open catalog's `Catalog.format` (EPUB/FB2, Flibusta FB2) first. The book sheet keeps at most two
-  controls: one capsule (best format → progress → «Читать») and a ••• `PullDownMenu` with every format; another format
-  can be taken after the first and lands as a separate library book (book id = file hash). While the capsule's download
-  is pending, × (`vm.cancel`) replaces •••; once a copy is in, only «Читать» (catalog's format, else latest; «Читать · FB2»
-  when several) and ••• show, other downloads live in the menu with «Отменить загрузку».
+  the open catalog's `Catalog.format` (EPUB/FB2, Flibusta FB2) first. `bookFormats` (`BookFormats.kt`, tested) splits
+  them: the capsule takes the last picked format (newest download `createdAt`, which `enqueue` renews on every pick;
+  a done copy deleted from the library doesn't count), else the catalog's; it goes progress → «Читать» («Читать · TXT»
+  when not the catalog's format or several copies are in). ••• is always there when it has something: the other
+  EPUB/FB2, conversions under «Другие форматы» (only when the book has EPUB/FB2), «Отменить загрузку» for every
+  pending download. Another format lands as a separate library book (book id = file hash). Flibusta really offers
+  six formats; all but FB2 are converted from it on the fly.
 - Books the app can't open (DJVU-only) are hidden from lists with a count note, never shown as downloadable.
 - Show only what the catalog declares (`CatalogPage.search/newBooks/popular/facets`); a `Catalog` field overrides it
   (Flibusta: its `/opds/new` is a menu and authors are searched separately). «Все/Книги/Авторы» only with `searchAuthors`.

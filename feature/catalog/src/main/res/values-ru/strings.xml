@@ -42,6 +42,7 @@
     <string name="catalog_read_copy">Читать · %1$s</string>
     <string name="catalog_download_cancel">Отменить загрузку %1$s</string>
     <string name="catalog_formats">Форматы</string>
+    <string name="catalog_other_formats">Другие форматы</string>
     <string name="catalog_download">Скачать %1$s</string>
     <string name="catalog_download_queued">%1$s · в очереди</string>
     <string name="catalog_download_waiting">%1$s · ждём сеть</string>
