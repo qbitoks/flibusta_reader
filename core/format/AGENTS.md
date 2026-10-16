@@ -5,7 +5,8 @@ MOBI/PalmDOC, RTF, plain text; zipped TXT/HTML/RTF as catalogs serve them.
 
 ## Entry points
 - `core/format/src/main/kotlin/app/folio/core/format/BookParser.kt` — `detect()` by content (`%PDF-x.y` in the
-  first KiB → `BookFormat.Pdf`, never parsed: `feature/reader` `PdfViewer` shows its pages), `parse()`
+  first KiB → `BookFormat.Pdf`, never parsed: `feature/reader` `PdfViewer` shows its pages), `parse()`;
+  `unzipPdf()` — a zipped PDF (LitRes `a6.pdf`), unpacked on import so the book ID is the PDF's SHA-1
 - `core/format/src/main/kotlin/app/folio/core/format/fb2/Fb2Parser.kt` — streaming FB2, repair retry
 - `core/format/src/main/kotlin/app/folio/core/format/epub/EpubParser.kt` — OPF, spine, CSS, XHTML
 - `core/format/src/main/kotlin/app/folio/core/format/text/TextParser.kt` — any text file (detect fallback:

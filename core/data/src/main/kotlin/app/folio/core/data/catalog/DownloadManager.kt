@@ -197,7 +197,7 @@ class DownloadManager @Inject constructor(
                 val code = if (DownloadCheck.asksToSignIn(page)) NetworkErrors.LOGIN else NetworkErrors.NOT_BOOK
                 throw DownloadException(code, "Сервер вернул страницу вместо книги")
             }
-            val result = library.import(Uri.fromFile(part), sourceUri = row.link)
+            val result = library.import(Uri.fromFile(part), sourceUri = row.link, title = row.title, author = row.author)
             catalog.reportDownload(row.link, null)
             val size = withContext(Dispatchers.IO) { part.length().also { part.delete() } }
             live.update { it - id }

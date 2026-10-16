@@ -62,6 +62,32 @@ object BookParser {
         BookFormat.Pdf -> throw UnsupportedBookException("PDF has fixed pages and is not reflowed")
     }
 
+    /**
+     * Copies the PDF out of a single-book archive (LitRes serves `a6.pdf` zipped) into [target], within
+     * the 50 MiB limit. False when [file] has no `.pdf` inside; call it only where [detect] found nothing.
+     */
+    fun unzipPdf(file: File, target: File): Boolean {
+        val zip = try { ZipFile(file) } catch (e: IOException) { return false }
+        return zip.use {
+            val entry = zip.entries().asSequence().firstOrNull { !it.isDirectory && it.name.endsWith(".pdf", ignoreCase = true) }
+                ?: return false
+            zip.getInputStream(entry).use { src ->
+                target.outputStream().use { out ->
+                    val buffer = ByteArray(256 * 1024)
+                    var total = 0L
+                    while (true) {
+                        val n = src.read(buffer)
+                        if (n < 0) break
+                        total += n
+                        if (total > MAX_UNPACKED_BYTES) throw UnsupportedBookException("Book is larger than 50 MiB")
+                        out.write(buffer, 0, n)
+                    }
+                }
+            }
+            true
+        }
+    }
+
     private fun read(file: File): ByteArray = file.inputStream().use(::readBounded)
 
     private fun zipped(file: File, extension: String): Pair<String, ByteArray> = ZipFile(file).use { zipped(it, extension) }

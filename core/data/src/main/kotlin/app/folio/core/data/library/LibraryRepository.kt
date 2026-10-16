@@ -28,6 +28,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import javax.inject.Inject
@@ -62,11 +64,13 @@ class LibraryRepository @Inject constructor(
     fun collectionsOf(bookId: String): Flow<List<Long>> = db.collections().observeCollectionsOf(bookId)
     fun bookmarks(bookId: String): Flow<List<BookmarkEntity>> = db.bookmarks().observe(bookId)
 
-    suspend fun import(uri: Uri, sourceUri: String? = null): ImportResult = withContext(Dispatchers.IO) {
-        importLock.withLock { importLocked(uri, sourceUri) }
-    }
+    /** [title] and [author] (a catalog's) name a book whose file says nothing about itself, such as a PDF. */
+    suspend fun import(uri: Uri, sourceUri: String? = null, title: String? = null, author: String? = null): ImportResult =
+        withContext(Dispatchers.IO) { importLock.withLock { importLocked(uri, sourceUri, Known(title, author)) } }
 
-    private suspend fun importLocked(uri: Uri, sourceUri: String?): ImportResult {
+    private class Known(val title: String?, val author: String?)
+
+    private suspend fun importLocked(uri: Uri, sourceUri: String?, known: Known): ImportResult {
         val tmp = File.createTempFile("import", ".tmp", files.importDir)
         try {
             val digest = MessageDigest.getInstance("SHA-1")
@@ -84,19 +88,25 @@ class LibraryRepository @Inject constructor(
                     }
                 }
             }
-            val id = digest.digest().joinToString("") { "%02x".format(it) }
+            var id = digest.digest().joinToString("") { "%02x".format(it) }
+            var format = BookParser.detect(tmp)
+            if (format == null && unzipPdf(tmp, uri)) {
+                // The book is the PDF, not its archive: the same PDF imported unzipped must dedupe with it.
+                id = sha1(tmp)
+                format = BookParser.detect(tmp)
+            }
 
             books.get(id)?.let {
                 if (sourceUri != null) books.attachSource(id, sourceUri)
                 return ImportResult.AlreadyInLibrary(id)
             }
 
-            val format = BookParser.detect(tmp) ?: throw ImportException("Unsupported file: ${displayName(uri)}")
+            if (format == null) throw ImportException("Unsupported file: ${displayName(uri)}")
             val original = files.original(id, format.extension)
             if (!tmp.renameTo(original)) {
                 tmp.copyTo(original, overwrite = true)
             }
-            if (format == BookFormat.Pdf) return importPdf(id, original, uri, sourceUri)
+            if (format == BookFormat.Pdf) return importPdf(id, original, uri, sourceUri, known)
             val book = try {
                 parseAndCache(id, original, format)
             } catch (e: Exception) {
@@ -134,7 +144,7 @@ class LibraryRepository @Inject constructor(
     }
 
     /** PDF keeps its fixed pages: no parsed cache, the first page becomes the cover. */
-    private suspend fun importPdf(id: String, original: File, uri: Uri, sourceUri: String?): ImportResult {
+    private suspend fun importPdf(id: String, original: File, uri: Uri, sourceUri: String?, known: Known): ImportResult {
         val hasCover = try {
             PdfCover.render(original, COVER_WIDTH)?.let { bitmap ->
                 files.cover(id).outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 88, it) }
@@ -148,8 +158,8 @@ class LibraryRepository @Inject constructor(
         books.insert(
             BookEntity(
                 id = id,
-                title = displayName(uri)?.substringBeforeLast('.') ?: "PDF",
-                authors = "",
+                title = known.title?.takeIf { it.isNotBlank() } ?: displayName(uri)?.substringBeforeLast('.') ?: "PDF",
+                authors = known.author.orEmpty(),
                 series = null,
                 seriesIndex = null,
                 language = null,
@@ -237,6 +247,33 @@ class LibraryRepository @Inject constructor(
         for (id in books.idsMissingCoverColors()) {
             coverColors(files.cover(id))?.let { books.setCoverColors(id, it) }
         }
+    }
+
+    /** Replaces an archive in [file] with the PDF inside it; false when there is none. */
+    private fun unzipPdf(file: File, uri: Uri): Boolean {
+        val pdf = File.createTempFile("import", ".pdf", files.importDir)
+        try {
+            if (!BookParser.unzipPdf(file, pdf)) return false
+            Files.move(pdf.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            return true
+        } catch (e: IOException) {
+            throw ImportException("Cannot read ${displayName(uri)}", e)
+        } finally {
+            pdf.delete()
+        }
+    }
+
+    private fun sha1(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-1")
+        file.inputStream().use { src ->
+            val buffer = ByteArray(256 * 1024)
+            while (true) {
+                val n = src.read(buffer)
+                if (n < 0) break
+                digest.update(buffer, 0, n)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
     private fun displayName(uri: Uri): String? = runCatching {

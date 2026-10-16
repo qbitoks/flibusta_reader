@@ -1,9 +1,15 @@
 package app.folio.core.format
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 class PdfDetectionTest {
     @get:Rule val tmp = TemporaryFolder()
@@ -29,5 +35,26 @@ class PdfDetectionTest {
     @Test(expected = UnsupportedBookException::class)
     fun pdfIsNotReflowed() {
         BookParser.parse(tmp.newFile(), BookFormat.Pdf) { _, _ -> }
+    }
+
+    private fun zip(vararg entries: Pair<String, ByteArray>): File = tmp.newFile().apply {
+        ZipOutputStream(outputStream()).use { out -> entries.forEach { (name, bytes) -> out.putNextEntry(ZipEntry(name)); out.write(bytes) } }
+    }
+
+    @Test
+    fun zippedPdfIsUnpackedAsLitResServesIt() {
+        val pdf = "%PDF-1.5\n1 0 obj\n".toByteArray() + ByteArray(1000) { it.toByte() }
+        val archive = zip("141856431.a6.pdf" to pdf)
+        assertNull(BookParser.detect(archive))
+        val target = tmp.newFile()
+        assertTrue(BookParser.unzipPdf(archive, target))
+        assertTrue(pdf.contentEquals(target.readBytes()))
+        assertEquals(BookFormat.Pdf, BookParser.detect(target))
+    }
+
+    @Test
+    fun noPdfNoUnpacking() {
+        assertFalse(BookParser.unzipPdf(zip("cover.jpg" to byteArrayOf(1, 2, 3)), tmp.newFile()))
+        assertFalse(BookParser.unzipPdf(tmp.newFile().apply { writeBytes("plain text".toByteArray()) }, tmp.newFile()))
     }
 }
