@@ -42,5 +42,5 @@ foreach ($asset in $assets) {
 # Publish only after every file is in place, so nobody sees a release without the APK.
 gh release edit $Tag --repo $env:GITHUB_REPOSITORY --draft=false
 if ($LASTEXITCODE -ne 0) { throw 'Publishing the draft release failed' }
-gh release view $Tag --repo $env:GITHUB_REPOSITORY --json url,isDraft,isPrerelease,isLatest,assets
+gh release view $Tag --repo $env:GITHUB_REPOSITORY --json url,isDraft,isPrerelease,assets
 if ($LASTEXITCODE -ne 0) { throw 'Cannot verify published release' }
