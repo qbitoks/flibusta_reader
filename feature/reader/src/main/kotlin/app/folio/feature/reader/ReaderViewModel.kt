@@ -259,33 +259,22 @@ class ReaderViewModel @Inject constructor(
     /** The language the book is read aloud in (its metadata, else the device's). */
     val speechLocale: Locale get() = book?.speechLocale() ?: Locale.getDefault()
 
-    /** Installed TTS engine apps. */
-    fun speechEngines(): List<TtsEngine> = voices.engines()
-
-    fun defaultSpeechEngine(): String? = voices.defaultEngine()
-
-    private val _engineVoices = MutableStateFlow<List<TtsVoice>?>(null)
-    /** Voices of the chosen engine for the book's language; null while loading. */
-    val engineVoices: StateFlow<List<TtsVoice>?> = _engineVoices.asStateFlow()
+    private val _engineVoices = MutableStateFlow<List<Pair<TtsEngine, List<TtsVoice>>>?>(null)
+    /** Every installed engine with its voices for the book's language (Folio engines first); null while loading. */
+    val engineVoices: StateFlow<List<Pair<TtsEngine, List<TtsVoice>>>?> = _engineVoices.asStateFlow()
     private var voicesJob: Job? = null
 
     fun loadEngineVoices() {
         voicesJob?.cancel()
         voicesJob = viewModelScope.launch {
-            if (_engineVoices.value?.isEmpty() != false) _engineVoices.value = null
-            _engineVoices.value = voices.voices(voices.choice.value.engine, speechLocale)
+            val locale = speechLocale
+            _engineVoices.value = voices.engines().map { it to voices.voices(it.packageName, locale) }.filter { it.second.isNotEmpty() }
         }
     }
 
-    /** Reads with [engine] (null = the system default) from the current phrase on. */
-    fun setSpeechEngine(engine: String?) {
-        voices.setEngine(engine)
-        _engineVoices.value = null
-        speech.voiceChanged()
-        loadEngineVoices()
-    }
-
-    fun setSpeechVoice(voice: TtsVoice) {
+    /** Reads with [voice] of [engine] from the current phrase on. */
+    fun setSpeechVoice(engine: TtsEngine, voice: TtsVoice) {
+        if (voices.choice.value.engine != engine.packageName) voices.setEngine(engine.packageName)
         voices.setVoice(speechLocale.language, voice.name)
         speech.voiceChanged()
     }

@@ -36,68 +36,50 @@ import app.folio.core.designsystem.components.GroupedRow
 import app.folio.core.designsystem.components.SheetHeader
 
 /**
- * «Голос»: the speech engine (Folio Piper, Folio Silero, any other installed one or the system default), its voice
- * for the book's language, and the Folio engine modules to install or update from the modules repository.
+ * «Голос»: every voice for the book's language from every installed engine, grouped by engine; a tap reads with
+ * it. Below, the Folio engine modules to install, update or open for more voices. Nothing picked = system voice.
  */
 @Composable
 internal fun VoiceSheet(vm: ReaderViewModel, palette: ReaderPalette, onDismiss: () -> Unit) {
     val choice by vm.voiceChoice.collectAsStateWithLifecycle()
-    val voices by vm.engineVoices.collectAsStateWithLifecycle()
+    val groups by vm.engineVoices.collectAsStateWithLifecycle()
     val installed by vm.installedModules.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     val locale = vm.speechLocale
-    // Re-read engines when one is installed or removed, and on return from an engine's voice screen.
+    // Re-read voices when an engine is installed or removed, and on return from an engine's voice screen.
     LifecycleResumeEffect(Unit) {
         vm.refreshModules()
         vm.loadEngineVoices()
         onPauseOrDispose {}
     }
     LaunchedEffect(installed) { vm.loadEngineVoices() }
-    val engines = remember(installed) { vm.speechEngines() }
-    val engine = choice.engine?.takeIf { pkg -> engines.any { it.packageName == pkg } }
-    val active = engine ?: vm.defaultSpeechEngine()
     FolioSheet(onDismiss = onDismiss, containerColor = palette.sheet()) {
         SheetHeader(stringResource(R.string.speech_voice), trailing = {
             CircleButton(Icons.Rounded.Close, stringResource(R.string.reader_close), onDismiss)
         })
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-            GroupHeader(stringResource(R.string.speech_engine))
-            GroupedCard {
-                GroupedRow(stringResource(R.string.speech_engine_system), trailing = { if (engine == null) Check() },
-                    showDivider = engines.isNotEmpty(), onClick = { vm.setSpeechEngine(null) })
-                engines.forEachIndexed { i, e ->
-                    GroupedRow(e.label, trailing = { if (engine == e.packageName) Check() }, showDivider = i != engines.lastIndex,
-                        onClick = { vm.setSpeechEngine(e.packageName) })
-                }
-            }
-            GroupHeader(stringResource(R.string.speech_voices, locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }))
-            val list = voices
+            val list = groups
+            val chosen = choice.voices[locale.language]
             when {
-                list == null -> Box(Modifier.fillMaxWidth().padding(16.dp)) {
+                list == null -> Box(Modifier.fillMaxWidth().padding(24.dp)) {
                     CircularProgressIndicator(Modifier.size(24.dp).align(androidx.compose.ui.Alignment.Center), color = Folio.colors.accent, strokeWidth = 2.dp)
                 }
-                list.isEmpty() -> Note(stringResource(R.string.speech_no_engine_voices))
-                else -> GroupedCard {
-                    val chosen = choice.voices[locale.language]?.takeIf { name -> list.any { it.name == name } }
-                    list.forEachIndexed { i, v ->
-                        GroupedRow(v.title ?: stringResource(R.string.speech_voice_number, v.speaker),
-                            value = when {
-                                v.title != null -> null
-                                v.needsNetwork -> stringResource(R.string.speech_voice_online)
-                                else -> stringResource(R.string.speech_voice_local)
-                            },
-                            trailing = { if (v.name == chosen) Check() }, showDivider = i != list.lastIndex,
-                            onClick = { vm.setSpeechVoice(v) })
+                list.isEmpty() -> Note(stringResource(R.string.speech_no_voices_yet))
+                else -> list.forEach { (engine, voices) ->
+                    GroupHeader(engine.label)
+                    GroupedCard {
+                        voices.forEachIndexed { i, v ->
+                            val selected = choice.engine == engine.packageName && v.name == chosen
+                            GroupedRow(v.title ?: stringResource(R.string.speech_voice_number, v.speaker),
+                                value = when {
+                                    v.title != null -> null
+                                    v.needsNetwork -> stringResource(R.string.speech_voice_online)
+                                    else -> null
+                                },
+                                trailing = { if (selected) Check() }, showDivider = i != voices.lastIndex,
+                                onClick = { vm.setSpeechVoice(engine, v) })
+                        }
                     }
                 }
-            }
-            GroupedCard(Modifier.padding(top = 16.dp)) {
-                if (active != null && active.startsWith(FOLIO_ENGINES)) {
-                    GroupedRow(stringResource(R.string.speech_engine_voices), chevron = true, showDivider = true,
-                        onClick = { openEngineVoices(context, active) })
-                }
-                GroupedRow(stringResource(R.string.speech_system_settings), chevron = true, showDivider = false,
-                    onClick = { openTtsSettings(context) })
             }
             ModulesGroup(vm, installed)
         }
@@ -159,14 +141,12 @@ private fun ModuleAction(m: ModuleApk, version: Long?, state: InstallState) {
         state is InstallState.Failed -> R.string.speech_voice_retry
         version == null -> R.string.speech_module_install
         version < m.versionCode -> R.string.speech_module_update
-        else -> null
+        else -> R.string.speech_module_voices
     }
     if (label != null) {
         Text(stringResource(label), style = FolioType.body, color = c.accent, modifier = Modifier.padding(start = 12.dp))
     }
 }
-
-private const val FOLIO_ENGINES = "app.folio.tts."
 
 /** A Folio engine's voice screen (download voices, default voice). */
 private fun openEngineVoices(context: Context, packageName: String) {

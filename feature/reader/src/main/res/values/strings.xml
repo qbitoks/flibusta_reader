@@ -295,20 +295,13 @@
     <string name="speech_rate_value">%1$s×</string>
     <string name="speech_no_voice">No voice for the book language. Install one in the speech settings.</string>
     <string name="speech_voice">Voice</string>
-    <string name="speech_engine">Engine</string>
-    <string name="speech_system_settings">Speech settings on the device</string>
-    <string name="speech_voices">Voices · %1$s</string>
     <string name="speech_voice_cancel">Cancel download</string>
     <string name="speech_read_from_here">Read from here</string>
     <string name="speech_voice_retry">Retry</string>
-
-    <string name="speech_engine_system">System default</string>
-    <string name="speech_no_engine_voices">This engine has no voices for the book\'s language. Download them in the engine\'s settings or pick another engine.</string>
     <string name="speech_voice_online">online</string>
-    <string name="speech_engine_voices">Engine voices</string>
-    <string name="speech_modules">Folio speech modules</string>
+    <string name="speech_modules">Folio modules</string>
     <string name="speech_modules_loading">Loading the module list…</string>
-    <string name="speech_modules_about">Modules are separate speech engine apps. Folio downloads them from GitHub (qbitoks/folio-modules), checks the checksum and signature and installs them through the system installer. Voices are downloaded in the engine itself.</string>
+    <string name="speech_modules_about">Modules are separate speech apps. Folio downloads them from GitHub and installs them through the system installer; voices are downloaded in the module.</string>
     <string name="speech_module_downloading">Downloading…</string>
     <string name="speech_module_installing">Installing…</string>
     <string name="speech_module_permission">Allow installing</string>
@@ -316,5 +309,6 @@
     <string name="speech_module_install">Install</string>
     <string name="speech_module_update">Update</string>
     <string name="speech_voice_number">Voice %1$d</string>
-    <string name="speech_voice_local">on device</string>
+    <string name="speech_module_voices">Voices</string>
+    <string name="speech_no_voices_yet">No voices for the book’s language yet — the system voice reads. Install Folio Piper or Folio Silero and download a voice in it.</string>
 </resources>

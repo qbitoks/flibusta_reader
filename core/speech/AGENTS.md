@@ -6,7 +6,8 @@
 - `SpeechVoices` — engine package and per-language voice name in prefs; lists installed engines and an engine's voices.
 - Offline voices are separate engine apps (Folio Piper, Folio Silero) from `github.com/qbitoks/folio-modules`; Folio
   installs them through `core/data/.../modules/ModuleInstaller.kt`. Engine code, models and voice downloads live there.
-- Reader voice UI: `feature/reader/.../VoiceSheet.kt` (engine, voice, «Модули озвучки Folio»).
+- Reader voice UI: `feature/reader/.../VoiceSheet.kt`: one list of all engines' voices for the book language (a tap picks
+  engine + voice), then «Модули Folio». No engine picker or system-settings link (user: keep it simple).
 - `SpeechController` — app-wide singleton: play/pause/skip/rate/stop, audio focus, throttled position saves.
 - `SpeechService` — `mediaPlayback` foreground service: media notification, `MediaSession`, headset-unplug pause.
 - Reader side: `feature/reader/.../ReaderSpeech.kt` (player shown with the controls, phrase `Mark`), `ReaderViewModel.followSpeech`:

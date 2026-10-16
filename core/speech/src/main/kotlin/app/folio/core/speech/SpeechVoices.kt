@@ -69,9 +69,6 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
             .sortedWith(compareByDescending<TtsEngine> { it.packageName.startsWith(FOLIO_ENGINES) }.thenBy { it.label })
     }
 
-    /** The system default engine's package. */
-    fun defaultEngine(): String? = android.provider.Settings.Secure.getString(context.contentResolver, "tts_default_synth")
-
     /**
      * Voices [engine] offers for [locale]'s language, the book's region first; installed (offline) ones only
      * when the engine marks the rest «not installed». Connects to the engine for a moment; empty on failure.
