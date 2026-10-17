@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.view.WindowManager
+import androidx.compose.animation.EnterExitState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -15,6 +16,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import app.folio.core.designsystem.LocalNavAnimatedScope
 
 /** Rotation lock and the window-only brightness from «Темы и настройки» (decision C). */
 @Composable
@@ -36,29 +38,37 @@ internal fun WindowEffects(rotationLocked: Boolean, brightness: Float) {
     }
 }
 
-/** Hides the system bars while reading; they come back with the reader chrome. */
+/**
+ * Hides the system bars while reading; they come back with the reader chrome. On close the bars return as
+ * soon as the exit animation starts, not when it ends: otherwise the screen underneath is laid out without
+ * the status bar during the fade and jumps down once the reader is gone.
+ */
 @Composable
 internal fun ImmersiveMode(showBars: Boolean, lightBars: Boolean) {
     val view = LocalView.current
     val activity = view.context.findActivity() ?: return
-    DisposableEffect(showBars, lightBars) {
+    val appDark = isSystemInDarkTheme()
+    val leaving = LocalNavAnimatedScope.current?.transition?.targetState == EnterExitState.PostExit
+    fun restoreAppBars() {
+        // Hand the bars back in the app's own appearance, not the reading theme's.
         val controller = WindowCompat.getInsetsController(activity.window, view)
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        controller.isAppearanceLightStatusBars = lightBars
-        controller.isAppearanceLightNavigationBars = lightBars
-        if (showBars) controller.show(WindowInsetsCompat.Type.systemBars()) else controller.hide(WindowInsetsCompat.Type.systemBars())
+        controller.show(WindowInsetsCompat.Type.systemBars())
+        controller.isAppearanceLightStatusBars = !appDark
+        controller.isAppearanceLightNavigationBars = !appDark
+    }
+    DisposableEffect(showBars, lightBars, leaving) {
+        if (leaving) {
+            restoreAppBars()
+        } else {
+            val controller = WindowCompat.getInsetsController(activity.window, view)
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.isAppearanceLightStatusBars = lightBars
+            controller.isAppearanceLightNavigationBars = lightBars
+            if (showBars) controller.show(WindowInsetsCompat.Type.systemBars()) else controller.hide(WindowInsetsCompat.Type.systemBars())
+        }
         onDispose { }
     }
-    val appDark = isSystemInDarkTheme()
-    DisposableEffect(Unit) {
-        onDispose {
-            // Hand the bars back in the app's own appearance, not the reading theme's.
-            val controller = WindowCompat.getInsetsController(activity.window, view)
-            controller.show(WindowInsetsCompat.Type.systemBars())
-            controller.isAppearanceLightStatusBars = !appDark
-            controller.isAppearanceLightNavigationBars = !appDark
-        }
-    }
+    DisposableEffect(Unit) { onDispose { restoreAppBars() } }
 }
 
 @Composable

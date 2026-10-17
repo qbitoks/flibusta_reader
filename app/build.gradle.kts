@@ -14,8 +14,8 @@ android {
         applicationId = "app.folio"
         minSdk = 34
         targetSdk = 37
-        versionCode = 26
-        versionName = "0.8.0"
+        versionCode = 27
+        versionName = "0.8.1"
         // Phones (arm64) and the x86_64 emulator; speech engines with heavy native code are separate apps.
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
