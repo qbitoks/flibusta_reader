@@ -32,8 +32,8 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   `download_issues` — `host<TAB>code` lines of catalogs whose last download was refused. The old `catalog`/`downloads`
   origins migrate once into a Flibusta-style catalog and are removed; with neither key the starter set is seeded.
 - `shared_prefs/speech.xml`: `rate`, `pitch` (floats, absent = 1), `engine_package` (TTS engine package; absent = system default),
-  `voice_<lang>` (voice name of that engine; the `-local` or `-network` variant itself), `favorites` (string set of
-  `engine<TAB>voice`, the voice being the speaker's on-device name, else its online one). Keys of 0.5 (`engine`, `piper_*`, `silero_speaker`) and `files/voices/`
+  `voice_<lang>` (voice name of that engine; the `-local` or `-network` variant itself). `favorites` (0.7.0 only) is
+  deleted on start. Keys of 0.5 (`engine`, `piper_*`, `silero_speaker`) and `files/voices/`
   (built-in Piper/Silero voices) are deleted on start (`SpeechVoices`): engines are separate apps now, no migration (user decision).
 - `files/catalog-presets.json` — last `catalogs.json` from the modules repository (`CatalogPresetsCodec`); `catalog.xml`
   `presets_checked` — when it was last fetched. Missing or junk = the bundled presets.

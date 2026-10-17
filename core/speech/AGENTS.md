@@ -6,12 +6,12 @@
 - `SpeechVoices` — engine package and per-language voice name in prefs; lists installed engines and an engine's voices.
 - Offline voices are separate engine apps (Folio Piper, Folio Silero) from `github.com/qbitoks/folio-modules`; Folio
   installs them through `core/data/.../modules/ModuleInstaller.kt`. Engine code, models and voice downloads live there.
-- Reader voice UI: `feature/reader/.../VoiceSheet.kt` + `VoiceGroups.kt`, state in `VoiceViewModel`: the voice reading
-  now, rate/pitch sliders, sleep timer, «Избранное», then installed engines by name (folded except the reading one; a
-  Folio engine carries «Скачать голоса…» / «Обновить»), Folio engines not installed last. No separate «Модули Folio»
-  section, no engine picker, no «Удалить» (user decisions). A tap picks engine + voice, long press stars it.
-- `TtsVoice` is one speaker: its `-local` and `-network` voices merge into one row; the chosen one shows
-  «На устройстве | Онлайн». `VoicePreview` says «▶» samples through its own `TextToSpeech`.
+- Reader voice UI: `feature/reader/.../VoiceSheet.kt` + `VoiceGroups.kt`, state in `VoiceViewModel`: «Выбранный голос»
+  (no sample button), rate/pitch sliders, sleep timer, then installed engines by name, all folded (open set kept in the
+  view model; a Folio engine carries «Скачать голоса…» / «Обновить»), Folio engines not installed last. No «Модули
+  Folio» section, engine picker, «Удалить» or favorites (user decisions). A tap picks engine + voice.
+- `TtsVoice` is one speaker: its `-local` and `-network` voices merge into one row; the chosen one gets an
+  «Онлайн-голос» switch row. `VoicePreview` says «▶» samples through its own `TextToSpeech`.
 - `SpeechController` — app-wide singleton: play/pause/skip/rate/pitch/stop, sleep timer (minutes or chapter end, not
   saved), audio focus, throttled position saves.
 - `SpeechService` — `mediaPlayback` foreground service: media notification, `MediaSession`, headset-unplug pause.

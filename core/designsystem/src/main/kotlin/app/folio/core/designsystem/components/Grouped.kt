@@ -65,6 +65,8 @@ fun GroupedCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.
 fun GroupedRow(
     title: String,
     modifier: Modifier = Modifier,
+    /** A second, secondary line under [title] (e.g. which engine a voice belongs to). */
+    subtitle: String? = null,
     icon: ImageVector? = null,
     leading: (@Composable () -> Unit)? = null,
     value: String? = null,
@@ -105,14 +107,19 @@ fun GroupedRow(
                 icon != null -> Icon(icon, null, tint = c.label.copy(alpha = contentAlpha), modifier = Modifier.width(36.dp).size(24.dp))
             }
             if (leading != null || icon != null) Spacer(Modifier.width(14.dp))
-            Text(
-                title,
-                style = FolioType.body,
-                color = titleColor.copy(alpha = titleColor.alpha * contentAlpha),
-                modifier = Modifier.weight(1f).padding(vertical = 13.dp),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Column(Modifier.weight(1f).padding(vertical = if (subtitle != null) 9.dp else 13.dp)) {
+                Text(
+                    title,
+                    style = FolioType.body,
+                    color = titleColor.copy(alpha = titleColor.alpha * contentAlpha),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (subtitle != null) {
+                    Text(subtitle, style = FolioType.footnote, color = c.secondaryLabel.copy(alpha = contentAlpha),
+                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+            }
             if (value != null && !editing) {
                 Text(value, style = valueStyle, color = c.secondaryLabel.copy(alpha = contentAlpha), maxLines = 1)
             }

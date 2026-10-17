@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import app.folio.core.data.modules.InstallState
 import app.folio.core.data.modules.ModuleApk
 import app.folio.core.data.modules.ModuleInstaller
-import app.folio.core.speech.FavoriteVoice
 import app.folio.core.speech.SpeechController
 import app.folio.core.speech.SpeechState
 import app.folio.core.speech.SpeechVoices
@@ -28,7 +27,7 @@ import javax.inject.Inject
 /** An installed engine and its speakers for the book's language; Folio engines are listed even with no voice yet. */
 internal data class EngineVoices(val engine: TtsEngine, val voices: List<TtsVoice>)
 
-/** The «Голос» sheet: engines and voices, voice samples, favorites, Folio engine modules, rate/pitch/sleep timer. */
+/** The «Голос» sheet: engines and voices, voice samples, Folio engine modules, rate/pitch/sleep timer. */
 @HiltViewModel
 internal class VoiceViewModel @Inject constructor(
     private val speech: SpeechController,
@@ -37,7 +36,6 @@ internal class VoiceViewModel @Inject constructor(
     private val installer: ModuleInstaller,
 ) : ViewModel() {
     val choice: StateFlow<VoiceChoice> = voices.choice
-    val favorites: StateFlow<Set<FavoriteVoice>> = voices.favorites
     /** The chosen online voice reads with its on-device twin right now. */
     val offline: StateFlow<Boolean> = voices.offline
     val speechState: StateFlow<SpeechState> = speech.state
@@ -97,7 +95,18 @@ internal class VoiceViewModel @Inject constructor(
         preview.release()
     }
 
-    fun toggleFavorite(engine: String, voice: TtsVoice) = voices.toggleFavorite(engine, voice.key)
+    private val _expanded = MutableStateFlow<Set<String>>(emptySet())
+    /** Engine groups the user opened; all start folded. Kept here so a recomposition can't fold them back. */
+    val expanded: StateFlow<Set<String>> = _expanded.asStateFlow()
+
+    fun toggleGroup(engine: String) {
+        _expanded.value = if (engine in _expanded.value) _expanded.value - engine else _expanded.value + engine
+    }
+
+    /** An engine installed while the sheet is open opens, to download a voice right away. */
+    fun expand(engines: Set<String>) {
+        _expanded.value = _expanded.value + engines
+    }
 
     fun setRate(rate: Float) = speech.setRate(rate)
     fun setPitch(pitch: Float) = speech.setPitch(pitch)

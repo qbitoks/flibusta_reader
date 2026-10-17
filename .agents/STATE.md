@@ -12,7 +12,7 @@ status: active
 ## Phone verification before distribution
 - Read aloud (stage 1): «Слушать» in the navigation panel, mini-player, phrase band, page following in Slide/Scroll,
   notification/lock-screen/headset controls, pause on headphone unplug, no-voice hint.
-- Voice sheet (0.7.0, unit-tested only): samples, rate/pitch, sleep timer, favorites, engine groups, online/offline switch.
+- Voice sheet (0.7.1): samples, rate/pitch, sleep timer; Google «Онлайн-голос» switch + offline fallback unchecked.
 - Read aloud via engine modules (0.6.0): install Folio Piper/Silero from «Голос» (unknown-apps permission, system
   installer confirm), voice download in the engine, reading with the chosen voice, Folio self-update card on Home.
   Emulator-checked: engine detection, Piper voice download, gapless reading with Irina; the in-app install was not

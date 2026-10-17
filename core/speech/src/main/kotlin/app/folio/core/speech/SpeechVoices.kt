@@ -35,23 +35,15 @@ data class TtsEngine(val packageName: String, val label: String)
  */
 data class TtsVoice(val local: String?, val network: String?, val locale: Locale, val title: String?, val speaker: Int) {
     val names: List<String> get() = listOfNotNull(local, network)
-    /** Stable id of the speaker (favorites): its on-device name, else the online one. */
-    val key: String get() = local ?: network!!
     /** The voice to read with: online when asked for and there is one, else on-device. */
     fun variant(online: Boolean): String = if (online) network ?: local!! else local ?: network!!
 }
-
-/** A voice the user starred, from any engine. */
-data class FavoriteVoice(val engine: String, val voice: String)
 
 @Singleton
 class SpeechVoices @Inject constructor(@ApplicationContext private val context: Context) {
     private val prefs = context.getSharedPreferences("speech", Context.MODE_PRIVATE)
     private val _choice = MutableStateFlow(read())
     val choice: StateFlow<VoiceChoice> = _choice.asStateFlow()
-
-    private val _favorites = MutableStateFlow(readFavorites())
-    val favorites: StateFlow<Set<FavoriteVoice>> = _favorites.asStateFlow()
 
     /** Set by [SystemTtsEngine]: the chosen online voice is replaced by its on-device twin (no network). */
     private val _offline = MutableStateFlow(false)
@@ -65,13 +57,6 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
         dropBuiltInVoices()
     }
 
-    /** Stars or unstars [voice] (a [TtsVoice.key]) of [engine]. */
-    fun toggleFavorite(engine: String, voice: String) {
-        val f = FavoriteVoice(engine, voice)
-        val next = if (f in _favorites.value) _favorites.value - f else _favorites.value + f
-        prefs.edit().putStringSet(KEY_FAVORITES, next.map { it.engine + '	' + it.voice }.toSet()).apply()
-        _favorites.value = next
-    }
 
     /** Reads with [engine] (null = the system default); its voices are chosen per language again. */
     fun setEngine(engine: String?) {
@@ -117,9 +102,6 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
         }
     }
 
-    private fun readFavorites(): Set<FavoriteVoice> = prefs.getStringSet(KEY_FAVORITES, null).orEmpty()
-        .mapNotNull { line -> line.split('	').takeIf { it.size == 2 }?.let { FavoriteVoice(it[0], it[1]) } }.toSet()
-
     private fun read(): VoiceChoice {
         val voices = prefs.all.mapNotNull { (key, value) ->
             if (key.startsWith(KEY_VOICE) && value is String) key.removePrefix(KEY_VOICE) to value else null
@@ -129,10 +111,11 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
 
     /**
      * Piper and Silero lived inside Folio up to 0.5: their prefs and `files/voices/` (hundreds of MB) are
-     * dead now that the engines are separate apps, which download their own voices.
+     * dead now that the engines are separate apps, which download their own voices. `favorites` (starred voices)
+     * existed only in 0.7.0.
      */
     private fun dropBuiltInVoices() {
-        val old = prefs.all.keys.filter { it == "engine" || it.startsWith("piper_") || it == "silero_speaker" }
+        val old = prefs.all.keys.filter { it == "engine" || it.startsWith("piper_") || it == "silero_speaker" || it == "favorites" }
         if (old.isNotEmpty()) prefs.edit().apply { old.forEach(::remove) }.apply()
         val dir = File(context.filesDir, "voices")
         if (dir.exists()) thread(name = "drop-voices") { dir.deleteRecursively() }
@@ -141,7 +124,6 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
     private companion object {
         const val KEY_ENGINE = "engine_package"
         const val KEY_VOICE = "voice_"
-        const val KEY_FAVORITES = "favorites"
         const val FOLIO_ENGINES = "app.folio.tts."
     }
 }

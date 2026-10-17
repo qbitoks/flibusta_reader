@@ -70,7 +70,7 @@ internal fun VoiceSheet(reader: ReaderViewModel, palette: ReaderPalette, onDismi
                     CircularProgressIndicator(Modifier.size(24.dp), color = Folio.colors.accent, strokeWidth = 2.dp)
                 }
             } else {
-                NowReading(vm, current, locale, sample)
+                SelectedVoice(vm, current, locale)
                 RateAndPitch(vm)
                 SleepTimerGroup(vm)
                 EngineGroups(vm, current, installed, locale, sample)
@@ -79,16 +79,15 @@ internal fun VoiceSheet(reader: ReaderViewModel, palette: ReaderPalette, onDismi
     }
 }
 
-/** The voice reading now (engine, on device / online / offline now), with its sample. */
+/** «Выбранный голос»: the voice reading the book's language, its engine and whether it is on device or online. */
 @Composable
-private fun NowReading(vm: VoiceViewModel, engines: List<EngineVoices>, locale: Locale, sample: String) {
+private fun SelectedVoice(vm: VoiceViewModel, engines: List<EngineVoices>, locale: Locale) {
     val choice by vm.choice.collectAsStateWithLifecycle()
     val offline by vm.offline.collectAsStateWithLifecycle()
-    val previewing by vm.previewing.collectAsStateWithLifecycle()
     val chosen = choice.voices[locale.language]
     val group = engines.firstOrNull { it.engine.packageName == choice.engine }
     val voice = group?.voices?.firstOrNull { chosen in it.names }
-    Spacer(Modifier.height(8.dp))
+    GroupHeader(stringResource(R.string.speech_selected_voice))
     GroupedCard {
         if (group == null || voice == null || chosen == null) {
             GroupedRow(stringResource(R.string.speech_now_system), showDivider = false)
@@ -98,9 +97,7 @@ private fun NowReading(vm: VoiceViewModel, engines: List<EngineVoices>, locale: 
                 offline -> stringResource(R.string.speech_variant_offline_now)
                 else -> stringResource(R.string.speech_voice_online)
             }
-            GroupedRow(voiceTitle(voice), showDivider = false,
-                leading = { PreviewButton(previewing == chosen) { vm.preview(group.engine.packageName, chosen, locale, sample) } },
-                value = stringResource(R.string.speech_now_engine, group.engine.label, variant), valueStyle = FolioType.subheadline)
+            GroupedRow(voiceTitle(voice), subtitle = stringResource(R.string.speech_now_engine, group.engine.label, variant), showDivider = false)
         }
     }
 }

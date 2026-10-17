@@ -27,7 +27,6 @@ class VoiceNamesTest {
         assertEquals("a-local", both.variant(online = false))
         val onlineOnly = TtsVoice(null, "b-network", ru, null, 2)
         assertEquals("b-network", onlineOnly.variant(online = false))
-        assertEquals("b-network", onlineOnly.key)
     }
 
     @Test fun anOnlineOnlySpeakerHasNoLocalVoice() {

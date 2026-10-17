@@ -4,15 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.speech.tts.TextToSpeech
 import android.text.format.Formatter
-import android.widget.Toast
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -20,9 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -34,7 +28,7 @@ import app.folio.core.designsystem.Folio
 import app.folio.core.designsystem.FolioType
 import app.folio.core.designsystem.components.GroupedCard
 import app.folio.core.designsystem.components.GroupedRow
-import app.folio.core.designsystem.components.SegmentedControl
+import app.folio.core.designsystem.components.IosSwitch
 import app.folio.core.speech.TtsVoice
 import java.util.Locale
 
@@ -43,42 +37,27 @@ import java.util.Locale
 internal fun voiceTitle(voice: TtsVoice): String = voice.title ?: stringResource(R.string.speech_voice_number, voice.speaker)
 
 /**
- * Starred voices, then installed engines by name (the one reading now open, the rest folded), then Folio engines
- * not installed yet. Only the reading engine's group starts open; an engine installed while the sheet is open opens.
+ * Installed engines by name, then Folio engines not installed yet. Every group starts folded (the chosen voice is
+ * on the card above); an engine installed while the sheet is open opens, to download a voice right away.
  */
 @Composable
 internal fun EngineGroups(vm: VoiceViewModel, engines: List<EngineVoices>, installed: Map<String, Long>, locale: Locale, sample: String) {
     val choice by vm.choice.collectAsStateWithLifecycle()
     val modules by vm.modules.collectAsStateWithLifecycle()
-    val favorites by vm.favorites.collectAsStateWithLifecycle()
-    var open by remember { mutableStateOf(setOfNotNull(choice.engine ?: engines.firstOrNull()?.engine?.packageName)) }
+    val open by vm.expanded.collectAsStateWithLifecycle()
     var known by remember { mutableStateOf(installed.keys) }
     LaunchedEffect(installed) {
-        open = open + (installed.keys - known)
+        vm.expand(installed.keys - known)
         known = installed.keys
     }
     val chosen = choice.voices[locale.language]
-    fun selected(engine: String, v: TtsVoice) = choice.engine == engine && chosen in v.names
-
-    val starred = engines.flatMap { g -> g.voices.filter { v -> favorites.any { it.engine == g.engine.packageName && it.voice == v.key } }.map { g to it } }
-    if (starred.isNotEmpty()) {
-        SectionHeader(stringResource(R.string.speech_favorites))
-        GroupedCard {
-            starred.forEachIndexed { i, (g, v) ->
-                VoiceRow(vm, g.engine.packageName, v, selected(g.engine.packageName, v), chosen, locale, sample,
-                    engineLabel = g.engine.label, showDivider = i != starred.lastIndex)
-            }
-        }
-    }
 
     engines.forEach { g ->
         val pkg = g.engine.packageName
         val module = modules.firstOrNull { it.packageName == pkg }
         val expanded = pkg in open
         val count = if (g.voices.isEmpty()) null else pluralStringResource(R.plurals.speech_voices_count, g.voices.size, g.voices.size)
-        SectionHeader(g.engine.label, value = if (expanded) null else count, expanded = expanded) {
-            open = if (expanded) open - pkg else open + pkg
-        }
+        SectionHeader(g.engine.label, value = if (expanded) null else count, expanded = expanded) { vm.toggleGroup(pkg) }
         if (!expanded) return@forEach
         val version = installed[pkg]
         val update = module?.takeIf { version != null && version < it.versionCode }
@@ -88,7 +67,8 @@ internal fun EngineGroups(vm: VoiceViewModel, engines: List<EngineVoices>, insta
                 GroupedRow(stringResource(R.string.speech_engine_no_voices), titleColor = Folio.colors.secondaryLabel, showDivider = more)
             }
             g.voices.forEachIndexed { i, v ->
-                VoiceRow(vm, pkg, v, selected(pkg, v), chosen, locale, sample, showDivider = i != g.voices.lastIndex || more)
+                val selected = choice.engine == pkg && chosen in v.names
+                VoiceRow(vm, pkg, v, selected, chosen, locale, sample, showDivider = i != g.voices.lastIndex || more)
             }
             if (module != null) {
                 val context = LocalContext.current
@@ -100,7 +80,7 @@ internal fun EngineGroups(vm: VoiceViewModel, engines: List<EngineVoices>, insta
     }
 
     val missing = modules.filter { it.packageName !in installed }.sortedBy { it.title.lowercase() }
-    if (engines.all { it.voices.isEmpty() } && starred.isEmpty()) VoiceNote(stringResource(R.string.speech_no_voices_yet))
+    if (engines.all { it.voices.isEmpty() }) VoiceNote(stringResource(R.string.speech_no_voices_yet))
     missing.forEach { m ->
         val context = LocalContext.current
         SectionHeader(m.title, value = Formatter.formatShortFileSize(context, m.bytes))
@@ -112,65 +92,41 @@ internal fun EngineGroups(vm: VoiceViewModel, engines: List<EngineVoices>, insta
             ModuleRow(vm, m, stringResource(R.string.speech_module_install), showDivider = false)
         }
     }
-    if (favorites.isEmpty() && engines.any { it.voices.isNotEmpty() }) VoiceNote(stringResource(R.string.speech_favorites_hint))
 }
 
 /**
- * One speaker: «▶» sample, name, a check when it reads. A tap reads with it, a long press stars it. The chosen speaker
- * with both an on-device and an online voice shows «На устройстве | Онлайн» under it.
+ * One speaker: «▶» sample, name, a check when it reads; a tap reads with it. The chosen speaker with both an
+ * on-device and an online voice gets an «Онлайн-голос» switch row under it.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VoiceRow(
     vm: VoiceViewModel, engine: String, v: TtsVoice, selected: Boolean, chosen: String?, locale: Locale, sample: String,
-    engineLabel: String? = null, showDivider: Boolean,
+    showDivider: Boolean,
 ) {
     val previewing by vm.previewing.collectAsStateWithLifecycle()
-    val favorites by vm.favorites.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val haptics = LocalHapticFeedback.current
-    val starred = favorites.any { it.engine == engine && it.voice == v.key }
     // The voice a tap or «▶» uses: the chosen variant of this speaker, else on-device.
     val name = if (selected && chosen != null) chosen else v.variant(online = false)
-    val added = stringResource(R.string.speech_favorite_added)
-    val removed = stringResource(R.string.speech_favorite_removed)
-    val value = when {
-        engineLabel != null -> engineLabel
-        v.local == null -> stringResource(R.string.speech_voice_online)
-        else -> null
-    }
+    val switch = selected && v.local != null && v.network != null
     GroupedRow(
         voiceTitle(v),
-        modifier = Modifier.combinedClickable(
-            onClick = { vm.select(engine, name, locale) },
-            onLongClick = {
-                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                vm.toggleFavorite(engine, v)
-                Toast.makeText(context, if (starred) removed else added, Toast.LENGTH_SHORT).show()
-            },
-        ),
         leading = { PreviewButton(previewing == name) { vm.preview(engine, name, locale, sample) } },
-        value = value,
+        value = if (v.local == null) stringResource(R.string.speech_voice_online) else null,
         valueStyle = FolioType.subheadline,
-        showDivider = showDivider && !(selected && v.local != null && v.network != null),
-        trailing = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (starred && engineLabel == null) Icon(Icons.Rounded.Star, null, tint = Folio.colors.secondaryLabel, modifier = Modifier.padding(start = 8.dp).size(18.dp))
-                if (selected) Icon(Icons.Rounded.Check, null, tint = Folio.colors.accent, modifier = Modifier.padding(start = 8.dp).size(22.dp))
-            }
-        },
+        showDivider = showDivider || switch,
+        trailing = { if (selected) Icon(Icons.Rounded.Check, null, tint = Folio.colors.accent, modifier = Modifier.padding(start = 8.dp).size(22.dp)) },
+        onClick = { vm.select(engine, name, locale) },
     )
-    if (selected && v.local != null && v.network != null) {
+    if (switch) {
         val online = chosen == v.network
-        Column(Modifier.padding(start = 18.dp, end = 16.dp, bottom = 12.dp)) {
-            SegmentedControl(listOf(stringResource(R.string.speech_device), stringResource(R.string.speech_online)),
-                if (online) 1 else 0, onSelect = { vm.select(engine, v.variant(online = it == 1), locale) }, role = Role.RadioButton)
-            if (online) {
-                Text(stringResource(R.string.speech_online_note), style = FolioType.footnote, color = Folio.colors.secondaryLabel,
-                    modifier = Modifier.padding(top = 8.dp))
-            }
+        // Indented like the voice names: the switch belongs to the voice above.
+        GroupedRow(stringResource(R.string.speech_online_voice), leading = {}, showDivider = showDivider && !online,
+            trailing = { IosSwitch(online, { vm.select(engine, v.variant(online = it), locale) }) },
+            onClick = { vm.select(engine, v.variant(online = !online), locale) })
+        if (online) {
+            Text(stringResource(R.string.speech_online_note), style = FolioType.footnote, color = Folio.colors.secondaryLabel,
+                modifier = Modifier.padding(start = 68.dp, end = 16.dp, bottom = 12.dp))
+            if (showDivider) HorizontalDivider(color = Folio.colors.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 68.dp, end = 16.dp))
         }
-        if (showDivider) HorizontalDivider(color = Folio.colors.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 60.dp, end = 16.dp))
     }
 }
 

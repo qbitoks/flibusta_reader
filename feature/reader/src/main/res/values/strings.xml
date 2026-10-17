@@ -321,21 +321,17 @@
     <string name="speech_sleep_until">Reading stops at %1$s.</string>
     <string name="speech_sleep_chapter_note">Reading stops at the end of the chapter.</string>
     <string name="speech_sleep_on">Sleep timer is on</string>
-    <string name="speech_favorites">Favorites</string>
-    <string name="speech_favorite_added">Voice added to favorites</string>
-    <string name="speech_favorite_removed">Voice removed from favorites</string>
     <string name="speech_preview">Play sample</string>
     <string name="speech_preview_stop">Stop sample</string>
-    <string name="speech_device">On device</string>
-    <string name="speech_online">Online</string>
     <string name="speech_online_note">Sounds better, but the text goes online to the engine. Without network the on-device voice reads.</string>
     <string name="speech_download_voices">Download voices…</string>
     <string name="speech_update_to">Update to %1$s</string>
     <string name="speech_engine_no_voices">No voices for the book’s language yet</string>
     <string name="speech_sample">This is how the book will sound with this voice.</string>
-    <string name="speech_favorites_hint">Touch and hold a voice to add it to favorites.</string>
     <plurals name="speech_voices_count">
         <item quantity="one">%1$d voice</item>
         <item quantity="other">%1$d voices</item>
     </plurals>
+    <string name="speech_online_voice">Online voice</string>
+    <string name="speech_selected_voice">Selected voice</string>
 </resources>
