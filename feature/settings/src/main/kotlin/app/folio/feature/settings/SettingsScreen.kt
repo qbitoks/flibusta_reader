@@ -1,5 +1,6 @@
 package app.folio.feature.settings
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import app.folio.core.designsystem.components.GroupHeader
 import app.folio.core.designsystem.components.GroupedCard
 import app.folio.core.designsystem.components.GroupedRow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -73,6 +75,10 @@ class SettingsViewModel @Inject constructor(
         settings.appAppearance.stateIn(viewModelScope, SharingStarted.Eagerly, Appearance.Auto)
     val update: StateFlow<ModuleApk?> = installer.appUpdate
     val states: StateFlow<Map<String, InstallState>> = installer.states
+    val viewers: StateFlow<List<ModuleApk>> = installer.viewers
+    val installed: StateFlow<Map<String, Long>> = installer.installed
+    val pdfInModule: StateFlow<Boolean> =
+        settings.pdfInModule.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     private val _check = MutableStateFlow(UpdateCheck.Checking)
     val check: StateFlow<UpdateCheck> = _check.asStateFlow()
@@ -80,9 +86,24 @@ class SettingsViewModel @Inject constructor(
 
     init {
         checkUpdate()
+        installer.refreshInstalled()
+        // The modules index too, never from the cache: «Модули» must show a module published an hour ago.
+        viewModelScope.launch {
+            try {
+                installer.refresh(force = true)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("Settings", "Modules index not refreshed", e)
+            }
+        }
     }
 
     fun setAppearance(value: Appearance) = viewModelScope.launch { settings.setAppAppearance(value) }
+
+    fun setPdfInModule(value: Boolean) {
+        viewModelScope.launch { settings.setPdfInModule(value) }
+    }
 
     fun checkUpdate() {
         if (checking?.isActive == true) return
@@ -120,6 +141,7 @@ fun SettingsScreen(onBack: () -> Unit, onReadingSettings: () -> Unit, vm: Settin
             GroupedRow(stringResource(R.string.settings_reading), icon = Icons.Rounded.TextFields, chevron = true, showDivider = false, onClick = onReadingSettings)
         }
         UpdateGroup(vm)
+        ModulesGroup(vm)
         AboutGroup()
     }
 }
@@ -215,7 +237,7 @@ private fun AboutGroup() {
 
 /** The update's action label for [state]: «Обновить», progress, «Разрешите установку» or «Повторить». */
 @Composable
-private fun installAction(state: InstallState): String = when (state) {
+internal fun installAction(state: InstallState): String = when (state) {
     is InstallState.Downloading -> state.fraction?.let { "${(it * 100).toInt()} %" } ?: stringResource(R.string.settings_install_downloading)
     InstallState.Installing -> stringResource(R.string.settings_install_installing)
     InstallState.NeedsPermission -> stringResource(R.string.settings_install_permission)

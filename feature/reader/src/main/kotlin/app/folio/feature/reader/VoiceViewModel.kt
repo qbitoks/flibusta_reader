@@ -40,7 +40,7 @@ internal class VoiceViewModel @Inject constructor(
     val offline: StateFlow<Boolean> = voices.offline
     val speechState: StateFlow<SpeechState> = speech.state
 
-    val modules: StateFlow<List<ModuleApk>> = installer.modules
+    val modules: StateFlow<List<ModuleApk>> = installer.engines
     val moduleStates: StateFlow<Map<String, InstallState>> = installer.states
     val installedModules: StateFlow<Map<String, Long>> = installer.installed
 

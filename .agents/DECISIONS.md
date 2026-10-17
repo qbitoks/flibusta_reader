@@ -86,3 +86,5 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-17 | catalog | Download notifications are plain (`DownloadNotifier`), no foreground service | WorkManager + Range resume suffice
 2026-10-17 | reader | Page keys via `ReaderKeys` from `MainActivity.onKeyDown/onKeyUp`; volume toggle shared, default on | Compose keys need focus
 2026-10-17 | settings | Licenses: hand `OpenSourceList` + assets, checked by a test | no AboutLibraries for ~10 libraries
+2026-10-17 | modules | PDF reader = separate GPL-3.0 app «Folio MJ PDF» (`pdf-mj/` in folio-modules, MJ PDF engine + Folio-style Compose UI) | GPL code stays out of Folio; user chose a module
+2026-10-17 | modules | Viewers in `modules.json` → own `viewers` array; position back via signature-protected `ReadingProvider.call` | 0.9 reads only `modules` and would list them as engines

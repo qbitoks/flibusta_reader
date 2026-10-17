@@ -5,6 +5,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Folio MJ PDF reports reading positions to ReadingProvider; only apps signed like Folio get it. -->
+    <permission
+        android:name="app.folio.permission.READING"
+        android:protectionLevel="signature" />
+
+    <queries>
+        <package android:name="app.folio.pdf.mj" />
+    </queries>
+
     <application
         android:name=".FolioApp"
         android:allowBackup="false"
@@ -73,6 +82,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <provider
+            android:name=".ReadingProvider"
+            android:authorities="app.folio.reading"
+            android:exported="true"
+            android:permission="app.folio.permission.READING" />
 
         <!-- WorkManager is initialised by FolioApp so workers can use Hilt. -->
         <provider

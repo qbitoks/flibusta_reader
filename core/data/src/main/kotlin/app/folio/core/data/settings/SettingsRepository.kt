@@ -152,6 +152,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val watchedFolder = stringPreferencesKey("watched_folder")
         val hiddenSystem = stringSetPreferencesKey("hidden_system_collections")
         val volumeKeys = booleanPreferencesKey("volume_keys_turn")
+        val pdfInModule = booleanPreferencesKey("pdf_in_module")
     }
 
     /** Settings shared by all books. */
@@ -180,6 +181,13 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     suspend fun setVolumeKeys(value: Boolean) {
         store.edit { it[Keys.volumeKeys] = value }
+    }
+
+    /** PDFs open in the Folio MJ PDF module when it is installed; off keeps the built-in viewer. */
+    val pdfInModule: Flow<Boolean> = store.data.map { it[Keys.pdfInModule] ?: true }.distinctUntilChanged()
+
+    suspend fun setPdfInModule(value: Boolean) {
+        store.edit { it[Keys.pdfInModule] = value }
     }
 
     suspend fun currentReader(): ReaderSettings = reader.first()

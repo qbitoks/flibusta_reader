@@ -23,7 +23,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
@@ -60,8 +63,12 @@ class ModuleInstaller @Inject constructor(@ApplicationContext private val contex
     private val jobs = mutableMapOf<String, Job>()
 
     private val _modules = MutableStateFlow(ModuleIndexCodec.modules(prefs.getString(KEY_INDEX, null).orEmpty()).orEmpty())
-    /** Engines published in the modules repository (the last list fetched). */
+    /** Modules published in the modules repository (the last list fetched). */
     val modules: StateFlow<List<ModuleApk>> = _modules.asStateFlow()
+    /** Speech engines among [modules]. */
+    val engines: StateFlow<List<ModuleApk>> = kind(ModuleKind.Engine)
+    /** Book viewers among [modules] (Folio MJ PDF). */
+    val viewers: StateFlow<List<ModuleApk>> = kind(ModuleKind.Viewer)
 
     private val _appUpdate = MutableStateFlow<ModuleApk?>(null)
     /** A newer Folio release, if there is one. */
@@ -276,6 +283,10 @@ class ModuleInstaller @Inject constructor(@ApplicationContext private val contex
         (_modules.value.map { it.packageName } + KNOWN_ENGINES).distinct()
             .mapNotNull { pkg -> installedVersion(pkg)?.let { pkg to it } }.toMap()
 
+    private fun kind(kind: ModuleKind): StateFlow<List<ModuleApk>> =
+        _modules.map { list -> list.filter { it.kind == kind } }
+            .stateIn(scope, SharingStarted.Eagerly, _modules.value.filter { it.kind == kind })
+
     private fun set(packageName: String, state: InstallState) = _states.update { it + (packageName to state) }
 
     private fun bounded(input: InputStream, limit: Long): ByteArray {
@@ -292,8 +303,9 @@ class ModuleInstaller @Inject constructor(@ApplicationContext private val contex
 
     private companion object {
         const val TAG = "ModuleInstaller"
-        const val KEY_INDEX = "index"
-        const val KEY_CHECKED = "checked"
+        // "_v2": refetch once, an index cached by 0.9 may predate the `viewers` array.
+        const val KEY_INDEX = "index_v2"
+        const val KEY_CHECKED = "checked_v2"
         const val EXTRA_PACKAGE = "app.folio.extra.PACKAGE"
         const val EXTRA_ID = "app.folio.extra.MODULE_ID"
         const val CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000L

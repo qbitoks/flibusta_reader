@@ -21,6 +21,15 @@ class ModuleIndexCodecTest {
         assertNull(ModuleIndexCodec.modules("<html>"))
     }
 
+    @Test fun viewersComeFromTheirOwnArray() {
+        val list = ModuleIndexCodec.modules("""{"version":1,"modules":[],"viewers":[
+            {"id":"pdf-mj","package":"app.folio.pdf.mj","title":"Folio MJ PDF","versionCode":1,"versionName":"1.0.0",
+             "url":"https://example.org/m.apk","sha256":"$sha"}]}""")!!
+        assertEquals(listOf(ModuleKind.Viewer), list.map { it.kind })
+        assertEquals(ModuleKind.Engine, ModuleIndexCodec.modules("""{"version":1,"modules":[
+            {"id":"p","package":"p","title":"P","versionCode":1,"url":"https://example.org/p.apk","sha256":"$sha"}]}""")!!.single().kind)
+    }
+
     @Test fun appReleaseTakesTheHashFromTheSums() {
         val metadata = """{"version":"0.6.0","versionName":"0.6.0","versionCode":23,"apkName":"Folio-v0.6.0.apk"}"""
         val sums = "$sha *Folio-v0.6.0.apk\n0000 README-release-ru.md\n"
@@ -34,6 +43,7 @@ class ModuleIndexCodecTest {
     /** The repository's own `modules.json` (checked out next to Folio) parses. */
     @Test fun repositoryIndexParses() {
         val file = File("../../../folio-modules/modules.json").takeIf { it.isFile } ?: return
-        assertEquals(setOf("piper", "silero"), ModuleIndexCodec.modules(file.readText())!!.map { it.id }.toSet())
+        val ids = ModuleIndexCodec.modules(file.readText())!!.map { it.id }.toSet()
+        assertEquals(true, ids.containsAll(setOf("piper", "silero")))
     }
 }

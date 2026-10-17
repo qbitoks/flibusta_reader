@@ -4,6 +4,7 @@
 ## Entry points
 - Resolve symbols below in `feature/reader/src/main/kotlin/app/folio/feature/reader/`; search exact names first.
 - `ReaderRoute` picks `PdfViewer` (PDF) or `ReaderScreen` — appearance, ink, lifecycle; `ReaderControls` — local UI state.
+- PDF + Folio MJ PDF module: `ReaderKind.External` starts it (`core/data/.../PdfModule.kt`, positions via `app/.../ReadingProvider.kt`); else `ModuleOffer`.
 - `ReaderSurface` — viewport, insets, guide geometry and layer order; `ReaderPages` — paged/scroll rendering.
 - `readerInteractions` — tap targets, tap zones, long-press selection; `ReaderSelectionOverlays` — selection, notes, palette.
 - `ReaderChrome` — overlays and page labels; `ReaderToolbar` / `ReaderNavigationPanel` — controls; `ReaderSheets` — sheets.
@@ -14,8 +15,7 @@
 - `HorizontalPageTurner` — Slide/Curl/Fade; `tapZone` — pure gesture math; `ScrollReader` / `planScrollWindow` — scroll/window.
 - `footerCenter`, `headerText`, `rememberClock`, `rememberBattery` — page chrome; `ReaderPageSettings` — inline page settings.
 - `ChapterProgress` — shared TOC rows, titles and remaining pages; `GuideNavigation` — line state after successful turns.
-- Settings: `core/data/src/main/kotlin/app/folio/core/data/settings/SettingsRepository.kt`.
-- Settings: `ThemesSheet` → `ReadingSettingsSheet` (also `ReadingDefaultsSheet`) in a full-height `FolioSheet`, no grabber.
+- Settings (`core/data/.../settings/SettingsRepository.kt`): `ThemesSheet` → `ReadingSettingsSheet` (also `ReadingDefaultsSheet`) in a full-height `FolioSheet`, no grabber.
   Edit through `SettingsEditor`; `vm.settings` = shared + `ownSettings`.
 - Pin `PageSettingsPreview` (a `PreviewSource`) outside per-tab scrolling; use `Paginator`/`PageView` with `samplePreviewSource()`, even in a book (book numbers flicker on re-pagination).
 - Preview taps only step the guide (turning at its ends); tabs/manual scroll navigate settings. Keep «Прокрутка» scroll; paged modes swipe via `HorizontalPageTurner`.

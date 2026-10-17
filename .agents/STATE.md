@@ -5,9 +5,10 @@ status: active
 
 ## Current focus
 - Work from the user's task; follow-ups below need an explicit task, not autonomous implementation.
-- 0.3.x–0.5.x (now 0.5.0) uses the prototype engine; OPDS is the «Каталог» tab. No data migration from 0.2.x (user decision).
 
 ## Phone verification before distribution
+- 0.10.0: «Настройки → Модули» installs Folio MJ PDF; PDFs open in it (pages, «Как книга», contents, search, themes,
+  volume keys) and the page comes back to Folio. Emulator-checked with a generated PDF; not on a phone or a real scan.
 - 0.9.0: page keys (volume off while reading aloud), download notifications + «Читать», «Лицензии»,
   «Каталоги» (iKnigi only, import link/file, re-import updates, export; old starred kept).
 - «Настройки» (gear on «Главная»): appearance, «Настройки чтения», update check/up-to-date/offline, project link.
@@ -16,8 +17,6 @@ status: active
 - Voice sheet (0.7.1): samples, rate/pitch, sleep timer; Google «Онлайн-голос» switch + offline fallback unchecked.
 - Read aloud via engine modules (0.6.0): install Folio Piper/Silero from «Голос» (unknown-apps permission, system
   installer confirm), voice download in the engine, reading with the chosen voice, Folio self-update card on Home.
-  Emulator-checked: engine detection, Piper voice download, gapless reading with Irina; the in-app install was not
-  run there (the unknown-apps permission was left to the user).
 - Reader settings: Basic/Advanced tabs, palette cards, Advanced-only reset, default/book reset, preset paragraph
   gaps and seam leading, cyclic interval/margin cards and percentage margins, footer capsules, 36 dp Scroll lines.
 - Reader controls: themed scrubber, five-page history arrows, position sheet, bottom search, corner bookmark.
@@ -37,4 +36,5 @@ status: active
 
 ## Known issues / verification gaps
 - The emulator's DNS proxy fails behind the host VPN; a fresh AVD with `-dns-server` works.
-- Page keys don't work in the PDF viewer yet.
+- Page keys don't work in the built-in PDF viewer (they do in Folio MJ PDF).
+- Folio MJ PDF 1.0.0 has no annotations, forms or bookmarks yet (MJ PDF's engine supports them).

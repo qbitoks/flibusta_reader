@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateCentroid
@@ -49,12 +50,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.folio.core.data.modules.InstallState
 import app.folio.core.designsystem.components.CircleButton
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -102,6 +106,7 @@ internal fun PdfViewer(vm: PdfViewModel, kind: ReaderKind, onClose: () -> Unit) 
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    ModuleOffer(vm, page = { pager.currentPage }, onClose = onClose)
                     var drag by remember { mutableStateOf<Float?>(null) }
                     val shown = drag?.roundToInt() ?: pager.currentPage
                     Text(stringResource(R.string.pdf_page, shown + 1, kind.pageCount), color = Color.White, fontSize = 13.sp)
@@ -183,5 +188,45 @@ private fun PdfPage(vm: PdfViewModel, index: Int, active: Boolean, onZoomed: (Bo
                 )
             }
         }
+    }
+}
+
+/** «Folio MJ PDF»: install it from here, then reopen the book in it at the current page. */
+@Composable
+private fun ModuleOffer(vm: PdfViewModel, page: () -> Int, onClose: () -> Unit) {
+    val offer by vm.offer.collectAsStateWithLifecycle()
+    val ready by vm.moduleReady.collectAsStateWithLifecycle()
+    val states by vm.installStates.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val apk = offer
+    if (apk == null && !ready) return
+    val state = apk?.let { states[it.packageName] } ?: InstallState.Idle
+    val action = when {
+        ready -> stringResource(R.string.pdf_module_open)
+        state is InstallState.Downloading -> state.fraction?.let { "${(it * 100).toInt()} %" } ?: stringResource(R.string.speech_module_downloading)
+        state == InstallState.Installing -> stringResource(R.string.speech_module_installing)
+        state == InstallState.NeedsPermission -> stringResource(R.string.speech_module_permission)
+        state is InstallState.Failed -> stringResource(R.string.speech_voice_retry)
+        else -> stringResource(R.string.speech_module_install)
+    }
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = 6.dp).clickable {
+            if (ready) {
+                scope.launch {
+                    vm.moduleIntent(page())?.let { runCatching { context.startActivity(it) } }
+                    onClose()
+                }
+            } else if (apk != null && state !is InstallState.Downloading && state != InstallState.Installing) {
+                vm.installModule(apk)
+            }
+        }.padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            stringResource(R.string.pdf_module_offer), color = Color.White.copy(alpha = 0.75f), fontSize = 13.sp,
+            modifier = Modifier.weight(1f),
+        )
+        Text(action, color = Color(0xFF0A84FF), fontSize = 15.sp, modifier = Modifier.padding(start = 12.dp))
     }
 }

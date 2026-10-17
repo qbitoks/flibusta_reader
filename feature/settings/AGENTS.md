@@ -10,6 +10,7 @@
 - App-wide settings and app info go here; actions tied to one screen (library view, folder, catalogs) stay there.
 - Sheets of other features open through host callbacks (`onReadingSettings`); no dependency on other `feature/*`.
 - Use `GroupHeader`/`GroupedCard`/`GroupedRow` on `groupedBackground`.
+- «Модули» (`ModulesGroup.kt`): viewers from `ModuleInstaller.viewers` (install/update) and the PDF switch; engines stay in «Голос».
 - Add text to `values/strings.xml` and `values-ru/strings.xml`.
 - «Лицензии» (`Licenses.kt`): a new shipped library or font needs an `OpenSourceList` entry and its text in
   `assets/licenses/`; `OpenSourceListTest` fails otherwise.

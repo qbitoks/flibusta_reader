@@ -6,6 +6,8 @@ import androidx.activity.compose.BackHandler
 import android.content.res.Configuration
 import android.content.res.Resources
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.toArgb
@@ -23,6 +25,13 @@ fun ReaderRoute(onClose: () -> Unit, pdf: PdfViewModel = hiltViewModel()) {
     when (val kind = pdf.kind.collectAsStateWithLifecycle().value) {
         ReaderKind.Loading -> Unit
         ReaderKind.Reflow -> ReaderScreen(hiltViewModel<ReaderViewModel>(), onClose)
+        is ReaderKind.External -> {
+            val context = LocalContext.current
+            LaunchedEffect(kind) {
+                runCatching { context.startActivity(kind.intent) }
+                onClose()
+            }
+        }
         else -> PdfViewer(pdf, kind, onClose)
     }
 }
