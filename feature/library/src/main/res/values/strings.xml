@@ -27,11 +27,6 @@
     <string name="library_watch_folder">Watch Folder…</string>
     <string name="library_stop_watching">Stop Watching Folder</string>
     <string name="library_scan_now">Check Folder Now</string>
-    <string name="library_appearance_header">Appearance</string>
-    <string name="library_appearance_auto">Match Device</string>
-    <string name="library_appearance_light">Light</string>
-    <string name="library_appearance_dark">Dark</string>
-    <string name="library_about">About Folio</string>
     <string name="library_add_to">Add To…</string>
     <string name="library_delete_selected">Delete</string>
     <string name="library_share">Share</string>
@@ -82,17 +77,12 @@
     <string name="search_recent">Recent</string>
     <string name="search_clear">Clear</string>
     <string name="search_no_results">No Results</string>
-    <string name="about_title">About</string>
-    <string name="about_version">Version %1$s</string>
-    <string name="about_fonts">Fonts</string>
-    <string name="about_fonts_text">Literata, PT Serif, Source Serif 4, Lora and Inter are licensed under the SIL Open Font License 1.1.</string>
     <plurals name="import_added">
         <item quantity="one">%d book added</item>
         <item quantity="other">%d books added</item>
     </plurals>
     <string name="import_exists">Already in your library</string>
     <string name="import_failed">Couldn’t open %1$s</string>
-    <string name="library_reading_settings">Reading Settings</string>
 
     <string name="update_title">Folio %1$s is available</string>
     <string name="update_text">A new version from GitHub; your settings and books stay.</string>
@@ -101,4 +91,5 @@
     <string name="update_installing">Installing…</string>
     <string name="update_permission">Allow installing</string>
     <string name="update_retry">Retry</string>
+    <string name="home_settings">Settings</string>
 </resources>

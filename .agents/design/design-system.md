@@ -82,5 +82,6 @@
 - Place Large Title at x=32 dp, baseline near y=95 dp; right controls are about 43 dp with 12–17 dp gaps
   and 16–19 dp right inset.
 - In «Библиотека», use «≡» for «Коллекции» and «•••» for view/sort/actions.
+- «Главная» carries a gear circle button that pushes «Настройки» (grouped cards, tab bar hidden).
 - Morph the search control/tab area into a bottom search field with a library/back circle; keep search
   results and recent requests in `.agents/design/home-library.md`.

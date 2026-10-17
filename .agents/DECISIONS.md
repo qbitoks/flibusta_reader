@@ -84,3 +84,4 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | catalog | Preset catalogs come from `catalogs.json` in folio-modules (daily, cached), bundled list as fallback | update the list without an app release
 2026-10-16 | speech | No migration of 0.5 voices/prefs: `files/voices/` and old speech keys are deleted | user decision: voices are downloaded again in the engines
 2026-10-17 | speech | Voice sheet: engines by name, uninstalled Folio engines last, no modules section | user chose it; uninstall stays with the system
+2026-10-17 | ui | Settings: `feature/settings`, gear on «Главная»; appearance + reader defaults leave library «•••» | user decision; settings will grow

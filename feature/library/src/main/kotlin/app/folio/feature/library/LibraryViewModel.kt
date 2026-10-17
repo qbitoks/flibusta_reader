@@ -14,7 +14,6 @@ import app.folio.core.data.db.CollectionEntity
 import app.folio.core.data.library.FolderScanner
 import app.folio.core.data.library.ImportResult
 import app.folio.core.data.library.LibraryRepository
-import app.folio.core.data.settings.Appearance
 import app.folio.core.data.settings.LibraryLayout
 import app.folio.core.data.settings.LibrarySettings
 import app.folio.core.data.settings.LibrarySort
@@ -103,11 +102,6 @@ class LibraryViewModel @Inject constructor(
 
     val librarySettings: StateFlow<LibrarySettings> =
         settings.library.stateIn(viewModelScope, SharingStarted.Eagerly, LibrarySettings())
-
-    val appAppearance: StateFlow<Appearance> =
-        settings.appAppearance.stateIn(viewModelScope, SharingStarted.Eagerly, Appearance.Auto)
-
-    fun setAppAppearance(value: Appearance) = viewModelScope.launch { settings.setAppAppearance(value) }
 
     val collections: StateFlow<List<CollectionEntity>> =
         library.collections.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())

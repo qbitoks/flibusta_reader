@@ -27,11 +27,6 @@
     <string name="library_watch_folder">Следить за папкой…</string>
     <string name="library_stop_watching">Не следить за папкой</string>
     <string name="library_scan_now">Проверить папку</string>
-    <string name="library_appearance_header">Оформление</string>
-    <string name="library_appearance_auto">Как на устройстве</string>
-    <string name="library_appearance_light">Светлое</string>
-    <string name="library_appearance_dark">Тёмное</string>
-    <string name="library_about">О приложении</string>
     <string name="library_add_to">Добавить в…</string>
     <string name="library_delete_selected">Удалить</string>
     <string name="library_share">Поделиться</string>
@@ -84,10 +79,6 @@
     <string name="search_recent">Недавние</string>
     <string name="search_clear">Очистить</string>
     <string name="search_no_results">Ничего не найдено</string>
-    <string name="about_title">О приложении</string>
-    <string name="about_version">Версия %1$s</string>
-    <string name="about_fonts">Шрифты</string>
-    <string name="about_fonts_text">Literata, PT Serif, Source Serif 4, Lora и Inter распространяются по лицензии SIL Open Font License 1.1.</string>
     <plurals name="import_added">
         <item quantity="one">Добавлена %d книга</item>
         <item quantity="few">Добавлено %d книги</item>
@@ -96,7 +87,6 @@
     </plurals>
     <string name="import_exists">Уже есть в библиотеке</string>
     <string name="import_failed">Не удалось открыть %1$s</string>
-    <string name="library_reading_settings">Настройки чтения</string>
 
     <string name="update_title">Доступна версия Folio %1$s</string>
     <string name="update_text">Новая версия с GitHub; настройки и книги сохранятся.</string>
@@ -105,4 +95,5 @@
     <string name="update_installing">Установка…</string>
     <string name="update_permission">Разрешите установку</string>
     <string name="update_retry">Повторить</string>
+    <string name="home_settings">Настройки</string>
 </resources>

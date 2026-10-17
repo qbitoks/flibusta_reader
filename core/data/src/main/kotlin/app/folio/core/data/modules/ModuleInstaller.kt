@@ -183,14 +183,20 @@ class ModuleInstaller @Inject constructor(@ApplicationContext private val contex
         }
     }
 
-    private suspend fun checkApp() {
+    /** Reads Folio's latest GitHub release into [appUpdate]; false when the release could not be fetched. */
+    suspend fun checkApp(): Boolean {
         val latest = runCatching {
             val metadata = fetch(ModulesRepository.APP_METADATA)
             val sums = fetch(ModulesRepository.APP_RELEASES + "SHA256SUMS.txt")
             ModuleIndexCodec.app(metadata, sums, context.packageName, ModulesRepository.APP_RELEASES)
-        }.onFailure { if (it is CancellationException) throw it }.getOrNull()
+        }.onFailure {
+            if (it is CancellationException) throw it
+            Log.w(TAG, "App update check failed", it)
+            return false
+        }.getOrNull()
         val current = installedVersion(context.packageName) ?: 0
         _appUpdate.value = latest?.takeIf { it.versionCode > current }
+        return true
     }
 
     private suspend fun fetch(url: String): String = runInterruptible(Dispatchers.IO) {

@@ -35,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -50,7 +49,6 @@ import app.folio.core.designsystem.Folio
 import app.folio.core.designsystem.components.FloatingTabBar
 import app.folio.core.designsystem.components.GlassScope
 import app.folio.core.designsystem.components.TabSpec
-import app.folio.feature.library.AboutScreen
 import app.folio.feature.library.AddToCollectionSheet
 import app.folio.feature.library.CollectionsSheet
 import app.folio.feature.library.HomeScreen
@@ -64,6 +62,7 @@ import app.folio.feature.library.ShelfScreen
 import app.folio.feature.reader.ReaderRoute
 import app.folio.feature.reader.ReadingDefaultsSheet
 import app.folio.feature.catalog.CatalogScreen
+import app.folio.feature.settings.SettingsScreen
 import app.folio.feature.catalog.CatalogViewModel
 import app.folio.feature.catalog.R as CatalogR
 import kotlinx.coroutines.flow.Flow
@@ -82,7 +81,7 @@ private const val READER = "reader/{bookId}"
 private const val TABS = "tabs"
 private const val SHELF = "shelf/{key}"
 private const val SEARCH = "search"
-private const val ABOUT = "about"
+private const val SETTINGS = "settings"
 
 private val importMimeTypes = arrayOf(
     "application/epub+zip",
@@ -155,7 +154,6 @@ private fun MainTabs(onOpen: (String) -> Unit, vm: LibraryViewModel = hiltViewMo
     val entry by inner.currentBackStackEntryAsState()
     val route = entry?.destination?.route
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
     val resources = LocalResources.current
     var collectionsOpen by rememberSaveable { mutableStateOf(false) }
     var readingSettingsOpen by rememberSaveable { mutableStateOf(false) }
@@ -186,15 +184,13 @@ private fun MainTabs(onOpen: (String) -> Unit, vm: LibraryViewModel = hiltViewMo
         collectionsOpen = false
         inner.navigate("shelf/${shelf.key}")
     }
-    val tabBarVisible = route != SEARCH && route != ABOUT && !vm.selecting
+    val tabBarVisible = route != SEARCH && route != SETTINGS && !vm.selecting
     val bottomPadding = PaddingValues(bottom = 96.dp)
     val hostActions = LibraryHostActions(
         onAddBooks = { importLauncher.launch(importMimeTypes) },
         onPickFolder = { folderLauncher.launch(null) },
-        onAbout = { inner.navigate(ABOUT) },
         onCollections = { collectionsOpen = true },
         onAddToCollection = { addToCollection = it },
-        onReadingSettings = { readingSettingsOpen = true },
     )
 
     GlassScope { source ->
@@ -215,6 +211,7 @@ private fun MainTabs(onOpen: (String) -> Unit, vm: LibraryViewModel = hiltViewMo
                             vm, bottomPadding, onOpen = onOpen, onOpenShelf = openShelf,
                             onAddBooks = hostActions.onAddBooks,
                             onAddToCollection = { addToCollection = setOf(it.id) },
+                            onSettings = { inner.navigate(SETTINGS) { launchSingleTop = true } },
                         )
                         LibraryScreen(vm, bottomPadding, onOpen = onOpen, actions = hostActions)
                         CatalogScreen(catalog, bottomPadding, onOpen = onOpen)
@@ -225,9 +222,8 @@ private fun MainTabs(onOpen: (String) -> Unit, vm: LibraryViewModel = hiltViewMo
                     ShelfScreen(vm, shelf, bottomPadding, onBack = { inner.popBackStack() }, onOpen = onOpen, onAddToCollection = { addToCollection = it })
                 }
                 composable(SEARCH) { SearchScreen(vm, onClose = { inner.popBackStack() }, onOpen = onOpen) }
-                composable(ABOUT) {
-                    val version = remember { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty() }
-                    AboutScreen(onBack = { inner.popBackStack() }, versionName = version)
+                composable(SETTINGS) {
+                    SettingsScreen(onBack = { inner.popBackStack() }, onReadingSettings = { readingSettingsOpen = true })
                 }
             }
 

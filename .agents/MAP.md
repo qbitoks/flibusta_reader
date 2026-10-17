@@ -17,6 +17,7 @@ Agent infrastructure (`.agents/`, `scripts/agent-lint.sh`, tool adapters) is des
 - `feature/library/` — «Библиотека» and «Главная» screens and ViewModels — `feature/library/AGENTS.md`
 - `feature/reader/` — reader: page turning, scroll mode, header/footer, selection — `feature/reader/AGENTS.md`
 - `feature/catalog/` — «Каталог»: catalog switcher and «Каталоги» list, OPDS home, search, book sheet, downloads — `feature/catalog/AGENTS.md`
+- `feature/settings/` — «Настройки» (gear on «Главная»): appearance, reading, Folio update, about — `feature/settings/AGENTS.md`
 - `baselineprofile/` — baseline profile generator (not generated; it uninstalls the app)
 - `scripts/` — PowerShell doctor, build, emulator launch check, release packaging — `scripts/AGENTS.md`
 - `fixtures/` — sample OPDS feeds for `core/opds` parser tests

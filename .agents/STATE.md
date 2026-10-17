@@ -10,6 +10,7 @@ status: active
   menu palettes and guide landings in Slide/Curl/Fade.
 
 ## Phone verification before distribution
+- «Настройки» (gear on «Главная»): appearance, «Настройки чтения», update check/up-to-date/offline, project link.
 - Read aloud (stage 1): «Слушать» in the navigation panel, mini-player, phrase band, page following in Slide/Scroll,
   notification/lock-screen/headset controls, pause on headphone unplug, no-voice hint.
 - Voice sheet (0.7.1): samples, rate/pitch, sleep timer; Google «Онлайн-голос» switch + offline fallback unchecked.

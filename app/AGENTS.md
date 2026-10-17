@@ -5,7 +5,7 @@ Android entry: Application (Hilt, WorkManager), `MainActivity` (edge-to-edge,
 
 ## Entry points
 - `app/src/main/kotlin/app/folio/FolioApp.kt` — Hilt app; schedules folder scan
-- `app/src/main/kotlin/app/folio/FolioNavHost.kt` — tabs Главная/Библиотека/Каталог, reader route, cover transition
+- `app/src/main/kotlin/app/folio/FolioNavHost.kt` — tabs Главная/Библиотека/Каталог, settings route, reader route, cover transition
 - `app/src/main/kotlin/app/folio/MainActivity.kt` — intents → import → open book
 
 ## Conventions

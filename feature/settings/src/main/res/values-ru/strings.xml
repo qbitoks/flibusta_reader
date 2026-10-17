@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_appearance">Оформление</string>
+    <string name="settings_appearance_auto">Как на устройстве</string>
+    <string name="settings_appearance_light">Светлое</string>
+    <string name="settings_appearance_dark">Тёмное</string>
+    <string name="settings_update">Обновление</string>
+    <string name="settings_version">Версия</string>
+    <string name="settings_check_update">Проверить обновления</string>
+    <string name="settings_checking">Проверка…</string>
+    <string name="settings_up_to_date">Установлена последняя версия</string>
+    <string name="settings_check_failed">Не удалось связаться с GitHub</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_project_page">Страница проекта</string>
+    <string name="settings_fonts_text">Шрифты Literata, PT Serif, Source Serif 4, Lora и Inter распространяются по лицензии SIL Open Font License 1.1.</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_reading">Настройки чтения</string>
+    <string name="settings_install_title">Доступна версия Folio %1$s</string>
+    <string name="settings_install_text">Новая версия с GitHub; настройки и книги сохранятся.</string>
+    <string name="settings_install_install">Обновить</string>
+    <string name="settings_install_downloading">Загрузка…</string>
+    <string name="settings_install_installing">Установка…</string>
+    <string name="settings_install_permission">Разрешите установку</string>
+    <string name="settings_install_retry">Повторить</string>
+    <string name="settings_reading_header">Чтение</string>
+</resources>

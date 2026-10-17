@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBackIos
 import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
 import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -137,22 +136,5 @@ fun SearchScreen(vm: LibraryViewModel, onClose: () -> Unit, onOpen: (String) -> 
                 }
             }
         }
-    }
-}
-
-@Composable
-fun AboutScreen(onBack: () -> Unit, versionName: String) {
-    val c = Folio.colors
-    Column(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
-            CircleButton(Icons.AutoMirrored.Rounded.ArrowBackIos, stringResource(R.string.library_back), onBack)
-        }
-        Text(stringResource(R.string.about_title), style = FolioType.largeTitle, color = c.label, modifier = Modifier.padding(start = 32.dp, top = 4.dp, bottom = 12.dp))
-        Row(Modifier.padding(horizontal = 32.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Info, null, tint = c.secondaryLabel, modifier = Modifier.size(20.dp))
-            Text("Folio · " + stringResource(R.string.about_version, versionName), style = FolioType.body, color = c.label, modifier = Modifier.padding(start = 8.dp))
-        }
-        Text(stringResource(R.string.about_fonts), style = FolioType.sheetTitle, color = c.label, modifier = Modifier.padding(start = 32.dp, top = 28.dp, bottom = 6.dp))
-        Text(stringResource(R.string.about_fonts_text), style = FolioType.subheadline, color = c.secondaryLabel, modifier = Modifier.padding(horizontal = 32.dp))
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -51,6 +52,7 @@ import app.folio.core.designsystem.BookTransition
 import app.folio.core.designsystem.bookTransition
 import app.folio.core.designsystem.Folio
 import app.folio.core.designsystem.FolioType
+import app.folio.core.designsystem.components.CircleButton
 import app.folio.core.designsystem.components.LargeTitleHeader
 import app.folio.core.designsystem.components.SectionTitle
 import app.folio.core.designsystem.components.SectionBand
@@ -68,18 +70,19 @@ fun HomeScreen(
     onOpenShelf: (Shelf) -> Unit,
     onAddBooks: () -> Unit,
     onAddToCollection: (BookItem) -> Unit,
+    onSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val home by vm.home.collectAsStateWithLifecycle()
     if (!home.loaded) return
     if (home.isEmpty) {
-        EmptyLibrary(contentPadding, onAddBooks)
+        EmptyLibrary(contentPadding, onAddBooks, onSettings)
         return
     }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
         item {
             SectionBand(first = true) {
-                LargeTitleHeader(stringResource(R.string.home_title))
+                LargeTitleHeader(stringResource(R.string.home_title)) { SettingsButton(onSettings) }
                 AppUpdateCard(Modifier.padding(start = 32.dp, end = 32.dp, bottom = 16.dp))
                 if (home.continueReading.isNotEmpty()) {
                     SectionTitle(stringResource(R.string.home_continue), Modifier.padding(top = 0.dp))
@@ -233,9 +236,9 @@ private fun CardBackdrop(item: BookItem) {
 }
 
 @Composable
-private fun EmptyLibrary(contentPadding: PaddingValues, onAddBooks: () -> Unit) {
+private fun EmptyLibrary(contentPadding: PaddingValues, onAddBooks: () -> Unit, onSettings: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(bottom = contentPadding.calculateBottomPadding())) {
-        LargeTitleHeader(stringResource(R.string.home_title))
+        LargeTitleHeader(stringResource(R.string.home_title)) { SettingsButton(onSettings) }
         AppUpdateCard(Modifier.padding(horizontal = 32.dp))
         Column(
             Modifier.fillMaxSize().padding(32.dp),
@@ -250,3 +253,8 @@ private fun EmptyLibrary(contentPadding: PaddingValues, onAddBooks: () -> Unit) 
         }
     }
 }
+
+/** The gear opening «Настройки». */
+@Composable
+private fun SettingsButton(onClick: () -> Unit) =
+    CircleButton(Icons.Outlined.Settings, stringResource(R.string.home_settings), onClick)
