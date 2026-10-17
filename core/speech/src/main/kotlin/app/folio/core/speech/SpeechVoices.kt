@@ -29,11 +29,20 @@ data class VoiceChoice(
 data class TtsEngine(val packageName: String, val label: String)
 
 /**
- * One voice of an engine, as `TextToSpeech.getVoices()` lists it. [title] is the speaker's name for Folio engines;
- * other engines name voices by codes (`ru-ru-x-dfc-network`), so they get [speaker], a number per distinct speaker
- * (its `-local` and `-network` variants share one).
+ * One speaker of an engine: its on-device ([local]) and online ([network]) voices as `TextToSpeech.getVoices()`
+ * names them, at least one set. [title] is the speaker's name for Folio engines; other engines name voices by codes
+ * (`ru-ru-x-dfc-network`), so they get [speaker], a number per distinct speaker.
  */
-data class TtsVoice(val name: String, val locale: Locale, val title: String?, val speaker: Int, val needsNetwork: Boolean)
+data class TtsVoice(val local: String?, val network: String?, val locale: Locale, val title: String?, val speaker: Int) {
+    val names: List<String> get() = listOfNotNull(local, network)
+    /** Stable id of the speaker (favorites): its on-device name, else the online one. */
+    val key: String get() = local ?: network!!
+    /** The voice to read with: online when asked for and there is one, else on-device. */
+    fun variant(online: Boolean): String = if (online) network ?: local!! else local ?: network!!
+}
+
+/** A voice the user starred, from any engine. */
+data class FavoriteVoice(val engine: String, val voice: String)
 
 @Singleton
 class SpeechVoices @Inject constructor(@ApplicationContext private val context: Context) {
@@ -41,8 +50,27 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
     private val _choice = MutableStateFlow(read())
     val choice: StateFlow<VoiceChoice> = _choice.asStateFlow()
 
+    private val _favorites = MutableStateFlow(readFavorites())
+    val favorites: StateFlow<Set<FavoriteVoice>> = _favorites.asStateFlow()
+
+    /** Set by [SystemTtsEngine]: the chosen online voice is replaced by its on-device twin (no network). */
+    private val _offline = MutableStateFlow(false)
+    val offline: StateFlow<Boolean> = _offline.asStateFlow()
+
+    internal fun setOffline(offline: Boolean) {
+        _offline.value = offline
+    }
+
     init {
         dropBuiltInVoices()
+    }
+
+    /** Stars or unstars [voice] (a [TtsVoice.key]) of [engine]. */
+    fun toggleFavorite(engine: String, voice: String) {
+        val f = FavoriteVoice(engine, voice)
+        val next = if (f in _favorites.value) _favorites.value - f else _favorites.value + f
+        prefs.edit().putStringSet(KEY_FAVORITES, next.map { it.engine + '	' + it.voice }.toSet()).apply()
+        _favorites.value = next
     }
 
     /** Reads with [engine] (null = the system default); its voices are chosen per language again. */
@@ -89,6 +117,9 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
         }
     }
 
+    private fun readFavorites(): Set<FavoriteVoice> = prefs.getStringSet(KEY_FAVORITES, null).orEmpty()
+        .mapNotNull { line -> line.split('	').takeIf { it.size == 2 }?.let { FavoriteVoice(it[0], it[1]) } }.toSet()
+
     private fun read(): VoiceChoice {
         val voices = prefs.all.mapNotNull { (key, value) ->
             if (key.startsWith(KEY_VOICE) && value is String) key.removePrefix(KEY_VOICE) to value else null
@@ -110,14 +141,15 @@ class SpeechVoices @Inject constructor(@ApplicationContext private val context: 
     private companion object {
         const val KEY_ENGINE = "engine_package"
         const val KEY_VOICE = "voice_"
+        const val KEY_FAVORITES = "favorites"
         const val FOLIO_ENGINES = "app.folio.tts."
     }
 }
 
 /**
- * [voices] (name, locale, needs network) for the reader's list: the book's region first, then by speaker,
- * on-device before online. Folio engines' `piper-ru_RU-irina-medium` / `silero-ru_dmitriy` are titled «Irina» /
- * «Dmitriy»; other voices are numbered by speaker, the name without its `-local`/`-network` ending.
+ * [voices] (name, locale, needs network) for the reader's list, one entry per speaker: the book's region first, then
+ * by speaker. A speaker's `-local` and `-network` voices become one [TtsVoice]. Folio engines' `piper-ru_RU-irina-medium`
+ * / `silero-ru_dmitriy` are titled «Irina» / «Dmitriy»; other speakers are numbered.
  */
 fun describeVoices(voices: List<Triple<String, Locale, Boolean>>, book: Locale): List<TtsVoice> {
     fun cap(s: String) = s.replaceFirstChar { it.titlecase(Locale.ROOT) }
@@ -126,11 +158,16 @@ fun describeVoices(voices: List<Triple<String, Locale, Boolean>>, book: Locale):
         name.startsWith("silero-") -> cap(name.removePrefix("silero-").substringAfter('_'))
         else -> null
     }
-    fun speaker(name: String) = name.lowercase().removeSuffix("-local").removeSuffix("-network")
     val sorted = voices.sortedWith(
         compareByDescending<Triple<String, Locale, Boolean>> { it.second.country.equals(book.country, ignoreCase = true) }
-            .thenBy { speaker(it.first) }.thenBy { it.third },
+            .thenBy { speakerKey(it.first) },
     )
-    val numbers = sorted.map { speaker(it.first) }.distinct().withIndex().associate { (i, key) -> key to i + 1 }
-    return sorted.map { (name, locale, network) -> TtsVoice(name, locale, title(name), numbers.getValue(speaker(name)), network) }
+    return sorted.groupBy { speakerKey(it.first) }.values.mapIndexed { i, group ->
+        val local = group.firstOrNull { !it.third }?.first
+        val network = group.firstOrNull { it.third }?.first
+        TtsVoice(local, network, group.first().second, title(local ?: network!!), i + 1)
+    }
 }
+
+/** A voice name without its `-local` / `-network` ending: the speaker both variants share. */
+internal fun speakerKey(name: String) = name.lowercase().removeSuffix("-local").removeSuffix("-network")

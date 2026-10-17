@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,9 +36,14 @@ data class SpeechState(
     val playing: Boolean = false,
     val current: Utterance? = null,
     val rate: Float = 1f,
+    val pitch: Float = 1f,
+    val sleep: SleepTimer? = null,
     /** The engine has no voice for the book's language; shown once by the reader. */
     val noVoice: Boolean = false,
 )
+
+/** Stops reading at [endsAt] (epoch ms, set for [minutes]), or, with [chapter] set, when the voice leaves that chapter. */
+data class SleepTimer(val minutes: Int? = null, val endsAt: Long? = null, val chapter: Int? = null)
 
 /**
  * Reads a book aloud phrase by phrase, app-wide: it outlives the reader screen and is driven by the
@@ -51,11 +57,12 @@ class SpeechController @Inject constructor(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val prefs = context.getSharedPreferences("speech", Context.MODE_PRIVATE)
-    private val _state = MutableStateFlow(SpeechState(rate = prefs.getFloat(KEY_RATE, 1f)))
+    private val _state = MutableStateFlow(SpeechState(rate = prefs.getFloat(KEY_RATE, 1f), pitch = prefs.getFloat(KEY_PITCH, 1f)))
     val state: StateFlow<SpeechState> = _state.asStateFlow()
 
     private var book: Book? = null
     private var job: Job? = null
+    private var sleepJob: Job? = null
     private var lastSaved = 0L
     private var pausedByFocus = false
 
@@ -120,14 +127,47 @@ class SpeechController @Inject constructor(
         if (_state.value.playing) resume()
     }
 
+    fun setPitch(pitch: Float) {
+        prefs.edit().putFloat(KEY_PITCH, pitch).apply()
+        _state.update { it.copy(pitch = pitch) }
+        if (_state.value.playing) resume()
+    }
+
+    /** Pauses after [minutes]; null cancels the timer. */
+    fun sleepIn(minutes: Int?) {
+        sleepJob?.cancel()
+        sleepJob = null
+        if (minutes == null) {
+            _state.update { it.copy(sleep = null) }
+            return
+        }
+        val ms = minutes * 60_000L
+        _state.update { it.copy(sleep = SleepTimer(minutes, System.currentTimeMillis() + ms)) }
+        sleepJob = scope.launch {
+            delay(ms)
+            _state.update { it.copy(sleep = null) }
+            if (_state.value.playing) pause()
+        }
+    }
+
+    /** Pauses when the voice reaches the next chapter. */
+    fun sleepAtChapterEnd() {
+        sleepJob?.cancel()
+        sleepJob = null
+        val chapter = _state.value.current?.start?.chapter ?: 0
+        _state.update { it.copy(sleep = SleepTimer(chapter = chapter)) }
+    }
+
     fun stop() {
         job?.cancel()
         job = null
+        sleepJob?.cancel()
+        sleepJob = null
         savePosition(force = true)
         engine.release()
         audio.abandonAudioFocusRequest(focus)
         book = null
-        _state.update { SpeechState(rate = it.rate) }
+        _state.update { SpeechState(rate = it.rate, pitch = it.pitch) }
     }
 
     /** The engine or voice changed: say the current phrase again with it. */
@@ -151,12 +191,19 @@ class SpeechController @Inject constructor(
                 while (next != null) {
                     val u = next
                     next = if (phrases.hasNext()) phrases.next() else null
+                    val sleepChapter = _state.value.sleep?.chapter
+                    if (sleepChapter != null && u.start.chapter != sleepChapter) {
+                        // The chapter timer: stop before the next chapter's first phrase.
+                        _state.update { it.copy(sleep = null, current = u) }
+                        pause()
+                        return@launch
+                    }
                     _state.update { it.copy(current = u) }
                     savePosition(force = false)
                     val rate = _state.value.rate
                     // Looking one phrase ahead lets the engine synthesize it while this one plays.
                     next?.let { engine.prepare(it.text, locale, rate) }
-                    engine.speak(u.text, locale, rate, 1f)
+                    engine.speak(u.text, locale, rate, _state.value.pitch)
                 }
                 // The end of the book.
                 stop()
@@ -181,6 +228,7 @@ class SpeechController @Inject constructor(
 
     private companion object {
         const val KEY_RATE = "rate"
+        const val KEY_PITCH = "pitch"
         const val SAVE_INTERVAL_MS = 5_000L
     }
 }

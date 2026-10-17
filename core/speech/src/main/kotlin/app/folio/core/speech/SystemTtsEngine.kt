@@ -1,8 +1,11 @@
 package app.folio.core.speech
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.Voice
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CompletableDeferred
@@ -17,7 +20,8 @@ import kotlin.coroutines.resumeWithException
 /**
  * Android's [TextToSpeech] with the engine and voice picked in [SpeechVoices] (a Folio engine app, or any
  * other installed one). The phrase after the current one ([prepare]) is queued behind it, so the engine
- * synthesizes it while this one sounds and phrases follow without a pause.
+ * synthesizes it while this one sounds and phrases follow without a pause. A chosen online voice reads with its
+ * on-device twin while there is no network or after it failed (for a minute), and returns on its own.
  */
 @Singleton
 class SystemTtsEngine @Inject constructor(
@@ -29,12 +33,20 @@ class SystemTtsEngine @Inject constructor(
     /** What [tts] was created for and set to; a change recreates or re-applies it. */
     private var engine: String? = null
     private var applied: Pair<Locale, String?>? = null
+    /** [tts]'s voices, read once per engine connection. */
+    private var known: Set<Voice>? = null
+    /** The voice being applied needs the network (no twin replaced it). */
+    private var usingNetwork = false
+    /** Until then the online voice stays replaced: it failed a moment ago. */
+    private var fallbackUntil = 0L
     private val ids = AtomicLong()
 
     /** Hint from the controller: the phrase it says next. */
     private var ahead: String? = null
-    /** The phrase queued behind the current one: its text, rate and utterance id. */
-    private var queued: Triple<String, Float, String>? = null
+    /** The phrase queued behind the current one. */
+    private var queued: Queued? = null
+
+    private data class Queued(val text: String, val rate: Float, val pitch: Float, val id: String)
 
     private val lock = Any()
     private var pending: Pair<String, CancellableContinuation<Unit>>? = null
@@ -93,15 +105,36 @@ class SystemTtsEngine @Inject constructor(
         }
     }
 
-    /** Sets the language and the chosen voice for it, when they changed since the last phrase. */
-    private fun apply(t: TextToSpeech, locale: Locale) {
-        val voiceName = voices.choice.value.voices[locale.language]
+    /**
+     * The voice to read [locale] with now: the chosen one, or its on-device twin while an online voice can't be
+     * reached. Tells [SpeechVoices.offline] which it is.
+     */
+    private fun effectiveVoice(t: TextToSpeech, locale: Locale): String? {
+        val chosen = voices.choice.value.voices[locale.language]
+        val all = known ?: t.voices.orEmpty().also { known = it }
+        val voice = chosen?.let { name -> all.firstOrNull { it.name == name } }
+        val needsNetwork = voice?.isNetworkConnectionRequired == true
+        val twin = if (needsNetwork && (System.currentTimeMillis() < fallbackUntil || !online())) {
+            all.firstOrNull { !it.isNetworkConnectionRequired && speakerKey(it.name) == speakerKey(chosen!!) }
+        } else null
+        voices.setOffline(twin != null)
+        usingNetwork = needsNetwork && twin == null
+        return twin?.name ?: chosen
+    }
+
+    private fun online(): Boolean {
+        val cm = context.getSystemService(ConnectivityManager::class.java)
+        return cm.getNetworkCapabilities(cm.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+    }
+
+    /** Sets the language and [voiceName] for it, when they changed since the last phrase. */
+    private fun apply(t: TextToSpeech, locale: Locale, voiceName: String?) {
         if (applied == locale to voiceName) return
         val result = t.setLanguage(locale)
         if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
             throw SpeechUnavailableException("No voice for $locale")
         }
-        voiceName?.let { name -> t.voices?.firstOrNull { it.name == name }?.let { t.voice = it } }
+        voiceName?.let { name -> known?.firstOrNull { it.name == name }?.let { t.voice = it } }
         applied = locale to voiceName
     }
 
@@ -113,19 +146,29 @@ class SystemTtsEngine @Inject constructor(
         val t = engine()
         val next = ahead
         ahead = null
-        val id = queued?.takeIf { it.first == text && it.second == rate }?.third ?: run {
+        val voice = effectiveVoice(t, locale)
+        // The queued phrase is reused only if it was synthesized as this one would be now (a voice switch flushes it).
+        val id = queued?.takeIf { it.text == text && it.rate == rate && it.pitch == pitch && applied == locale to voice }?.id ?: run {
             synchronized(lock) { ended.clear() }
-            apply(t, locale)
+            apply(t, locale, voice)
             t.setSpeechRate(rate)
             t.setPitch(pitch)
             enqueue(t, text, TextToSpeech.QUEUE_FLUSH)
         }
         queued = null
         if (next != null && next != text) {
-            t.setSpeechRate(rate)
-            queued = Triple(next, rate, enqueue(t, next, TextToSpeech.QUEUE_ADD))
+            queued = Queued(next, rate, pitch, enqueue(t, next, TextToSpeech.QUEUE_ADD))
         }
-        await(t, id)
+        try {
+            await(t, id)
+        } catch (e: SpeechUnavailableException) {
+            // An online voice that failed (network lost mid-phrase): say the phrase again with its twin.
+            if (!usingNetwork || System.currentTimeMillis() < fallbackUntil) throw e
+            fallbackUntil = System.currentTimeMillis() + FALLBACK_MS
+            queued = null
+            ahead = next
+            speak(text, locale, rate, pitch)
+        }
     }
 
     private fun enqueue(t: TextToSpeech, text: String, mode: Int): String {
@@ -158,11 +201,16 @@ class SystemTtsEngine @Inject constructor(
         ready = null
         engine = null
         applied = null
+        known = null
         ahead = null
         queued = null
         synchronized(lock) {
             pending = null
             ended.clear()
         }
+    }
+
+    private companion object {
+        const val FALLBACK_MS = 60_000L
     }
 }

@@ -83,3 +83,4 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | modules | Folio installs engines and its updates via PackageInstaller after SHA-256 + same-cert checks | no Google Play planned (user)
 2026-10-16 | catalog | Preset catalogs come from `catalogs.json` in folio-modules (daily, cached), bundled list as fallback | update the list without an app release
 2026-10-16 | speech | No migration of 0.5 voices/prefs: `files/voices/` and old speech keys are deleted | user decision: voices are downloaded again in the engines
+2026-10-17 | speech | Voice sheet: engines by name, uninstalled Folio engines last, no modules section | user chose it; uninstall stays with the system

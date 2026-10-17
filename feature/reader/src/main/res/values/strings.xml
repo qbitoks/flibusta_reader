@@ -299,9 +299,6 @@
     <string name="speech_read_from_here">Read from here</string>
     <string name="speech_voice_retry">Retry</string>
     <string name="speech_voice_online">online</string>
-    <string name="speech_modules">Folio modules</string>
-    <string name="speech_modules_loading">Loading the module list…</string>
-    <string name="speech_modules_about">Modules are separate speech apps. Folio downloads them from GitHub and installs them through the system installer; voices are downloaded in the module.</string>
     <string name="speech_module_downloading">Downloading…</string>
     <string name="speech_module_installing">Installing…</string>
     <string name="speech_module_permission">Allow installing</string>
@@ -310,5 +307,35 @@
     <string name="speech_module_update">Update</string>
     <string name="speech_voice_number">Voice %1$d</string>
     <string name="speech_module_voices">Voices</string>
-    <string name="speech_no_voices_yet">No voices for the book’s language yet — the system voice reads. Install Folio Piper or Folio Silero and download a voice in it.</string>
+    <string name="speech_no_voices_yet">No voices for the book’s language yet — the system voice reads. Install an engine below and download a voice in it.</string>
+    <string name="speech_now_system">System voice</string>
+    <string name="speech_now_engine">%1$s · %2$s</string>
+    <string name="speech_variant_device">on device</string>
+    <string name="speech_variant_offline_now">offline now</string>
+    <string name="speech_pitch">Pitch</string>
+    <string name="speech_reset">Reset</string>
+    <string name="speech_sleep">Sleep timer</string>
+    <string name="speech_sleep_off">Off</string>
+    <string name="speech_sleep_minutes">%1$d min</string>
+    <string name="speech_sleep_chapter">Chapter</string>
+    <string name="speech_sleep_until">Reading stops at %1$s.</string>
+    <string name="speech_sleep_chapter_note">Reading stops at the end of the chapter.</string>
+    <string name="speech_sleep_on">Sleep timer is on</string>
+    <string name="speech_favorites">Favorites</string>
+    <string name="speech_favorite_added">Voice added to favorites</string>
+    <string name="speech_favorite_removed">Voice removed from favorites</string>
+    <string name="speech_preview">Play sample</string>
+    <string name="speech_preview_stop">Stop sample</string>
+    <string name="speech_device">On device</string>
+    <string name="speech_online">Online</string>
+    <string name="speech_online_note">Sounds better, but the text goes online to the engine. Without network the on-device voice reads.</string>
+    <string name="speech_download_voices">Download voices…</string>
+    <string name="speech_update_to">Update to %1$s</string>
+    <string name="speech_engine_no_voices">No voices for the book’s language yet</string>
+    <string name="speech_sample">This is how the book will sound with this voice.</string>
+    <string name="speech_favorites_hint">Touch and hold a voice to add it to favorites.</string>
+    <plurals name="speech_voices_count">
+        <item quantity="one">%1$d voice</item>
+        <item quantity="other">%1$d voices</item>
+    </plurals>
 </resources>

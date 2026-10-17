@@ -8,11 +8,14 @@ import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.RecordVoiceOver
@@ -76,7 +79,11 @@ internal fun NoVoiceEffect(vm: ReaderViewModel, state: SpeechState) {
     }
 }
 
-/** Player above the navigation panel; ▶ starts reading from the current page if this book isn't loaded yet. */
+/**
+ * Player above the navigation panel; ▶ starts reading from the current page if this book isn't loaded yet. A moon
+ * shows while the sleep timer runs; it and the voice button open «Голос».
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SpeechMiniPlayer(vm: ReaderViewModel, state: SpeechState, palette: ReaderPalette, onVoice: () -> Unit, modifier: Modifier = Modifier) {
     val c = Folio.colors
@@ -99,12 +106,15 @@ internal fun SpeechMiniPlayer(vm: ReaderViewModel, state: SpeechState, palette: 
             }
         } else {
             val rate = state.rate
+            // A tap steps the rate, a long press opens «Голос» with the exact sliders.
             Box(Modifier.heightIn(min = 48.dp).widthIn(min = 56.dp).clip(CircleShape)
-                .clickable(role = Role.Button, onClickLabel = stringResource(R.string.speech_rate)) { vm.setSpeechRate(nextSpeechRate(rate)) },
+                .combinedClickable(role = Role.Button, onClickLabel = stringResource(R.string.speech_rate),
+                    onLongClickLabel = stringResource(R.string.speech_voice), onLongClick = onVoice) { vm.setSpeechRate(nextSpeechRate(rate)) },
                 contentAlignment = Alignment.Center) {
                 Text(stringResource(R.string.speech_rate_value, formatRate(rate)), style = FolioType.subheadline, color = c.label)
             }
         }
+        if (loaded && state.sleep != null) PlayerButton(Icons.Rounded.Bedtime, stringResource(R.string.speech_sleep_on), onVoice)
         PlayerButton(Icons.Rounded.RecordVoiceOver, stringResource(R.string.speech_voice), onVoice)
     }
 }

@@ -35,14 +35,8 @@ import app.folio.core.model.parseInternalTarget
 import app.folio.core.model.progressAt
 import app.folio.core.speech.SpeechController
 import app.folio.core.speech.SpeechState
-import app.folio.core.speech.SpeechVoices
-import app.folio.core.speech.VoiceChoice
-import app.folio.core.speech.TtsEngine
-import app.folio.core.speech.TtsVoice
-import app.folio.core.data.modules.InstallState
-import app.folio.core.data.modules.ModuleApk
-import app.folio.core.data.modules.ModuleInstaller
 import app.folio.core.speech.speechLocale
+import app.folio.core.speech.utterancesFrom
 import java.util.Locale
 import app.folio.core.data.settings.PageTurn
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -113,8 +107,6 @@ class ReaderViewModel @Inject constructor(
     private val library: LibraryRepository,
     private val settingsRepository: SettingsRepository,
     private val speech: SpeechController,
-    private val voices: SpeechVoices,
-    private val installer: ModuleInstaller,
     @ApplicationContext context: Context,
 ) : ViewModel() {
     val bookId: String = checkNotNull(savedState["bookId"])
@@ -254,52 +246,14 @@ class ReaderViewModel @Inject constructor(
     fun stopSpeech() = speech.stop()
     fun dismissNoVoice() = speech.dismissNoVoice()
 
-    val voiceChoice: StateFlow<VoiceChoice> = voices.choice
-
     /** The language the book is read aloud in (its metadata, else the device's). */
     val speechLocale: Locale get() = book?.speechLocale() ?: Locale.getDefault()
 
-    private val _engineVoices = MutableStateFlow<List<Pair<TtsEngine, List<TtsVoice>>>?>(null)
-    /** Every installed engine with its voices for the book's language (Folio engines first); null while loading. */
-    val engineVoices: StateFlow<List<Pair<TtsEngine, List<TtsVoice>>>?> = _engineVoices.asStateFlow()
-    private var voicesJob: Job? = null
-
-    fun loadEngineVoices() {
-        voicesJob?.cancel()
-        voicesJob = viewModelScope.launch {
-            val locale = speechLocale
-            _engineVoices.value = voices.engines().map { it to voices.voices(it.packageName, locale) }.filter { it.second.isNotEmpty() }
-        }
+    /** What «▶» in the voice list says: the first phrase of the page on screen; null without a book. */
+    fun speechSample(): String? {
+        val book = book ?: return null
+        return book.utterancesFrom(readingPosition, book.speechLocale()).take(30).firstOrNull { it.text.length >= 20 }?.text?.take(220)
     }
-
-    /** Reads with [voice] of [engine] from the current phrase on. */
-    fun setSpeechVoice(engine: TtsEngine, voice: TtsVoice) {
-        if (voices.choice.value.engine != engine.packageName) voices.setEngine(engine.packageName)
-        voices.setVoice(speechLocale.language, voice.name)
-        speech.voiceChanged()
-    }
-
-    val modules: StateFlow<List<ModuleApk>> = installer.modules
-    val moduleStates: StateFlow<Map<String, InstallState>> = installer.states
-    val installedModules: StateFlow<Map<String, Long>> = installer.installed
-
-    /** Re-reads installed engines and, at most a few times a day, the modules index. */
-    fun refreshModules() {
-        installer.refreshInstalled()
-        viewModelScope.launch {
-            try {
-                installer.refresh()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Log.w("ReaderViewModel", "Modules index not refreshed", e)
-            }
-        }
-    }
-
-    fun installModule(module: ModuleApk) = installer.install(module)
-
-    fun cancelModule(module: ModuleApk) = installer.cancel(module.packageName)
 
     /** Turns to the spoken phrase once it leaves the screen (in Scroll the next page is on screen too). */
     private fun followSpeech(start: Position) {

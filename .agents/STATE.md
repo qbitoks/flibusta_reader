@@ -12,6 +12,7 @@ status: active
 ## Phone verification before distribution
 - Read aloud (stage 1): «Слушать» in the navigation panel, mini-player, phrase band, page following in Slide/Scroll,
   notification/lock-screen/headset controls, pause on headphone unplug, no-voice hint.
+- Voice sheet (0.7.0, unit-tested only): samples, rate/pitch, sleep timer, favorites, engine groups, online/offline switch.
 - Read aloud via engine modules (0.6.0): install Folio Piper/Silero from «Голос» (unknown-apps permission, system
   installer confirm), voice download in the engine, reading with the chosen voice, Folio self-update card on Home.
   Emulator-checked: engine detection, Piper voice download, gapless reading with Irina; the in-app install was not
@@ -34,7 +35,5 @@ status: active
 - Collect dependency licenses before distributing beyond testing.
 
 ## Known issues / verification gaps
-- Wrapper download of Gradle 9.8 was flaky on this machine (connection resets).
 - The emulator's DNS proxy fails behind the host VPN; a fresh AVD with `-dns-server` works.
 - No download notification: progress is visible only in the app («Загрузки»).
-- The archived prototype roadmap is historical: `.agents/archive/prototype-roadmap.md`.
