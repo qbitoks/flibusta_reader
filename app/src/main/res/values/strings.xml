@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Folio</string>
+    <string name="app_name" translatable="false">Folio</string>
+    <string name="downloads_channel">Book downloads</string>
+    <string name="downloads_many">Downloading %1$d books</string>
+    <string name="downloads_waiting">Waiting for the network</string>
+    <string name="downloads_running">Downloading…</string>
+    <string name="downloads_percent">%1$d%%</string>
+    <string name="downloads_done">“%1$s” is downloaded</string>
+    <string name="downloads_read">Read</string>
+    <string name="downloads_failed">Couldn’t download the book</string>
 </resources>

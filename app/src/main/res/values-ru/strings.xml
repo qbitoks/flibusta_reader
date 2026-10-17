@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel">Загрузка книг</string>
+    <string name="downloads_many">Загружается книг: %1$d</string>
+    <string name="downloads_waiting">Ждёт сеть</string>
+    <string name="downloads_running">Загружается…</string>
+    <string name="downloads_percent">%1$d%%</string>
+    <string name="downloads_done">«%1$s» загружена</string>
+    <string name="downloads_read">Читать</string>
+    <string name="downloads_failed">Не удалось загрузить книгу</string>
+</resources>

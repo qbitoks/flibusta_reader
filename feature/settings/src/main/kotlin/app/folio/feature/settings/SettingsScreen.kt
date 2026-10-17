@@ -23,6 +23,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -190,16 +193,18 @@ private fun UpdateGroup(vm: SettingsViewModel) {
 private fun AboutGroup() {
     val c = Folio.colors
     val uri = LocalUriHandler.current
+    var licenses by rememberSaveable { mutableStateOf(false) }
     GroupHeader(stringResource(R.string.settings_about))
     GroupedCard {
         GroupedRow(
             stringResource(R.string.settings_project_page),
             value = "GitHub",
-            showDivider = false,
             trailing = { Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, tint = c.tertiaryLabel, modifier = Modifier.padding(start = 8.dp).size(20.dp)) },
             onClick = { runCatching { uri.openUri(ModulesRepository.APP_PAGE) } },
         )
+        GroupedRow(stringResource(R.string.settings_licenses), chevron = true, showDivider = false, onClick = { licenses = true })
     }
+    if (licenses) LicensesSheet(onDismiss = { licenses = false })
     Text(
         stringResource(R.string.settings_fonts_text),
         style = FolioType.footnote,

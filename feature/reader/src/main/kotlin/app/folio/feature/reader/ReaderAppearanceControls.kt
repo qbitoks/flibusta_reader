@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -49,7 +50,7 @@ import kotlin.math.roundToInt
 
 /** Basic settings: palettes first, then text size, screen controls and turning, each under a short heading. */
 @Composable
-internal fun ReaderAppearanceSettings(editor: SettingsEditor, brightness: SheetBrightness?, rotation: SheetRotation?) {
+internal fun ReaderAppearanceSettings(editor: SettingsEditor, brightness: SheetBrightness?, rotation: SheetRotation?, volumeKeys: SheetToggle?) {
     val settings = editor.settings
     val dark = ReaderPalettes.isDark(settings.appearance, androidInDarkTheme())
     SettingsGroupHeader(stringResource(R.string.settings_basic_theme))
@@ -80,6 +81,11 @@ internal fun ReaderAppearanceSettings(editor: SettingsEditor, brightness: SheetB
     }
     SettingsGroupHeader(stringResource(R.string.settings_page_turn))
     ReaderPageTurnSettings(editor)
+    if (volumeKeys != null) {
+        GroupedCard(Modifier.padding(top = 12.dp)) {
+            SettingsToggle(stringResource(R.string.settings_volume_keys), volumeKeys.on, volumeKeys.onChange)
+        }
+    }
 }
 
 /** Books-style size row: a small and a large «A» frame the slider; the value sits in the title row. */

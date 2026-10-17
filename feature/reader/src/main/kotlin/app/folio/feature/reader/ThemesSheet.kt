@@ -39,12 +39,16 @@ import app.folio.core.designsystem.components.*
 internal class SheetBrightness(val value: Float, val onChange: (Float) -> Unit)
 internal class SheetRotation(val locked: Boolean, val onChange: (Boolean) -> Unit)
 
+/** A switch the sheet shows but [SettingsEditor] doesn't own (shared by all books, saved at once). */
+internal class SheetToggle(val on: Boolean, val onChange: (Boolean) -> Unit)
+
 /** «Темы и настройки» in a book: the book's own settings or the shared ones, chosen under the title. */
 @Composable
 internal fun ThemesSheet(vm: ReaderViewModel, brightness: SheetBrightness, rotation: SheetRotation, onDismiss: () -> Unit) {
     val shared by vm.sharedSettings.collectAsStateWithLifecycle()
     val effective by vm.settings.collectAsStateWithLifecycle()
     val own by vm.ownSettings.collectAsStateWithLifecycle()
+    val volumeKeys by vm.volumeKeys.collectAsStateWithLifecycle()
     // A book with its own settings opens on them; otherwise edits go to all books.
     var bookScope by rememberSaveable { mutableStateOf(!vm.ownSettings.value.isEmpty) }
     val editor = rememberSettingsEditor(if (bookScope) effective else shared, own, bookScope,
@@ -60,6 +64,7 @@ internal fun ThemesSheet(vm: ReaderViewModel, brightness: SheetBrightness, rotat
         preview = samplePreviewSource(),
         brightness = brightness,
         rotation = rotation,
+        volumeKeys = SheetToggle(volumeKeys, vm::setVolumeKeys),
         onDismiss = onDismiss,
     )
 }
@@ -74,6 +79,7 @@ internal fun ReadingSettingsSheet(
     brightness: SheetBrightness?,
     onDismiss: () -> Unit,
     rotation: SheetRotation? = null,
+    volumeKeys: SheetToggle? = null,
 ) {
     var section by rememberSaveable { mutableIntStateOf(0) }
     val tabStates = rememberSaveableStateHolder()
@@ -106,7 +112,7 @@ internal fun ReadingSettingsSheet(
                         Column(Modifier.weight(1f).verticalScroll(scrollStates[section], overscrollEffect = null).padding(bottom = 24.dp)) {
                             tabStates.SaveableStateProvider(section) {
                                 when (section) {
-                                    0 -> ReaderAppearanceSettings(editor, brightness, rotation)
+                                    0 -> ReaderAppearanceSettings(editor, brightness, rotation, volumeKeys)
                                     1 -> ReaderAdvancedSettings(editor, preview)
                                 }
                             }

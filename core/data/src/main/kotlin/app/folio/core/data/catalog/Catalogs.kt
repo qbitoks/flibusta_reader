@@ -38,11 +38,12 @@ data class Catalog(
 }
 
 /**
- * A known catalog listed in «Каталоги» without being saved; [note] warns about a known limit (sign-in,
- * fragments only), [russian] picks its group.
+ * A catalog with a line about it: the built-in one, or a row of a list being imported. [note] warns about a known
+ * limit (sign-in, fragments only).
  */
-data class CatalogPreset(val catalog: Catalog, val description: String, val note: String? = null, val russian: Boolean = true)
+data class CatalogPreset(val catalog: Catalog, val description: String, val note: String? = null)
 
+/** The one catalog Folio ships with; everything else the user adds by address or imports from a list. */
 object CatalogPresets {
     fun flibustaStyle(id: String, title: String, origin: String, downloads: String? = null, format: String = "FB2") = Catalog(
         id = id,
@@ -55,43 +56,18 @@ object CatalogPresets {
         format = format,
     )
 
-    /** Built in, used until `catalogs.json` from the modules repository arrives ([replace]). */
-    val bundled: List<CatalogPreset> = listOf(
-        CatalogPreset(flibustaStyle("flibusta", "Флибуста", "https://flibusta.is"), "Большая библиотека на русском: FB2, EPUB"),
-        CatalogPreset(Catalog("librusec", "Либрусек", "https://lib.rus.ec/opds"), "Художественная, фантастика, техническая литература", "Скачивание только после входа на сайте."),
-        CatalogPreset(Catalog("iknigi", "iKnigi", "https://iknigi.net/opds"), "Художественная и современная литература", "Отдаёт только ознакомительные фрагменты с ЛитРес."),
-        CatalogPreset(Catalog("ekniga", "EKNIGA", "https://ekniga.org/opds"), "Книги разных жанров"),
-        CatalogPreset(Catalog("imwerden", "ImWerden", "https://imwerden.de/opds/"), "Русская классика, редкие и архивные издания"),
-        CatalogPreset(Catalog("anarchist", "Библиотека анархизма", "https://ru.anarchistlibraries.net/opds"), "Философия, история, общественная мысль"),
-        CatalogPreset(Catalog("gutenberg", "Project Gutenberg", "https://www.gutenberg.org/ebooks.opds/"), "Более 79 000 книг, в основном классика на английском", russian = false),
-        CatalogPreset(Catalog("openlibrary", "Open Library", "https://openlibrary.org/opds/"), "Классика и архив; многие книги только на время, на сайте", russian = false),
-        CatalogPreset(Catalog("wolnelektury", "Wolne Lektury", "https://wolnelektury.pl/opds/"), "Польская литература", russian = false),
-        CatalogPreset(Catalog("fantasyworlds", "Fantasy Worlds", "https://fantasy-worlds.org/opds"), "Фантастика и фэнтези"),
-        CatalogPreset(Catalog("profilib", "PROFILIB", "https://profilib.com/opds/"), "Художественная литература"),
-        CatalogPreset(Catalog("knihi", "Knihi.com", "https://knihi.com/opds.xml"), "Белорусская литература", russian = false),
-        CatalogPreset(Catalog("ebooksgratuits", "Ebooks libres et gratuits", "https://www.ebooksgratuits.com/opds/"), "Французская классика", russian = false),
-        CatalogPreset(Catalog("openedition", "OpenEdition Books", "https://opds.openedition.org/"), "Научные издания на разных языках", russian = false),
-        CatalogPreset(Catalog("textos", "Textos.info", "https://www.textos.info/catalogo.atom"), "Испанская литература", russian = false),
+    val all: List<CatalogPreset> = listOf(
+        CatalogPreset(
+            Catalog("iknigi", "iKnigi", "https://iknigi.net/opds"),
+            "Книги ЛитРес",
+            "Только ознакомительные фрагменты; через VPN может не открываться.",
+        ),
     )
 
-    @Volatile
-    private var current: List<CatalogPreset> = bundled
-
-    /** The presets in effect: the downloaded list when there is one, else [bundled]. */
-    val all: List<CatalogPreset> get() = current
-
-    /** Switches to a downloaded list; an empty one is ignored. */
-    fun replace(list: List<CatalogPreset>) {
-        if (list.isNotEmpty()) current = list
-    }
-
-    /** First launch: Flibusta (the former built-in source) and Project Gutenberg. */
-    val starter: List<Catalog> get() = listOf("flibusta", "gutenberg").mapNotNull { id -> bundled.firstOrNull { it.catalog.id == id }?.catalog }
+    /** First launch: the built-in catalog. */
+    val starter: List<Catalog> get() = all.map { it.catalog }
 
     fun preset(id: String): CatalogPreset? = all.firstOrNull { it.catalog.id == id }
-
-    /** OPDS Home, a directory of OPDS catalogs; opened in the browser. */
-    const val DIRECTORY = "https://opdshome.uo1.net/"
 }
 
 /**
@@ -121,6 +97,20 @@ object CatalogDirectory {
             index >= 0 -> saved.toMutableList().also { it[index] = row }
             else -> saved + row
         }
+    }
+
+    /**
+     * Adds imported catalogs: one with the same id or feed address as a saved row updates that row (its id and
+     * star stay), the rest are appended as favorites.
+     */
+    fun merge(saved: List<Catalog>, incoming: List<Catalog>): List<Catalog> {
+        val result = saved.toMutableList()
+        for (c in incoming) {
+            val index = result.indexOfFirst { it.id == c.id || it.address == c.address }
+            if (index >= 0) result[index] = c.copy(id = result[index].id, favorite = result[index].favorite)
+            else result += c.copy(favorite = true)
+        }
+        return result
     }
 
     /** Puts a preset back to its own fields, keeping the star. */
@@ -172,11 +162,11 @@ internal object CatalogCodec {
 }
 
 /**
- * `catalogs.json` of the modules repository: `{"version":1,"catalogs":[{id,title,address,downloads?,searchBooks?,
- * searchAuthors?,newBooks?,format?,description,note?,russian}]}`. Rows without an HTTPS address are dropped;
- * a newer major [version] or junk decodes as null, so the app keeps what it has.
+ * A catalog list file, for import and export: `{"version":1,"catalogs":[{id,title,address,downloads?,searchBooks?,
+ * searchAuthors?,newBooks?,format?,description?,note?}]}` (the format of `catalogs.json` in folio-modules). Rows
+ * without an HTTPS address are dropped; a newer major [VERSION], junk or an empty list decodes as null.
  */
-internal object CatalogPresetsCodec {
+object CatalogListCodec {
     private val json = Json { ignoreUnknownKeys = true }
     const val VERSION = 1
 
@@ -198,8 +188,27 @@ internal object CatalogPresetsCodec {
                 newBooks = https("newBooks"),
                 format = s("format")?.takeIf { it in Catalog.FORMATS } ?: Catalog.DEFAULT_FORMAT,
             )
-            CatalogPreset(catalog, s("description").orEmpty(), s("note"), (o["russian"] as? JsonPrimitive)?.contentOrNull != "false")
+            CatalogPreset(catalog, s("description").orEmpty(), s("note"))
         }
         return presets.distinctBy { it.catalog.id }.takeIf { it.isNotEmpty() }
     }
+
+    /** The file «Экспорт» writes; sign-ins never go into it. */
+    fun encode(list: List<Catalog>): String = buildJsonObject {
+        put("version", VERSION)
+        put("catalogs", buildJsonArray {
+            list.forEach { c ->
+                add(buildJsonObject {
+                    put("id", c.id)
+                    put("title", c.title)
+                    put("address", c.address)
+                    c.downloads?.let { put("downloads", it) }
+                    c.searchBooks?.let { put("searchBooks", it) }
+                    c.searchAuthors?.let { put("searchAuthors", it) }
+                    c.newBooks?.let { put("newBooks", it) }
+                    if (c.format != Catalog.DEFAULT_FORMAT) put("format", c.format)
+                })
+            }
+        })
+    }.toString()
 }

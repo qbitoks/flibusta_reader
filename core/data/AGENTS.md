@@ -11,7 +11,7 @@
 - Use `core/data/src/main/kotlin/app/folio/core/data/library/FolderScanner.kt` for SAF folder scans and scheduled imports.
 - Use `core/data/src/main/kotlin/app/folio/core/data/modules/ModuleInstaller.kt` for engine/app installs from the modules
   repository (`ModulesRepository` URLs, `ModuleIndexCodec`); it verifies SHA-256, package and Folio's certificate before
-  `PackageInstaller`. Preset catalogs: `CatalogRepository.refreshPresets` + `CatalogPresetsCodec`.
+  `PackageInstaller`. Catalog lists: `CatalogRepository.fetchList`/`import`/`exportList` + `CatalogListCodec`; built-in catalog: `CatalogPresets` (iKnigi only).
 - Bind repositories in `core/data/src/main/kotlin/app/folio/core/data/di/DataModule.kt`; keep UI in feature modules.
 
 ## Invariants

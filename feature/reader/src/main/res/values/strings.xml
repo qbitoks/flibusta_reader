@@ -334,4 +334,5 @@
     </plurals>
     <string name="speech_online_voice">Online voice</string>
     <string name="speech_selected_voice">Selected voice</string>
+    <string name="settings_volume_keys">Turn Pages with Volume Buttons</string>
 </resources>

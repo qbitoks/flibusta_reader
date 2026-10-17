@@ -25,6 +25,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ReadingDefaultsViewModel @Inject constructor(private val settingsRepository: SettingsRepository) : ViewModel() {
     val settings: StateFlow<ReaderSettings> = settingsRepository.reader.stateIn(viewModelScope, SharingStarted.Eagerly, ReaderSettings())
+    val volumeKeys: StateFlow<Boolean> = settingsRepository.volumeKeys.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    fun setVolumeKeys(on: Boolean) = viewModelScope.launch { settingsRepository.setVolumeKeys(on) }
 
     /** Closing the panel never cancels a save. */
     fun save(change: (ReaderSettings) -> ReaderSettings) = viewModelScope.launch { settingsRepository.updateReader(change) }
@@ -37,6 +40,7 @@ class ReadingDefaultsViewModel @Inject constructor(private val settingsRepositor
 @Composable
 fun ReadingDefaultsSheet(onDismiss: () -> Unit, vm: ReadingDefaultsViewModel = hiltViewModel()) {
     val saved by vm.settings.collectAsStateWithLifecycle()
+    val volumeKeys by vm.volumeKeys.collectAsStateWithLifecycle()
     val editor = rememberSettingsEditor(saved, BookOverrides(), bookScope = false,
         save = { change -> vm.save(change).join() })
     FolioTheme(readerPalette(editor.settings).uiColors()) {
@@ -46,6 +50,7 @@ fun ReadingDefaultsSheet(onDismiss: () -> Unit, vm: ReadingDefaultsViewModel = h
             subtitle = { Text(stringResource(R.string.settings_scope_all), style = FolioType.subheadline, color = Folio.colors.secondaryLabel) },
             preview = samplePreviewSource(),
             brightness = null,
+            volumeKeys = SheetToggle(volumeKeys) { vm.setVolumeKeys(it) },
             onDismiss = onDismiss,
         )
     }

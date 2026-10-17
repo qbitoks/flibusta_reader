@@ -98,6 +98,7 @@ internal fun BoxScope.ReaderPages(
                 vm.select(null)
                 controls.activeHighlight = null
             },
+            keyTurns = controls.keyTurns,
             pageOverlay = { page -> NoteMarkers(page, Offset.Zero, highlights, vm, palette) { controls.noteFor = it } },
             modifier = run {
                 val top = settings.scrollHeaderBoundary.takeUnless { header == PageHeader.None } ?: FooterStyle.None
@@ -120,6 +121,7 @@ internal fun BoxScope.ReaderPages(
             onPrev = vm::prev,
             onTap = interaction.onTap,
             onTurnEvent = interaction.onTurnEvent,
+            keyTurns = controls.keyTurns,
             onDragStart = {
                 controls.chromeVisible = false
                 vm.clearHighlight()

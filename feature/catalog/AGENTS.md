@@ -10,7 +10,8 @@ downloads live in `core/data/.../catalog/` (`CatalogRepository`, `DownloadManage
   author ranking, saved state
 - `feature/catalog/src/main/kotlin/app/folio/feature/catalog/CatalogParts.kt` — rows, remote covers, error/empty
   blocks, `feedItems` (endless scroll)
-- `BookSheet.kt`, `DownloadsSheet.kt`, `CatalogsSheet.kt` (one list: favorites, presets by language, «Мои»; add by address / edit) — the sheets
+- `BookSheet.kt`, `DownloadsSheet.kt`, `CatalogsSheet.kt` (favorites, «Мои каталоги», add/import/export; edit),
+  `CatalogImport.kt` (import by link or file with ticks) — the sheets
 - `core/data/src/main/kotlin/app/folio/core/data/catalog/Catalogs.kt` — `Catalog`, `CatalogPresets`, `CatalogDirectory`
   (saved rows merged with presets, star/reset rules), prefs codec
 - `core/data/src/main/kotlin/app/folio/core/data/catalog/DownloadManager.kt` — Room row + unique
@@ -38,8 +39,9 @@ downloads live in `core/data/.../catalog/` (`CatalogRepository`, `DownloadManage
   tries the next EPUB/FB2 (a format picked in the menu does not), then the sheet offers «Открыть на сайте»;
   `CatalogRepository.downloadIssues` marks the catalog until a success.
 - «Каталоги»: tap opens any catalog (no add step), ★ toggles favorite, long press edits. Favorites feed the switcher
-  menu under the title; presets are never deleted, only unstarred or reset; only own catalogs are removed.
-- Downloads open nothing by themselves: the book sheet and «Загрузки» show «Читать» when done.
+  menu under the title; the built-in iKnigi is never deleted, only unstarred or reset; only own catalogs are removed. No other catalog ships with the app.
+- Downloads open nothing by themselves: the book sheet, «Загрузки» and the notification
+  (`app/.../DownloadNotifier.kt`) offer «Читать». The first download asks for the notification permission.
 - Sign-in: «Логин»/«Пароль» in `EditCatalog` (`vm.saveCatalog(catalog, login, password)`; empty password keeps the
   saved one, blank login signs out). A `LOGIN` error offers «Войти» via `LocalSignIn`, which opens that sheet.
   Never prefill or show the saved password. Agents don't type real passwords; the user tests sign-in on the phone.

@@ -1,6 +1,5 @@
 package app.folio.feature.catalog
 
-import android.util.Log
 import app.folio.core.data.catalog.CatalogPreset
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
@@ -72,7 +71,6 @@ class CatalogViewModel @Inject constructor(
     private val saved: SavedStateHandle,
 ) : ViewModel() {
     val catalogs: StateFlow<List<Catalog>> = repository.catalogs
-    val presets: StateFlow<List<CatalogPreset>> = repository.presets
     var catalog by mutableStateOf(repository.current.value)
         private set
     var root by mutableStateOf(Feed(catalog?.address.orEmpty(), ""))
@@ -110,15 +108,6 @@ class CatalogViewModel @Inject constructor(
     val canGoBack: Boolean get() = stack.isNotEmpty() || results != null
 
     init {
-        viewModelScope.launch {
-            try {
-                repository.refreshPresets()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Log.w("CatalogViewModel", "Catalog list not refreshed", e)
-            }
-        }
         loadHome()
         viewModelScope.launch { downloads.collect(::fallBack) }
         viewModelScope.launch {
@@ -197,6 +186,15 @@ class CatalogViewModel @Inject constructor(
     fun resetCatalog(catalog: Catalog) = repository.reset(catalog.id)
 
     fun moveCatalog(from: Int, to: Int) = repository.move(from, to)
+
+    /** Catalogs of a list file at [address]; throws [IllegalArgumentException] with a user message. */
+    suspend fun fetchList(address: String): List<CatalogPreset> = repository.fetchList(address)
+
+    fun parseList(text: String): List<CatalogPreset> = repository.parseList(text)
+
+    fun importCatalogs(list: List<Catalog>) = repository.import(list)
+
+    fun exportList(): String = repository.exportList()
 
     fun newCatalogId(): String = repository.newId()
 

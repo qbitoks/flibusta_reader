@@ -24,4 +24,8 @@
     <string name="settings_install_permission">Разрешите установку</string>
     <string name="settings_install_retry">Повторить</string>
     <string name="settings_reading_header">Чтение</string>
+    <string name="settings_licenses">Лицензии</string>
+    <string name="settings_licenses_libraries">Библиотеки</string>
+    <string name="settings_licenses_fonts">Шрифты</string>
+    <string name="settings_close">Закрыть</string>
 </resources>

@@ -102,9 +102,6 @@
     <string name="catalog_add_address">Add by address</string>
     <string name="catalog_add_folder">Add as catalog</string>
     <string name="catalog_added">Added to favorites</string>
-    <string name="catalog_directory">Find catalogs on OPDS Home</string>
-    <string name="catalog_directory_text">OPDS Home lists other catalogs. Copy an address there and come back: it fills the empty field.</string>
-    <string name="catalog_presets_text">Some libraries host books without the rights holders\' permission: free access doesn\'t always mean lawful distribution.</string>
     <string name="catalog_edit_title">Catalog</string>
     <string name="catalog_save">Save</string>
     <string name="catalog_field_title">Name</string>
@@ -119,8 +116,6 @@
     <string name="catalog_open_web_hint">Download the book in the browser (sign in if needed), then open the file in Folio with «Open with».</string>
     <string name="catalog_issue_short">refuses files</string>
     <string name="catalog_favorites">Favorites</string>
-    <string name="catalog_group_russian">In Russian</string>
-    <string name="catalog_group_other">Other languages</string>
     <string name="catalog_group_mine">My catalogs</string>
     <string name="catalog_find">Search catalogs</string>
     <string name="catalog_favorite_add">Add to favorites</string>
@@ -137,4 +132,18 @@
     <string name="catalog_field_password">Password</string>
     <string name="catalog_password_saved">saved</string>
     <string name="catalog_sign_in_text">Only for catalogs that ask you to sign in. The password is stored encrypted on this phone and sent only over HTTPS to this catalog and its download server.</string>
+    <string name="catalog_group_add">Add Catalogs</string>
+    <string name="catalog_import_by_link">Import from Link</string>
+    <string name="catalog_import_file">Import from File…</string>
+    <string name="catalog_export">Export to File…</string>
+    <string name="catalog_export_done">Catalog list saved.</string>
+    <string name="catalog_lists_text">A list is a JSON file in Folio’s format. Export saves your catalogs without logins and passwords, to move them to another phone or share as a link.</string>
+    <string name="catalog_import_title">Import Catalogs</string>
+    <string name="catalog_import_add">Add</string>
+    <string name="catalog_import_link">Link</string>
+    <string name="catalog_import_loading">Loading…</string>
+    <string name="catalog_import_load">Load List</string>
+    <string name="catalog_import_text">An HTTPS link to a catalog list file, for example an export from another phone.</string>
+    <string name="catalog_import_update">Will be updated</string>
+    <string name="catalog_import_rights">Some libraries publish books without the rights holders’ permission: free access doesn’t always mean lawful distribution.</string>
 </resources>

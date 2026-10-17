@@ -19,7 +19,6 @@ import app.folio.core.opds.HttpsRequest
 import app.folio.core.opds.OpdsParser
 import app.folio.core.opds.OpenSearch
 import app.folio.core.opds.SearchLink
-import app.folio.core.data.modules.ModulesRepository
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
@@ -32,7 +31,7 @@ import javax.inject.Singleton
 /**
  * OPDS catalog over HTTPS: feeds (cached for a few minutes, retried once on a transient failure),
  * cover thumbnails, recent searches and the saved [Catalog] rows (JSON in the `catalog` prefs) over
- * [CatalogPresets], see [CatalogDirectory]. A catalog with a saved sign-in ([CatalogCredentials]) gets
+ * the built-in [CatalogPresets], see [CatalogDirectory]; lists of catalogs are imported and exported as [CatalogListCodec] files. A catalog with a saved sign-in ([CatalogCredentials]) gets
  * HTTP Basic auth on its own hosts only ([auth]). Downloads live in [DownloadManager].
  */
 @Singleton
@@ -52,10 +51,10 @@ class CatalogRepository @Inject constructor(
     /** Recent catalog searches, newest first. */
     val recent: StateFlow<List<String>> = _recent.asStateFlow()
 
-    private val presetsFile = File(context.filesDir, "catalog-presets.json")
-    private val _presets = MutableStateFlow(loadPresets())
-    /** Preset catalogs: `catalogs.json` of the modules repository once downloaded, else the bundled list. */
-    val presets: StateFlow<List<CatalogPreset>> = _presets.asStateFlow()
+    init {
+        File(context.filesDir, OLD_PRESETS_FILE).delete()
+        if (prefs.contains(KEY_PRESETS_CHECKED)) prefs.edit().remove(KEY_PRESETS_CHECKED).apply()
+    }
 
     private val _catalogs = MutableStateFlow(loadCatalogs())
     /** Saved rows in their order: favorites, the user's own catalogs and edited presets. */
@@ -283,27 +282,30 @@ class CatalogRepository @Inject constructor(
     }
 
     /**
-     * Downloads the preset list at most once a day ([ModulesRepository.CATALOGS_JSON]); a failure keeps the
-     * list in use. A downloaded list is kept in `files/catalog-presets.json` for the next start.
+     * Catalogs of a list file at [address] (HTTPS, at most 512 KiB); throws [IllegalArgumentException] with a user
+     * message when it is no list.
      */
-    suspend fun refreshPresets() {
-        val now = System.currentTimeMillis()
-        if (now - prefs.getLong(KEY_PRESETS_CHECKED, 0) < PRESETS_TTL_MS) return
+    suspend fun fetchList(address: String): List<CatalogPreset> {
+        val url = validateFeed(address)
         val text = runInterruptible(Dispatchers.IO) {
-            HttpsRequest().read(ModulesRepository.CATALOGS_JSON) { input, _, _ -> String(bounded(input, MAX_PRESETS_BYTES), Charsets.UTF_8) }
+            HttpsRequest(readTimeoutMs = FEED_READ_TIMEOUT_MS).read(url) { input, _, _ -> String(bounded(input, MAX_LIST_BYTES), Charsets.UTF_8) }
         }
-        prefs.edit().putLong(KEY_PRESETS_CHECKED, now).apply()
-        val list = CatalogPresetsCodec.decode(text) ?: return
-        runInterruptible(Dispatchers.IO) { presetsFile.writeText(text) }
-        CatalogPresets.replace(list)
-        _presets.value = list
-        _current.value?.let { current -> _current.value = find(current.id) ?: fallback() }
+        return parseList(text)
     }
 
-    private fun loadPresets(): List<CatalogPreset> {
-        runCatching { CatalogPresetsCodec.decode(presetsFile.readText()) }.getOrNull()?.let(CatalogPresets::replace)
-        return CatalogPresets.all
+    /** Catalogs of a list file's [text]; throws [IllegalArgumentException] with a user message when it is no list. */
+    fun parseList(text: String): List<CatalogPreset> =
+        CatalogListCodec.decode(text) ?: throw IllegalArgumentException("Это не список каталогов: нужен JSON-файл формата Folio")
+
+    /** Adds [list], updating catalogs already saved (same id or address); see [CatalogDirectory.merge]. */
+    fun import(list: List<Catalog>) {
+        store(CatalogDirectory.merge(_catalogs.value, list))
+        feeds.clear()
+        if (_current.value == null) _current.value = fallback()
     }
+
+    /** The saved catalogs as a list file; logins and passwords are never in it. */
+    fun exportList(): String = CatalogListCodec.encode(_catalogs.value)
 
     /** Saves the rows; the current catalog follows its edits (or its preset once the row is gone). */
     private fun store(list: List<Catalog>) {
@@ -317,12 +319,7 @@ class CatalogRepository @Inject constructor(
         prefs.getString(KEY_CATALOGS, null)?.let { return CatalogCodec.decode(it) }
         val oldCatalog = prefs.getString(KEY_CATALOG, null)
         val list = if (oldCatalog != null) {
-            val flibusta = CatalogPresets.bundled.first { it.catalog.id == "flibusta" }.catalog
-            if (oldCatalog == FLIBUSTA_ORIGIN && prefs.getString(KEY_DOWNLOADS, null) in listOf(null, FLIBUSTA_ORIGIN)) {
-                listOf(flibusta)
-            } else {
-                listOf(CatalogPresets.flibustaStyle("flibusta", flibusta.title, oldCatalog, prefs.getString(KEY_DOWNLOADS, null)))
-            }
+            listOf(CatalogPresets.flibustaStyle("flibusta", "Флибуста", oldCatalog, prefs.getString(KEY_DOWNLOADS, null)))
         } else {
             CatalogPresets.starter
         }
@@ -377,10 +374,10 @@ class CatalogRepository @Inject constructor(
         const val KEY_CATALOGS = "catalogs"
         const val KEY_CURRENT = "current"
         const val KEY_ISSUES = "download_issues"
+        /** Before 0.9 the preset list came from folio-modules daily; its cache and timestamp are removed. */
         const val KEY_PRESETS_CHECKED = "presets_checked"
-        const val MAX_PRESETS_BYTES = 512L * 1024
-        const val PRESETS_TTL_MS = 24 * 60 * 60 * 1000L
-        const val FLIBUSTA_ORIGIN = "https://flibusta.is"
+        const val OLD_PRESETS_FILE = "catalog-presets.json"
+        const val MAX_LIST_BYTES = 512L * 1024
         const val MAX_FEED_BYTES = 5L * 1024 * 1024
         const val MAX_COVER_BYTES = 3L * 1024 * 1024
         const val MAX_CACHED_FEEDS = 40

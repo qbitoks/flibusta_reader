@@ -91,6 +91,8 @@ fun HorizontalPageTurner(
     onLongPressDrag: (Offset) -> Unit = {},
     modifier: Modifier = Modifier,
     onTurnEvent: (PageTurnEvent) -> Unit = {},
+    /** Turns asked from outside (hardware keys): +1 forward, −1 back. */
+    keyTurns: kotlinx.coroutines.flow.Flow<Int> = kotlinx.coroutines.flow.emptyFlow(),
     /** Corner radius of a sliding page; match the container's so the corners don't jump when the turn ends. */
     pageCorner: Dp = 27.dp,
     content: @Composable (Page?) -> Unit,
@@ -221,6 +223,13 @@ fun HorizontalPageTurner(
             } finally {
                 latestOnTurnEvent(PageTurnEvent(active = gesturing || dragging || offset.value != 0f))
             }
+        }
+    }
+
+    LaunchedEffect(keyTurns) {
+        keyTurns.collect { direction ->
+            latestOnDragStart()
+            turn(scope, direction)
         }
     }
 

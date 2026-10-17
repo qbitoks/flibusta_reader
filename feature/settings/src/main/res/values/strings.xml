@@ -24,4 +24,8 @@
     <string name="settings_install_permission">Allow installing</string>
     <string name="settings_install_retry">Retry</string>
     <string name="settings_reading_header">Reading</string>
+    <string name="settings_licenses">Licenses</string>
+    <string name="settings_licenses_libraries">Libraries</string>
+    <string name="settings_licenses_fonts">Fonts</string>
+    <string name="settings_close">Close</string>
 </resources>

@@ -665,6 +665,11 @@ class ReaderViewModel @Inject constructor(
     fun setGuideLine(on: Boolean) =
         saveSettings(BookOverrides.GUIDE_LINE in ownSettings.value.values) { it.copy(guideLine = on) }
 
+    /** Volume buttons turn pages; shared by all books. */
+    val volumeKeys: StateFlow<Boolean> = settingsRepository.volumeKeys.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    fun setVolumeKeys(on: Boolean) = viewModelScope.launch { settingsRepository.setVolumeKeys(on) }
+
     fun shareOwnSettings() = viewModelScope.launch { settingsRepository.shareBookReader(bookId) }
     fun resetOwnSettings() = viewModelScope.launch { settingsRepository.resetBookReader(bookId) }
 

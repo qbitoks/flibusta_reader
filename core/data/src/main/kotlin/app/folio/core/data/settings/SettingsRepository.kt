@@ -151,6 +151,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val librarySort = stringPreferencesKey("library_sort")
         val watchedFolder = stringPreferencesKey("watched_folder")
         val hiddenSystem = stringSetPreferencesKey("hidden_system_collections")
+        val volumeKeys = booleanPreferencesKey("volume_keys_turn")
     }
 
     /** Settings shared by all books. */
@@ -173,6 +174,13 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     /** Appearance of the whole app; Auto follows the system. */
     val appAppearance: Flow<Appearance> = store.data.map { enumOr(it[Keys.appAppearance], Appearance.Auto) }.distinctUntilChanged()
+
+    /** Volume buttons turn pages in the reader (shared by all books, not a book's own setting). */
+    val volumeKeys: Flow<Boolean> = store.data.map { it[Keys.volumeKeys] ?: true }.distinctUntilChanged()
+
+    suspend fun setVolumeKeys(value: Boolean) {
+        store.edit { it[Keys.volumeKeys] = value }
+    }
 
     suspend fun currentReader(): ReaderSettings = reader.first()
 

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -12,6 +13,7 @@ import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
 import app.folio.core.data.library.LibraryRepository
 import app.folio.core.designsystem.FolioTheme
+import app.folio.feature.reader.ReaderKeys
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -56,12 +58,22 @@ class MainActivity : ComponentActivity() {
         navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
     )
 
+    /** The open book takes page-turn keys (volume, PageDown, arrows) before the system does. */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean = ReaderKeys.dispatch(event) || super.onKeyDown(keyCode, event)
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean = ReaderKeys.dispatch(event) || super.onKeyUp(keyCode, event)
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIntent(intent)
     }
 
     private fun handleIntent(intent: Intent?) {
+        intent?.getStringExtra(EXTRA_BOOK_ID)?.let { id ->
+            intent.removeExtra(EXTRA_BOOK_ID)
+            lifecycleScope.launch { openRequests.send(id) }
+            return
+        }
         val uris: List<Uri> = when (intent?.action) {
             Intent.ACTION_VIEW -> listOfNotNull(intent.data)
             Intent.ACTION_SEND -> listOfNotNull(IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java))
@@ -75,5 +87,10 @@ class MainActivity : ComponentActivity() {
             // Opening a single shared book goes straight to reading, as in Apple Books.
             if (uris.size == 1) last?.let { openRequests.send(it) }
         }
+    }
+
+    companion object {
+        /** A downloaded book to open, from the download notification. */
+        const val EXTRA_BOOK_ID = "app.folio.BOOK_ID"
     }
 }

@@ -35,8 +35,9 @@ Why: users upgrade with `install -r`; books, positions, highlights and collectio
   `voice_<lang>` (voice name of that engine; the `-local` or `-network` variant itself). `favorites` (0.7.0 only) is
   deleted on start. Keys of 0.5 (`engine`, `piper_*`, `silero_speaker`) and `files/voices/`
   (built-in Piper/Silero voices) are deleted on start (`SpeechVoices`): engines are separate apps now, no migration (user decision).
-- `files/catalog-presets.json` — last `catalogs.json` from the modules repository (`CatalogPresetsCodec`); `catalog.xml`
-  `presets_checked` — when it was last fetched. Missing or junk = the bundled presets.
+- `files/catalog-presets.json` and `catalog.xml` `presets_checked` (before 0.9: the daily preset list) are deleted on
+  start. Catalog list files for import/export: `CatalogListCodec` (`{"version":1,"catalogs":[…]}`, no sign-ins).
+- DataStore `settings` `volume_keys_turn` — volume buttons turn pages (absent = on), shared, never a book's own.
 - `shared_prefs/modules.xml`: `index` (last `modules.json`), `checked` (fetch time). `cache/modules/<id>.apk` — APK
   being installed, deleted after the installer answers.
 - `shared_prefs/catalog_auth.xml` (`CatalogCredentials`): catalog id → `login\n<base64 IV+AES-GCM ciphertext>`, key

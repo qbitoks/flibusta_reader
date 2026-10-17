@@ -37,6 +37,8 @@ internal class ReaderControls(
     var speechPlayer by mutableStateOf(false)
     /** Height of the bottom navigation panel while shown; the speech mini-player floats above it. */
     var bottomPanelHeight by mutableStateOf(androidx.compose.ui.unit.Dp(0f))
+    /** Page turns asked by hardware keys: +1 forward, −1 back. */
+    val keyTurns = kotlinx.coroutines.flow.MutableSharedFlow<Int>(extraBufferCapacity = 4)
 }
 
 @Composable

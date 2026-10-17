@@ -17,8 +17,8 @@ class CatalogCodecTest {
     }
 
     @Test fun formatDefaultsToEpubAndFlibustaTakesFb2() {
-        assertEquals("FB2", CatalogPresets.preset("flibusta")!!.catalog.format)
-        assertEquals("EPUB", CatalogPresets.preset("gutenberg")!!.catalog.format)
+        assertEquals("FB2", CatalogPresets.flibustaStyle("f", "Ф", "https://f.example").format)
+        assertEquals("EPUB", CatalogPresets.preset("iknigi")!!.catalog.format)
         val rows = CatalogCodec.decode("""[{"id":"a","title":"A","address":"https://a.org/opds"},{"id":"b","title":"B","address":"https://b.org/opds","format":"PDF"}]""")
         assertEquals(listOf("EPUB", "EPUB"), rows.map { it.format })
         assertTrue("format" !in CatalogCodec.encode(rows))
@@ -46,25 +46,22 @@ class CatalogCodecTest {
     }
 
     @Test fun directoryListsSavedRowsThenUncoveredPresets() {
-        val gutenberg = CatalogPresets.preset("gutenberg")!!.catalog
-        val mine = Catalog("c1", "Флибуста-зеркало", "https://flibusta.is/opds")
-        val all = CatalogDirectory.all(listOf(gutenberg, mine))
-        assertEquals(listOf(gutenberg, mine), all.take(2))
-        // Same id or same address as a saved row: the preset isn't listed twice.
-        assertFalse(all.drop(2).any { it.id == "gutenberg" || it.id == "flibusta" })
-        assertTrue(all.drop(2).none { it.favorite })
-        assertEquals(CatalogPresets.all.size, all.size)
+        val mine = Catalog("c1", "Флибуста", "https://flibusta.is/opds")
+        assertEquals(listOf(mine, CatalogPresets.preset("iknigi")!!.catalog.copy(favorite = false)), CatalogDirectory.all(listOf(mine)))
+        // Same address as a saved row: the preset isn't listed twice.
+        val copy = Catalog("c2", "iKnigi", "https://iknigi.net/opds")
+        assertEquals(listOf(copy), CatalogDirectory.all(listOf(copy)))
     }
 
     @Test fun unstarringAnUneditedPresetDropsItsRow() {
-        val gutenberg = CatalogPresets.preset("gutenberg")!!.catalog
+        val gutenberg = CatalogPresets.preset("iknigi")!!.catalog
         val starred = CatalogDirectory.setFavorite(emptyList(), gutenberg.copy(favorite = false), true)
         assertEquals(listOf(gutenberg), starred)
         assertTrue(CatalogDirectory.setFavorite(starred, gutenberg, false).isEmpty())
     }
 
     @Test fun unstarringAnEditedPresetOrOwnCatalogKeepsTheRow() {
-        val mirror = CatalogPresets.flibustaStyle("flibusta", "Флибуста", "https://flibusta.is", downloads = "https://flisland.net")
+        val mirror = CatalogPresets.preset("iknigi")!!.catalog.copy(downloads = "https://mirror.example")
         val mine = Catalog("c1", "Мой", "https://example.org/opds")
         val list = CatalogDirectory.setFavorite(CatalogDirectory.setFavorite(listOf(mirror, mine), mirror, false), mine, false)
         assertEquals(listOf(mirror.copy(favorite = false), mine.copy(favorite = false)), list)
@@ -73,9 +70,22 @@ class CatalogCodecTest {
     }
 
     @Test fun resetRestoresThePresetAndKeepsTheStar() {
-        val preset = CatalogPresets.preset("flibusta")!!.catalog
-        val mirror = preset.copy(downloads = "https://flisland.net")
-        assertEquals(listOf(preset), CatalogDirectory.reset(listOf(mirror), "flibusta"))
-        assertTrue(CatalogDirectory.reset(listOf(mirror.copy(favorite = false)), "flibusta").isEmpty())
+        val preset = CatalogPresets.preset("iknigi")!!.catalog
+        val mirror = preset.copy(downloads = "https://mirror.example")
+        assertEquals(listOf(preset), CatalogDirectory.reset(listOf(mirror), "iknigi"))
+        assertTrue(CatalogDirectory.reset(listOf(mirror.copy(favorite = false)), "iknigi").isEmpty())
+    }
+
+    @Test fun importUpdatesSavedRowsAndAppendsNewOnesAsFavorites() {
+        val mine = Catalog("c1", "Старое зеркало", "https://old.example/opds", favorite = false)
+        val sameId = Catalog("c1", "Новое зеркало", "https://new.example/opds")
+        val sameAddress = Catalog("x", "Другое имя", "https://a.example/opds")
+        val saved = listOf(mine, Catalog("c2", "A", "https://a.example/opds"))
+        val added = Catalog("c3", "Новый", "https://n.example/opds", favorite = false)
+        val result = CatalogDirectory.merge(saved, listOf(sameId, sameAddress, added))
+        assertEquals(
+            listOf(sameId.copy(favorite = false), Catalog("c2", "Другое имя", "https://a.example/opds"), added.copy(favorite = true)),
+            result,
+        )
     }
 }

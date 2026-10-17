@@ -8,13 +8,13 @@
 - `readerInteractions` — tap targets, tap zones, long-press selection; `ReaderSelectionOverlays` — selection, notes, palette.
 - `ReaderChrome` — overlays and page labels; `ReaderToolbar` / `ReaderNavigationPanel` — controls; `ReaderSheets` — sheets.
 - `WindowEffects`, `ImmersiveMode`, `ReadingSessionEffect` — orientation, brightness, bars, session lifecycle.
+- `ReaderKeys` / `ReaderKeysEffect` — hardware page keys from `MainActivity.onKeyDown/onKeyUp` into `controls.keyTurns` (pager and scroll); not in PDF.
 - `ReaderViewModel` — snapshot `state`, `PaginationEngine`, navigation/history, eager flows and coroutine scope.
 - `ReaderSearch` / `searchBook` — search job/state, normalization and snippets; `ReaderAnnotations` — range/text and persistence.
 - `HorizontalPageTurner` — Slide/Curl/Fade; `tapZone` — pure gesture math; `ScrollReader` / `planScrollWindow` — scroll/window.
 - `footerCenter`, `headerText`, `rememberClock`, `rememberBattery` — page chrome; `ReaderPageSettings` — inline page settings.
 - `ChapterProgress` — shared TOC rows, titles and remaining pages; `GuideNavigation` — line state after successful turns.
 - Settings: `core/data/src/main/kotlin/app/folio/core/data/settings/SettingsRepository.kt`.
-
 - Settings: `ThemesSheet` → `ReadingSettingsSheet` (also `ReadingDefaultsSheet`) in a full-height `FolioSheet`, no grabber.
   Edit through `SettingsEditor`; `vm.settings` = shared + `ownSettings`.
 - Pin `PageSettingsPreview` (a `PreviewSource`) outside per-tab scrolling; use `Paginator`/`PageView` with `samplePreviewSource()`, even in a book (book numbers flicker on re-pagination).

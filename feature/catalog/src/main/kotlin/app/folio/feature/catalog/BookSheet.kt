@@ -1,5 +1,9 @@
 package app.folio.feature.catalog
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,7 +46,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -81,6 +87,7 @@ internal fun BookSheet(
     val readable = current?.second?.takeIf { it.readable }
     val anyReadable = formats.any { (_, item) -> item?.readable == true }
     val main = formats.filter { it.first in mainFormats }.ifEmpty { formats }
+    val notify = rememberNotificationAsk()
     FolioSheet(onDismiss = onDismiss) {
         Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), contentAlignment = Alignment.CenterEnd) {
             CircleButton(Icons.Rounded.Close, stringResource(R.string.catalog_close), onDismiss)
@@ -124,12 +131,12 @@ internal fun BookSheet(
                                     leading = { Icon(Icons.AutoMirrored.Rounded.MenuBook, null, tint = c.background, modifier = Modifier.padding(end = 8.dp).size(20.dp)) },
                                 )
                             } else {
-                                DownloadCapsule(current.first, current.second, primary = true, { vm.download(entry, current.first) }, vm::pause, vm::resume)
+                                DownloadCapsule(current.first, current.second, primary = true, { notify(); vm.download(entry, current.first) }, vm::pause, vm::resume)
                             }
                         }
                         if (choice.hasMenu) {
                             FormatsMenu(
-                                choice, { onOpen(it.entity.bookId!!) }, { vm.download(entry, it, fallBack = false) },
+                                choice, { onOpen(it.entity.bookId!!) }, { notify(); vm.download(entry, it, fallBack = false) },
                                 vm::pause, vm::resume, { vm.cancel(entry, it) },
                             )
                         }
@@ -342,6 +349,18 @@ private fun DownloadCapsule(
             Icon(icon, null, tint = content, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(text, style = FolioType.headline, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/** A download asks once for notifications, where its progress and «Читать» show; a refusal changes nothing else. */
+@Composable
+private fun rememberNotificationAsk(): () -> Unit {
+    val context = LocalContext.current
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    return {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            permission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }

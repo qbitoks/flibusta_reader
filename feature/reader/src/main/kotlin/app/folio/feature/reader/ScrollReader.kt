@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -129,6 +130,7 @@ internal fun ScrollReader(
     onLongPressDrag: (Page, Offset) -> Unit,
     onScrollStart: () -> Unit,
     pageOverlay: @Composable (Page) -> Unit = {},
+    keyTurns: kotlinx.coroutines.flow.Flow<Int> = kotlinx.coroutines.flow.emptyFlow(),
     modifier: Modifier = Modifier,
 ) {
     key(generation) {
@@ -238,6 +240,13 @@ internal fun ScrollReader(
             listState.interactionSource.interactions.collect { if (it is DragInteraction.Start) latestOnScrollStart() }
         }
 
+        // A key scrolls by most of a screen, keeping a couple of lines for context.
+        LaunchedEffect(listState, keyTurns) {
+            keyTurns.collect { direction ->
+                latestOnScrollStart()
+                listState.animateScrollBy(direction * listState.layoutInfo.viewportSize.height * 0.85f)
+            }
+        }
         LazyColumn(
             state = listState,
             contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding()),

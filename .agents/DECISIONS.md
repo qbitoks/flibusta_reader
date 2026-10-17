@@ -63,11 +63,8 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | catalog | Many catalogs as JSON in `catalog` prefs, not Room | user-approved plan
 2026-10-16 | catalog | UI shows search/new/popular/facets only when the feed declares them; Flibusta keeps preset templates | user-approved plan
 2026-10-16 | opds | OPDS 2 JSON parsed with kotlinx-serialization-json (JsonElement, no plugin); `http://` feed links are upgraded to HTTPS, never fetched as HTTP | user-approved plan
-2026-10-16 | catalog | All catalogs from the user's list are presets, unverified ones with a note | user decision
-2026-10-16 | catalog | OPDS Home opens in the browser + paste-by-address: site unreachable, no known feed | user-approved plan
 2026-10-16 | catalog | Not presets: Всенаука (expired cert), ФантЛаб (404), FBSearch/Gallica/LITLIB (403) | checked from dev host
 2026-10-16 | catalog | Not presets: Maxima (DNS), E-reading (login), Самиздат via OPDS Home (no answer) | checked from dev host
-2026-10-16 | catalog | One «Каталоги» list (★ favorites, presets by language, own), no «Добавить» page | user-approved plan
 2026-10-16 | catalog | Presets stored only when starred or edited; rows without `favorite` decode as favorites | keeps old lists
 2026-10-16 | catalog | Book sheet: one best-format capsule (EPUB first) + ••• menu of all formats | user-approved design
 2026-10-16 | catalog | Extra formats stay separate library books | merging would change book ids and storage
@@ -81,7 +78,11 @@ keep foundational ones (stack, layout) here however old. Parallel appends merge 
 2026-10-16 | speech | `core/speech`: `SpeechEngine` interface, system TTS first; platform `MediaSession` + FGS, not Media3 | no new dependency; Piper/Silero become engines
 2026-10-16 | speech | Offline voices are separate TTS engine apps in qbitoks/folio-modules | APK 55 → 6 MB; engines update alone; no code loading
 2026-10-16 | modules | Folio installs engines and its updates via PackageInstaller after SHA-256 + same-cert checks | no Google Play planned (user)
-2026-10-16 | catalog | Preset catalogs come from `catalogs.json` in folio-modules (daily, cached), bundled list as fallback | update the list without an app release
 2026-10-16 | speech | No migration of 0.5 voices/prefs: `files/voices/` and old speech keys are deleted | user decision: voices are downloaded again in the engines
 2026-10-17 | speech | Voice sheet: engines by name, uninstalled Folio engines last, no modules section | user chose it; uninstall stays with the system
 2026-10-17 | ui | Settings: `feature/settings`, gear on «Главная»; appearance + reader defaults leave library «•••» | user decision; settings will grow
+2026-10-17 | catalog | Only iKnigi built in; others by address or list import; no OPDS Home, no daily `catalogs.json` | user: no unlicensed libraries shipped
+2026-10-17 | catalog | One-off list import with ticks; re-import updates same id/address; export without sign-ins | user chose it over subscriptions
+2026-10-17 | catalog | Download notifications are plain (`DownloadNotifier`), no foreground service | WorkManager + Range resume suffice
+2026-10-17 | reader | Page keys via `ReaderKeys` from `MainActivity.onKeyDown/onKeyUp`; volume toggle shared, default on | Compose keys need focus
+2026-10-17 | settings | Licenses: hand `OpenSourceList` + assets, checked by a test | no AboutLibraries for ~10 libraries

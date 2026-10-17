@@ -6,10 +6,10 @@ status: active
 ## Current focus
 - Work from the user's task; follow-ups below need an explicit task, not autonomous implementation.
 - 0.3.x–0.5.x (now 0.5.0) uses the prototype engine; OPDS is the «Каталог» tab. No data migration from 0.2.x (user decision).
-- Checked on an emulator: live OPDS browse/search, EPUB/FB2 downloads, Range resume; upgrade/restart, presets,
-  menu palettes and guide landings in Slide/Curl/Fade.
 
 ## Phone verification before distribution
+- 0.9.0: page keys (volume off while reading aloud), download notifications + «Читать», «Лицензии»,
+  «Каталоги» (iKnigi only, import link/file, re-import updates, export; old starred kept).
 - «Настройки» (gear on «Главная»): appearance, «Настройки чтения», update check/up-to-date/offline, project link.
 - Read aloud (stage 1): «Слушать» in the navigation panel, mini-player, phrase band, page following in Slide/Scroll,
   notification/lock-screen/headset controls, pause on headphone unplug, no-voice hint.
@@ -33,8 +33,8 @@ status: active
 - Generate the baseline profile on a disposable emulator; the generator uninstalls the app.
 - Replace archived Readium regressions with checks for the current UI; CI uses `scripts/ci-emulator.ps1`.
 - Potential reader follow-up: add the roadmap's scroll scrubber with chapter/page bubble.
-- Collect dependency licenses before distributing beyond testing.
+- folio-modules `catalogs.json` is no longer read by the app; keep it as an importable list or drop it (user's call).
 
 ## Known issues / verification gaps
 - The emulator's DNS proxy fails behind the host VPN; a fresh AVD with `-dns-server` works.
-- No download notification: progress is visible only in the app («Загрузки»).
+- Page keys don't work in the PDF viewer yet.

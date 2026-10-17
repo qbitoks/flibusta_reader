@@ -55,6 +55,15 @@ private fun ReaderContent(vm: ReaderViewModel, onClose: () -> Unit) {
     ImmersiveMode(showBars = controls.chromeVisible || controls.sheet != null, lightBars = !palette.isDark)
     ReadingSessionEffect(vm)
     WindowEffects(rotationLocked = controls.rotationLocked, brightness = controls.brightness)
+    val volumeKeys by vm.volumeKeys.collectAsStateWithLifecycle()
+    val speech by vm.speechState.collectAsStateWithLifecycle()
+    // Keys turn only the page itself: an open sheet or selection keeps them for itself.
+    ReaderKeysEffect(volume = volumeKeys && !speech.playing) { direction ->
+        if (controls.sheet == null && vm.selection == null) {
+            controls.chromeVisible = false
+            controls.keyTurns.tryEmit(direction)
+        }
+    }
     BackHandler(enabled = controls.chromeVisible && controls.sheet == null) { controls.chromeVisible = false }
     ReaderSurface(vm, settings, palette, controls, bookmarks.size + highlights.size, highlights, onClose)
     ReaderSheets(vm, settings, palette, controls)

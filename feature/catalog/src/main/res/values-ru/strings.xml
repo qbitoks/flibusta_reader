@@ -104,9 +104,6 @@
     <string name="catalog_add_address">Добавить по адресу</string>
     <string name="catalog_add_folder">Добавить как каталог</string>
     <string name="catalog_added">Добавлено в избранное</string>
-    <string name="catalog_directory">Найти каталоги на OPDS Home</string>
-    <string name="catalog_directory_text">OPDS Home собирает адреса других каталогов. Скопируйте адрес и вернитесь: он подставится в пустое поле.</string>
-    <string name="catalog_presets_text">Часть библиотек размещает книги без разрешения правообладателей: бесплатный доступ не всегда значит разрешённое распространение.</string>
     <string name="catalog_edit_title">Каталог</string>
     <string name="catalog_save">Сохранить</string>
     <string name="catalog_field_title">Название</string>
@@ -121,8 +118,6 @@
     <string name="catalog_open_web_hint">Скачайте книгу в браузере (если нужно, войдите на сайт), затем откройте файл в Folio через «Открыть с помощью».</string>
     <string name="catalog_issue_short">не отдаёт файлы</string>
     <string name="catalog_favorites">Избранное</string>
-    <string name="catalog_group_russian">На русском</string>
-    <string name="catalog_group_other">На других языках</string>
     <string name="catalog_group_mine">Мои каталоги</string>
     <string name="catalog_find">Поиск по каталогам</string>
     <string name="catalog_favorite_add">В избранное</string>
@@ -139,4 +134,18 @@
     <string name="catalog_field_password">Пароль</string>
     <string name="catalog_password_saved">сохранён</string>
     <string name="catalog_sign_in_text">Только если каталог просит войти. Пароль хранится зашифрованным на этом телефоне и уходит только по HTTPS на этот каталог и его сервер скачивания.</string>
+    <string name="catalog_group_add">Добавить каталоги</string>
+    <string name="catalog_import_by_link">Импорт по ссылке</string>
+    <string name="catalog_import_file">Импорт из файла…</string>
+    <string name="catalog_export">Экспорт в файл…</string>
+    <string name="catalog_export_done">Список каталогов сохранён.</string>
+    <string name="catalog_lists_text">Список — это JSON-файл в формате Folio. Экспорт сохраняет ваши каталоги без логинов и паролей: их можно перенести на другой телефон или раздать ссылкой.</string>
+    <string name="catalog_import_title">Импорт каталогов</string>
+    <string name="catalog_import_add">Добавить</string>
+    <string name="catalog_import_link">Ссылка</string>
+    <string name="catalog_import_loading">Загрузка…</string>
+    <string name="catalog_import_load">Загрузить список</string>
+    <string name="catalog_import_text">HTTPS-ссылка на файл со списком каталогов, например экспорт с другого телефона.</string>
+    <string name="catalog_import_update">Обновится</string>
+    <string name="catalog_import_rights">Часть библиотек размещает книги без разрешения правообладателей: бесплатный доступ не всегда значит разрешённое распространение.</string>
 </resources>

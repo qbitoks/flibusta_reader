@@ -1,5 +1,7 @@
 package app.folio.feature.catalog
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -21,8 +23,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBackIos
-import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.FileOpen
+import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
@@ -45,7 +49,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -55,6 +59,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.folio.core.data.catalog.Catalog
 import app.folio.core.data.catalog.CatalogDirectory
+import app.folio.core.data.catalog.CatalogPreset
 import app.folio.core.data.catalog.CatalogPresets
 import app.folio.core.designsystem.Folio
 import app.folio.core.designsystem.FolioType
@@ -66,17 +71,20 @@ import app.folio.core.designsystem.components.GroupedCard
 import app.folio.core.designsystem.components.GroupedRow
 import app.folio.core.designsystem.components.SegmentedControl
 import app.folio.core.designsystem.components.SheetHeader
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 private sealed interface CatalogsPage {
     data object List : CatalogsPage
     /** [catalog] is null for a catalog added by address. */
     data class Edit(val catalog: Catalog?) : CatalogsPage
+    /** [list] is a file's catalogs; null asks for a link first. */
+    data class Import(val list: kotlin.collections.List<CatalogPreset>?) : CatalogsPage
 }
 
 /**
- * «Каталоги»: one list of every catalog — favorites first, then the known ones by language and the
- * user's own. Tap opens, ★ keeps it at the top, touch and hold edits; «Добавить по адресу» ends «Мои».
+ * «Каталоги»: favorites first, then the rest (the built-in iKnigi and the user's own). Tap opens, ★ keeps it at
+ * the top, touch and hold edits; the last card adds by address, imports a list (link or file) and exports one.
  */
 @Composable
 internal fun CatalogsSheet(vm: CatalogViewModel, onDismiss: () -> Unit, edit: Catalog? = null) {
@@ -84,7 +92,8 @@ internal fun CatalogsSheet(vm: CatalogViewModel, onDismiss: () -> Unit, edit: Ca
     var page by remember { mutableStateOf<CatalogsPage>(edit?.let { CatalogsPage.Edit(it) } ?: CatalogsPage.List) }
     FolioSheet(onDismiss = onDismiss, containerColor = c.groupedBackground) {
         when (val p = page) {
-            CatalogsPage.List -> CatalogList(vm, onDismiss, onEdit = { page = CatalogsPage.Edit(it) })
+            CatalogsPage.List -> CatalogList(vm, onDismiss, onEdit = { page = CatalogsPage.Edit(it) }, onImport = { page = CatalogsPage.Import(it) })
+            is CatalogsPage.Import -> ImportCatalogs(vm, p.list, onBack = { page = CatalogsPage.List }, onDone = { page = CatalogsPage.List })
             is CatalogsPage.Edit -> EditCatalog(
                 vm, p.catalog,
                 onBack = { if (edit != null) onDismiss() else page = CatalogsPage.List },
@@ -95,15 +104,40 @@ internal fun CatalogsSheet(vm: CatalogViewModel, onDismiss: () -> Unit, edit: Ca
 }
 
 @Composable
-private fun CatalogList(vm: CatalogViewModel, onDismiss: () -> Unit, onEdit: (Catalog?) -> Unit) {
+private fun CatalogList(vm: CatalogViewModel, onDismiss: () -> Unit, onEdit: (Catalog?) -> Unit, onImport: (List<CatalogPreset>?) -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val saved by vm.catalogs.collectAsStateWithLifecycle()
-    // CatalogPresets reads the list in effect; collecting it recomposes when a new one arrives.
-    val presets by vm.presets.collectAsStateWithLifecycle()
     val issues by vm.downloadIssues.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
-    val all = presets.let { CatalogDirectory.all(saved) }.filter { it.matches(query) }
-    val rest = all.filterNot { it.favorite }
+    var message by remember { mutableStateOf<String?>(null) }
+    val exported = stringResource(R.string.catalog_export_done)
+    val all = CatalogDirectory.all(saved).filter { it.matches(query) }
     val open = { catalog: Catalog -> vm.select(catalog); onDismiss() }
+    val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            message = null
+            try {
+                onImport(vm.parseList(readListFile(context, uri)))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                message = (e as? IllegalArgumentException)?.message ?: e.toString()
+            }
+        }
+    }
+    val createFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) scope.launch {
+            message = try {
+                writeListFile(context, uri, vm.exportList())
+                exported
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.toString()
+            }
+        }
+    }
     @Composable
     fun Group(title: String, catalogs: List<Catalog>, footer: @Composable () -> Unit = {}) {
         if (catalogs.isEmpty()) return
@@ -131,29 +165,19 @@ private fun CatalogList(vm: CatalogViewModel, onDismiss: () -> Unit, onEdit: (Ca
         FindField(query) { query = it }
         val favorites = all.filter { it.favorite }
         Group(stringResource(R.string.catalog_favorites), favorites) {
-            Footnote(stringResource(R.string.catalog_catalogs_text))
+            CatalogFootnote(stringResource(R.string.catalog_catalogs_text))
         }
-        Group(stringResource(R.string.catalog_group_russian), rest.filter { CatalogPresets.preset(it.id)?.russian == true })
-        Group(stringResource(R.string.catalog_group_other), rest.filter { CatalogPresets.preset(it.id)?.russian == false }) {
-            Footnote(stringResource(R.string.catalog_presets_text))
-        }
-        val mine = rest.filterNot { CatalogDirectory.isPreset(it) }
-        GroupHeader(stringResource(R.string.catalog_group_mine))
+        Group(stringResource(R.string.catalog_group_mine), all.filterNot { it.favorite })
+        GroupHeader(stringResource(R.string.catalog_group_add))
         GroupedCard {
-            mine.forEach { catalog ->
-                CatalogRow(
-                    catalog,
-                    issue = issues[catalog.host] != null,
-                    current = catalog.id == vm.catalog?.id,
-                    divider = true,
-                    onOpen = { open(catalog) },
-                    onStar = { vm.setFavorite(catalog, true) },
-                    onEdit = { onEdit(catalog) },
-                )
-            }
-            GroupedRow(stringResource(R.string.catalog_add_address), icon = Icons.Rounded.Add, showDivider = false, chevron = true, onClick = { onEdit(null) })
+            GroupedRow(stringResource(R.string.catalog_add_address), icon = Icons.Rounded.Add, chevron = true, onClick = { onEdit(null) })
+            GroupedRow(stringResource(R.string.catalog_import_by_link), icon = Icons.Rounded.Link, chevron = true, onClick = { onImport(null) })
+            GroupedRow(stringResource(R.string.catalog_import_file), icon = Icons.Rounded.FileOpen, onClick = { pickFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) })
+            GroupedRow(stringResource(R.string.catalog_export), icon = Icons.Rounded.IosShare, showDivider = false, onClick = { createFile.launch("folio-catalogs.json") })
         }
-        if (favorites.isEmpty() && query.isBlank()) Footnote(stringResource(R.string.catalog_catalogs_text))
+        message?.let { CatalogFootnote(it, destructive = it != exported) }
+        CatalogFootnote(stringResource(R.string.catalog_lists_text))
+        if (favorites.isEmpty() && query.isBlank()) CatalogFootnote(stringResource(R.string.catalog_catalogs_text))
     }
 }
 
@@ -244,7 +268,6 @@ private fun CatalogRow(
 private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> Unit, onSaved: () -> Unit) {
     val c = Folio.colors
     val clipboard = LocalClipboard.current
-    val uri = LocalUriHandler.current
     val scope = rememberCoroutineScope()
     var title by remember { mutableStateOf(catalog?.title.orEmpty()) }
     var address by remember { mutableStateOf(catalog?.address.orEmpty()) }
@@ -289,43 +312,34 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
     )
     Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().imePadding().padding(bottom = 24.dp)) {
         GroupedCard(Modifier.padding(top = 8.dp)) {
-            Field(stringResource(R.string.catalog_field_title), title, KeyboardType.Text) { title = it; error = null }
+            CatalogField(stringResource(R.string.catalog_field_title), title, KeyboardType.Text) { title = it; error = null }
             HorizontalDivider(color = c.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 18.dp))
-            Field(stringResource(R.string.catalog_field_address), address, KeyboardType.Uri) { address = it; error = null }
+            CatalogField(stringResource(R.string.catalog_field_address), address, KeyboardType.Uri) { address = it; error = null }
         }
-        error?.let { Footnote(it, destructive = true) }
-        Footnote(stringResource(R.string.catalog_sources_text))
-        if (catalog == null) {
-            GroupedCard(Modifier.padding(top = 16.dp)) {
-                GroupedRow(
-                    stringResource(R.string.catalog_directory), icon = Icons.AutoMirrored.Rounded.OpenInNew, showDivider = false,
-                    onClick = { runCatching { uri.openUri(CatalogPresets.DIRECTORY) } },
-                )
-            }
-            Footnote(stringResource(R.string.catalog_directory_text))
-        }
+        error?.let { CatalogFootnote(it, destructive = true) }
+        CatalogFootnote(stringResource(R.string.catalog_sources_text))
         GroupedCard(Modifier.padding(top = 16.dp)) {
             GroupedRow(stringResource(R.string.catalog_field_format), showDivider = false, trailing = {
                 SegmentedControl(Catalog.FORMATS, Catalog.FORMATS.indexOf(format), { format = Catalog.FORMATS[it] }, Modifier.width(150.dp))
             })
         }
-        Footnote(stringResource(R.string.catalog_format_text))
+        CatalogFootnote(stringResource(R.string.catalog_format_text))
         GroupHeader(stringResource(R.string.catalog_sign_in_group))
         GroupedCard {
-            Field(stringResource(R.string.catalog_field_login), login, KeyboardType.Email, placeholder = stringResource(R.string.catalog_field_optional)) { login = it; error = null }
+            CatalogField(stringResource(R.string.catalog_field_login), login, KeyboardType.Email, placeholder = stringResource(R.string.catalog_field_optional)) { login = it; error = null }
             HorizontalDivider(color = c.separator, thickness = 0.5.dp, modifier = Modifier.padding(start = 18.dp))
-            Field(
+            CatalogField(
                 stringResource(R.string.catalog_field_password), password, KeyboardType.Password,
                 placeholder = stringResource(if (savedLogin != null && login.trim() == savedLogin) R.string.catalog_password_saved else R.string.catalog_field_optional),
                 secret = true,
             ) { password = it; error = null }
         }
-        Footnote(stringResource(R.string.catalog_sign_in_text))
+        CatalogFootnote(stringResource(R.string.catalog_sign_in_text))
         GroupHeader(stringResource(R.string.catalog_advanced))
         GroupedCard {
-            Field(stringResource(R.string.catalog_source_downloads), downloads, KeyboardType.Uri, placeholder = stringResource(R.string.catalog_field_optional)) { downloads = it; error = null }
+            CatalogField(stringResource(R.string.catalog_source_downloads), downloads, KeyboardType.Uri, placeholder = stringResource(R.string.catalog_field_optional)) { downloads = it; error = null }
         }
-        Footnote(stringResource(R.string.catalog_mirror_text))
+        CatalogFootnote(stringResource(R.string.catalog_mirror_text))
         when {
             catalog == null -> Unit
             !CatalogDirectory.isPreset(catalog) -> GroupedCard(Modifier.padding(top = 16.dp)) {
@@ -339,7 +353,7 @@ private fun EditCatalog(vm: CatalogViewModel, catalog: Catalog?, onBack: () -> U
 }
 
 @Composable
-private fun Field(label: String, value: String, type: KeyboardType, placeholder: String? = null, secret: Boolean = false, onChange: (String) -> Unit) {
+internal fun CatalogField(label: String, value: String, type: KeyboardType, placeholder: String? = null, secret: Boolean = false, onChange: (String) -> Unit) {
     val c = Folio.colors
     Row(Modifier.fillMaxWidth().heightIn(min = 50.dp).padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = FolioType.body, color = c.label, modifier = Modifier.width(118.dp))
@@ -361,7 +375,7 @@ private fun Field(label: String, value: String, type: KeyboardType, placeholder:
 }
 
 @Composable
-private fun Footnote(text: String, destructive: Boolean = false) {
+internal fun CatalogFootnote(text: String, destructive: Boolean = false) {
     val c = Folio.colors
     Text(
         text, style = FolioType.footnote, color = if (destructive) c.destructive else c.secondaryLabel,

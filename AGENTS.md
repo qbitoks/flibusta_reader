@@ -81,7 +81,7 @@ Commands (PowerShell, repo root; Linux/macOS: `bash ./gradlew`, see `scripts/AGE
   `& "$env:ProgramFiles\Git\bin\sh.exe" scripts/agent-lint.sh`. Docs-only change: agent-lint + link check.
 - Setup / env check: `./scripts/doctor.ps1`
 - JVM tests: `./gradlew.bat :core:opds:test :core:format:test :core:layout:testDebugUnitTest :core:data:testDebugUnitTest :core:speech:testDebugUnitTest`
-  `:core:designsystem:testDebugUnitTest :feature:reader:testDebugUnitTest :feature:catalog:testDebugUnitTest --console=plain` (one command)
+  `:core:designsystem:testDebugUnitTest :feature:reader:testDebugUnitTest :feature:catalog:testDebugUnitTest :feature:settings:testDebugUnitTest --console=plain` (one command)
 - Test one: `./gradlew.bat :core:opds:test --tests 'app.folio.core.opds.OpdsParserTest' --console=plain`
 - Device checks: install the release APK and verify by hand (`scripts/AGENTS.md`); CI checks launch/crashes.
   - Bug in `core`: reproduce with a regression test first.
